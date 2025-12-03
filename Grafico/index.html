@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor Cripto - JS Puro</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body { background-color: #111; color: white; font-family: sans-serif; text-align: center; }
+        #grafico { width: 90%; height: 600px; margin: 0 auto; }
+    </style>
+</head>
+<body>
+
+    <h1>BTC-USD Tempo Real (Backend Python + Frontend JS)</h1>
+    <h3 id="preco">Carregando...</h3>
+    
+    <div id="grafico"></div>
+
+    <script>
+        // Função que busca dados e atualiza o gráfico
+        async function atualizarGrafico() {
+            try {
+                // 1. Chama o seu Python
+                const response = await fetch('http://127.0.0.1:5000/api/dados');
+                const dados = await response.json();
+
+                // 2. Configura os Candles (Branco e Vermelho)
+                const candles = {
+                    x: dados.datas,
+                    close: dados.close,
+                    decreasing: {line: {color: 'red'}},
+                    high: dados.high,
+                    increasing: {line: {color: 'white'}},
+                    low: dados.low,
+                    open: dados.open,
+                    type: 'candlestick',
+                    name: 'BTC'
+                };
+
+                // 3. Configura a Média Móvel (Linha Amarela)
+                const mediaMovel = {
+                    x: dados.datas,
+                    y: dados.ma,
+                    type: 'scatter',
+                    mode: 'lines',
+                    line: {color: 'yellow', width: 2},
+                    name: dados.ma_label
+                };
+
+                // 4. Layout Escuro
+                const layout = {
+                    dragmode: 'zoom',
+                    margin: {r: 10, t: 25, b: 40, l: 60},
+                    showlegend: true,
+                    xaxis: {rangeslider: {visible: false}, type: 'date'},
+                    paper_bgcolor: '#111', // Fundo da página
+                    plot_bgcolor: '#111',  // Fundo do gráfico
+                    font: {color: 'white'} // Texto branco
+                };
+
+                // 5. Desenha (Plotly.react é melhor que newPlot para atualizações)
+                Plotly.react('grafico', [candles, mediaMovel], layout);
+                
+                // Atualiza o texto do preço
+                document.getElementById('preco').innerText = "Último Preço: $" + dados.preco_atual;
+
+            } catch (erro) {
+                console.error("Erro ao buscar dados:", erro);
+            }
+        }
+
+        // Roda a primeira vez
+        atualizarGrafico();
+
+        // Configura para rodar a cada 60 segundos (60000ms) automaticamente
+        setInterval(atualizarGrafico, 60000);
+    </script>
+</body>
+</html>

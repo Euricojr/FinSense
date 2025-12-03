@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor Financeiro Pro</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        body { background-color: #111; color: white; font-family: sans-serif; text-align: center; }
+        
+        select, input {
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            background-color: #222;
+            color: white;
+            border: 1px solid #444;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+        
+        #grafico { width: 95%; height: 600px; margin: 0 auto; }
+        
+        /* Ajuste para telas menores */
+        @media (max-width: 768px) {
+            #grafico { height: 400px; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Monitor de Mercado</h1>
+
+    <select id="seletor-ativo" onchange="mudouAtivo()">
+        <optgroup label="Criptomoedas">
+            <option value="BTC-USD" selected>Bitcoin (BTC)</option>
+            <option value="ETH-USD">Ethereum (ETH)</option>
+            <option value="SOL-USD">Solana (SOL)</option>
+        </optgroup>
+        <optgroup label="Bolsa Brasil (B3)">
+            <option value="BBAS3.SA">Banco do Brasil (BBAS3)</option>
+            <option value="PETR4.SA">Petrobras (PETR4)</option>
+            <option value="VALE3.SA">Vale (VALE3)</option>
+            <option value="ITUB4.SA">Itaú (ITUB4)</option>
+            <option value="MGLU3.SA">Magalu (MGLU3)</option>
+        </optgroup>
+        <optgroup label="Índices">
+            <option value="^BVSP">Ibovespa</option>
+            <option value="^GSPC">S&P 500</option>
+        </optgroup>
+    </select>
+
+    <select id="seletor-periodo" onchange="mudouAtivo()">
+        <option value="1d">1 Dia</option>
+        <option value="5d">5 Dias</option>
+        <option value="1mo" selected>1 Mês</option>
+        <option value="3mo">3 Meses</option>
+        <option value="6mo">6 Meses</option>
+        <option value="1y">1 Ano</option>
+        <option value="2y">2 Anos</option>
+        <option value="5y">5 Anos</option>
+        <option value="max">Máximo</option>
+    </select>
+
+    <select id="seletor-intervalo" onchange="mudouAtivo()">
+        <option value="1m">1 Minuto</option>
+        <option value="5m">5 Minutos</option>
+        <option value="15m">15 Minutos</option>
+        <option value="30m">30 Minutos</option>
+        <option value="1h" selected>1 Hora</option>
+        <option value="1d">1 Dia</option>
+        <option value="1wk">1 Semana</option>
+        <option value="1mo">1 Mês</option>
+    </select>
+
+    <input type="number" id="input-ma" value="14" min="1" max="200" onchange="mudouAtivo()" style="width: 60px;" title="Período da Média Móvel">
+
+    <h2 id="titulo-ativo">BTC-USD</h2>
+    <h3 id="preco" style="color: cyan;">Carregando...</h3>
+    
+    <div id="grafico"></div>
+
+    <script>
+        // Variável global para guardar o layout e evitar piscadas bruscas
+        let layoutAtual = null;
+
+        function mudouAtivo() {
+            document.getElementById('titulo-ativo').innerText = "Carregando...";
+            atualizarGrafico();
+        }
+
+        async function atualizarGrafico() {
+            try {
+                // 1. AQUI ESTÁ A CORREÇÃO DO "RESET":
+                // Toda vez que essa função roda (seja pelo clique ou pelo timer),
+                // ela lê o que está selecionado NAQUELE MOMENTO na caixinha.
+                const seletor = document.getElementById('seletor-ativo');
+                const ativoSelecionado = seletor.value; 
+                const nomeAtivo = seletor.options[seletor.selectedIndex].text;
+
+                const periodo = document.getElementById('seletor-periodo').value;
+                const intervalo = document.getElementById('seletor-intervalo').value;
+                const maPeriod = document.getElementById('input-ma').value;
+
+                // Chama o backend
+                const response = await fetch(`http://127.0.0.1:5000/api/dados?ticker=${ativoSelecionado}&period=${periodo}&interval=${intervalo}&ma_period=${maPeriod}`);
+                if (!response.ok) throw new Error("Erro na API");
+                const dados = await response.json();
+
+                // Atualiza textos da tela
+                document.getElementById('titulo-ativo').innerText = nomeAtivo;
+                document.getElementById('preco').innerText = "R$ " + dados.preco_atual;
+
+                // --- CONFIGURAÇÃO DOS CANDLES ---
+                const candles = {
+                    x: dados.datas,
+                    close: dados.close,
+                    decreasing: {line: {color: '#ff3333', width: 1}},
+                    high: dados.high,
+                    increasing: {line: {color: '#00ff00', width: 1}},
+                    low: dados.low,
+                    open: dados.open,
+                    type: 'candlestick',
+                    name: 'Preço'
+                };
+
+                // --- CONFIGURAÇÃO DA MÉDIA ---
+                const mediaMovel = {
+                    x: dados.datas,
+                    y: dados.ma,
+                    type: 'scatter',
+                    mode: 'lines',
+                    line: {color: 'yellow', width: 1.5},
+                    name: dados.ma_label
+                };
+
+                // --- AQUI ESTÁ A CORREÇÃO VISUAL (TIRA OS BURANCOS) ---
+                const layout = {
+                    dragmode: 'pan', // Permite arrastar o gráfico
+                    margin: {r: 40, t: 30, b: 50, l: 60},
+                    showlegend: true,
+                    legend: {x: 0, y: 1, font: {color: 'white'}},
+                    
+                    xaxis: {
+                        type: 'category',  // <--- ESSA LINHA MÁGICA REMOVE OS ESPAÇOS VAZIOS
+                        rangeslider: {visible: false}, 
+                        gridcolor: '#333',
+                        nticks: 10, // Mostra apenas +- 10 datas para não poluir o eixo X
+                        tickangle: -20 // Inclina a data para caber melhor
+                    },
+                    
+                    yaxis: {
+                        gridcolor: '#333',
+                        autorange: true,
+                        fixedrange: false // Permite dar zoom vertical
+                    },
+                    paper_bgcolor: '#111',
+                    plot_bgcolor: '#111',
+                    font: {color: '#ddd'}
+                };
+
+                // Plotly.react é mais eficiente para atualizar dados sem recriar o gráfico do zero
+                Plotly.react('grafico', [candles, mediaMovel], layout);
+
+            } catch (erro) {
+                console.error("Erro:", erro);
+            }
+        }
+
+        // 1. Roda assim que abre a página
+        atualizarGrafico();
+
+        // 2. Roda a cada 60 segundos AUTOMATICAMENTE
+        setInterval(atualizarGrafico, 60000);
+    </script>
+</body>
+</html>
