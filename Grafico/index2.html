@@ -3,382 +3,929 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitor Financeiro Pro</title>
+    <title>FinSense - Análise de Mercado</title>
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
-        body { background-color: #111; color: white; font-family: sans-serif; text-align: center; }
-        
-        select, input {
-            padding: 10px;
-            font-size: 16px;
-            border-radius: 5px;
-            background-color: #222;
+        :root {
+            /* Light Mode (Default) */
+            --bg-main: #f0f2f5;
+            --bg-panel: #f8f9fa;
+            --text-main: #1a1a1a;
+            --text-muted: #666666;
+            --accent-primary: #0056b3;
+            --accent-hover: #004494;
+            --border-color: #e0e0e0;
+            --success-green: #008000;
+            --danger-red: #d32f2f;
+            --hero-bg: #0a192f;
+            --chart-bg: #ffffff;
+            --chart-grid: #e0e0e0;
+        }
+
+        [data-theme="dark"] {
+            /* Dark Mode */
+            --bg-main: #0a192f;
+            --bg-panel: #112240;
+            --text-main: #e6f1ff;
+            --text-muted: #8892b0;
+            --accent-primary: #4da3ff;
+            --accent-hover: #2d89ef;
+            --border-color: #233554;
+            --success-green: #64ffda;
+            --danger-red: #ff5f56;
+            --hero-bg: #020c1b;
+            --chart-bg: #112240;
+            --chart-grid: #233554;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            overflow-x: hidden;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* --- Header --- */
+        header {
+            background-color: transparent;
+            padding: 0 40px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: absolute;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .logo {
+            font-weight: 700;
+            font-size: 22px;
             color: white;
-            border: 1px solid #444;
-            margin-bottom: 10px;
+        }
+
+        nav a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            margin-left: 30px;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        nav a:hover { color: white; }
+
+        .theme-toggle {
+            background: none;
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
             cursor: pointer;
+            font-size: 18px;
+            margin-left: 25px;
+            padding: 5px 10px;
+            border-radius: 20px;
+            transition: all 0.3s;
         }
-        
-        #grafico { width: 95%; height: 600px; margin: 0 auto; }
-        
-        /* Ajuste para telas menores */
-        @media (max-width: 768px) {
-            #grafico { height: 400px; }
+        .theme-toggle:hover {
+            background-color: rgba(255,255,255,0.1);
+            border-color: white;
         }
+
+        /* --- Hero Section --- */
+        .hero {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: linear-gradient(135deg, #0a192f 0%, #112240 100%);
+            color: white;
+            padding: 0 20px;
+            position: relative;
+            overflow: hidden; /* Ensure particles don't overflow */
+        }
+
+        #hero-particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1; /* Behind content but above background */
+            pointer-events: none; /* Allow clicks to pass through */
+        }
+
+        .hero h1, .hero p, .hero .cta-button {
+            position: relative;
+            z-index: 2; /* Ensure content is above particles */
+        }
+
+        .hero h1 {
+            font-size: 56px;
+            font-weight: 800;
+            margin-bottom: 20px;
+            max-width: 900px;
+            line-height: 1.1;
+        }
+
+        .hero p {
+            font-size: 20px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 50px;
+            max-width: 700px;
+        }
+
+        .cta-button {
+            background-color: var(--accent-primary);
+            color: white;
+            padding: 18px 50px;
+            border-radius: 40px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 18px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 20px rgba(0, 86, 179, 0.4);
+        }
+
+        .cta-button:hover {
+            background-color: var(--accent-hover);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 25px rgba(0, 86, 179, 0.6);
+        }
+
+        .scroll-indicator {
+            position: absolute;
+            bottom: 30px;
+            font-size: 24px;
+            animation: bounce 2s infinite;
+            color: rgba(255, 255, 255, 0.5);
+            z-index: 2;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+            40% {transform: translateY(-10px);}
+            60% {transform: translateY(-5px);}
+        }
+
+        /* --- Dashboard Section --- */
+        #dashboard {
+            height: 100vh; /* Full viewport height */
+            display: flex;
+            flex-direction: column;
+            background-color: var(--bg-main);
+            overflow: hidden; /* Prevent body scroll within dashboard */
+        }
+
+        .dashboard-header {
+            padding: 10px 20px;
+            background-color: var(--hero-bg);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            height: 50px; /* Fixed height */
+            transition: background-color 0.3s;
+        }
+
+        .dashboard-title {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .main-container {
+            display: flex;
+            flex: 1;
+            padding: 10px;
+            gap: 10px;
+            background-color: var(--bg-main);
+            height: calc(100vh - 50px); /* Fill remaining height */
+            width: 100%;
+            max-width: 100%; /* Full width */
+            margin: 0;
+            box-sizing: border-box;
+        }
+
+        /* --- Chart Section (Left) --- */
+        .chart-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--bg-panel);
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+            height: 100%; /* Fill container */
+            overflow: hidden;
+        }
+
+        /* --- Chart Section (Left) --- */
+        .chart-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--bg-panel);
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+            height: 100%; /* Fill container */
+            overflow: hidden;
+        }
+
+        /* --- Market Section --- */
+        #mercado {
+            min-height: 100vh;
+            height: auto;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--bg-main);
+            padding-top: 70px; /* Header space */
+            padding-bottom: 40px;
+        }
+
+        .market-container {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .heatmap-container {
+            background-color: var(--chart-bg); /* Restored white background */
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* --- Market Grid Styles --- */
+        .market-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+            padding: 5px;
+        }
+
+        .market-card {
+            background-color: var(--bg-main);
+            border-radius: 8px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 75px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: default;
+            color: #ffffff !important; /* Force white text */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .market-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        /* Brighter, more readable colors */
+        .market-card.positive { 
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%); 
+            border: 1px solid #059669;
+        }
+        .market-card.negative { 
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); 
+            border: 1px solid #dc2626;
+        }
+
+        .card-symbol { 
+            font-size: 13px; 
+            font-weight: 800; 
+            margin-bottom: 2px; 
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+        .card-price { 
+            font-size: 13px; 
+            font-weight: 600; 
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+        .card-change { 
+            font-size: 12px; 
+            font-weight: 700; 
+            margin-top: auto; 
+            opacity: 1; 
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+
+        .heatmap-loading {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            border-radius: 12px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        [data-theme="dark"] .heatmap-loading {
+            background-color: rgba(17, 34, 64, 0.8);
+        }
+        .heatmap-loading.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .heatmap-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .chart-title-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .chart-title { font-size: 24px; font-weight: 700; color: var(--text-main); }
+        .price-display { font-size: 24px; font-weight: 400; color: var(--accent-primary); }
+
+        .controls { 
+            display: flex; 
+            gap: 15px; 
+            align-items: flex-end;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .control-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        select, input[type="number"] {
+            background-color: var(--bg-panel);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 13px;
+            outline: none;
+            cursor: pointer;
+            height: 32px;
+        }
+        select:hover, input:hover { border-color: #bbb; }
+
+        /* --- Sidebar (Right) --- */
+        .sidebar {
+            flex: none;
+            width: 320px;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--bg-panel);
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            height: 100%; /* Fill container */
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            background-color: var(--bg-panel);
+        }
+
+        /* Styled Selector */
+        .custom-select {
+            width: 100%;
+            padding: 10px 15px;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            background-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            height: auto; /* Override global select height */
+        }
+        .custom-select:hover {
+            border-color: var(--accent-primary);
+            background-color: var(--bg-panel);
+        }
+        .custom-select:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.1);
+        }
+
+        .asset-list { flex: 1; overflow-y: auto; max-height: 800px; }
+
+        .asset-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.2s;
+        }
+        .asset-item:hover { background-color: var(--bg-main); }
+        .asset-item.active { background-color: rgba(0, 86, 179, 0.1); border-left: 4px solid var(--accent-primary); }
+
+        .asset-info { display: flex; flex-direction: column; }
+        .asset-symbol { font-weight: 600; font-size: 14px; color: var(--text-main); }
+        .asset-name { font-size: 12px; color: var(--text-muted); }
+
+        .asset-price-info { text-align: right; }
+        .asset-price { font-weight: 500; font-size: 14px; color: var(--text-main); }
+        .asset-change { font-size: 12px; font-weight: 600; }
+        .positive { color: var(--success-green); }
+        .negative { color: var(--danger-red); }
+
+        /* --- Spinner --- */
+        .spinner {
+            border: 3px solid rgba(0, 86, 179, 0.1);
+            border-left-color: var(--accent-primary);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: 10px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .spinner.active { opacity: 1; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
     </style>
 </head>
 <body>
 
-    <h1>Monitor de Mercado</h1>
+    <header>
+        <div class="logo">FinSense</div>
+        <nav>
+            <a href="#">Início</a>
+            <a href="#dashboard">Plataforma</a>
+            <a href="#mercado">Mercado</a>
+            <button id="theme-btn" class="theme-toggle" onclick="toggleTheme()" title="Alternar Tema">🌙</button>
+        </nav>
+    </header>
 
-    <select id="seletor-ativo" onchange="mudouAtivo()">
-        <optgroup label="Criptomoedas">
-            <option value="BTC-USD" selected>Bitcoin (BTC)</option>
-            <option value="ETH-USD">Ethereum (ETH)</option>
-            <option value="SOL-USD">Solana (SOL)</option>
-            <option value="BNB-USD">Binance Coin (BNB)</option>
-            <option value="XRP-USD">XRP (XRP)</option>
-            <option value="ADA-USD">Cardano (ADA)</option>
-            <option value="DOGE-USD">Dogecoin (DOGE)</option>
-            <option value="AVAX-USD">Avalanche (AVAX)</option>
-            <option value="TRX-USD">Tron (TRX)</option>
-            <option value="DOT-USD">Polkadot (DOT)</option>
-            <option value="LINK-USD">Chainlink (LINK)</option>
-            <option value="MATIC-USD">Polygon (MATIC)</option>
-            <option value="LTC-USD">Litecoin (LTC)</option>
-            <option value="BCH-USD">Bitcoin Cash (BCH)</option>
-            <option value="UNI-USD">Uniswap (UNI)</option>
-            <option value="ATOM-USD">Cosmos (ATOM)</option>
-            <option value="XLM-USD">Stellar (XLM)</option>
-            <option value="ETC-USD">Ethereum Classic (ETC)</option>
-            <option value="FIL-USD">Filecoin (FIL)</option>
-            <option value="HBAR-USD">Hedera (HBAR)</option>
-            <option value="APT-USD">Aptos (APT)</option>
-            <option value="NEAR-USD">Near Protocol (NEAR)</option>
-            <option value="VET-USD">VeChain (VET)</option>
-            <option value="QNT-USD">Quant (QNT)</option>
-            <option value="MKR-USD">Maker (MKR)</option>
-            <option value="AAVE-USD">Aave (AAVE)</option>
-            <option value="ALGO-USD">Algorand (ALGO)</option>
-            <option value="GRT-USD">The Graph (GRT)</option>
-            <option value="FTM-USD">Fantom (FTM)</option>
-            <option value="SAND-USD">The Sandbox (SAND)</option>
-            <option value="EOS-USD">EOS (EOS)</option>
-            <option value="MANA-USD">Decentraland (MANA)</option>
-        </optgroup>
-        <optgroup label="Ações Brasil (Top 40)">
-            <option value="VALE3.SA">Vale (VALE3)</option>
-            <option value="PETR4.SA">Petrobras PN (PETR4)</option>
-            <option value="ITUB4.SA">Itaú Unibanco (ITUB4)</option>
-            <option value="BBDC4.SA">Bradesco PN (BBDC4)</option>
-            <option value="BBAS3.SA">Banco do Brasil (BBAS3)</option>
-            <option value="PETR3.SA">Petrobras ON (PETR3)</option>
-            <option value="ABEV3.SA">Ambev (ABEV3)</option>
-            <option value="WEGE3.SA">WEG (WEGE3)</option>
-            <option value="RENT3.SA">Localiza (RENT3)</option>
-            <option value="BPAC11.SA">BTG Pactual (BPAC11)</option>
-            <option value="SUZB3.SA">Suzano (SUZB3)</option>
-            <option value="ITSA4.SA">Itaúsa (ITSA4)</option>
-            <option value="HAPV3.SA">Hapvida (HAPV3)</option>
-            <option value="RDOR3.SA">Rede D'Or (RDOR3)</option>
-            <option value="JBSS3.SA">JBS (JBSS3)</option>
-            <option value="B3SA3.SA">B3 (B3SA3)</option>
-            <option value="GGBR4.SA">Gerdau (GGBR4)</option>
-            <option value="RADL3.SA">Raia Drogasil (RADL3)</option>
-            <option value="PRIO3.SA">Prio (PRIO3)</option>
-            <option value="RAIL3.SA">Rumo (RAIL3)</option>
-            <option value="VBBR3.SA">Vibra (VBBR3)</option>
-            <option value="ELET3.SA">Eletrobras (ELET3)</option>
-            <option value="UGPA3.SA">Ultrapar (UGPA3)</option>
-            <option value="CSAN3.SA">Cosan (CSAN3)</option>
-            <option value="BBSE3.SA">BB Seguridade (BBSE3)</option>
-            <option value="LREN3.SA">Lojas Renner (LREN3)</option>
-            <option value="VIVT3.SA">Vivo (VIVT3)</option>
-            <option value="EQTL3.SA">Equatorial (EQTL3)</option>
-            <option value="SBSP3.SA">Sabesp (SBSP3)</option>
-            <option value="CMIG4.SA">Cemig (CMIG4)</option>
-            <option value="CPLE6.SA">Copel (CPLE6)</option>
-            <option value="EMBR3.SA">Embraer (EMBR3)</option>
-            <option value="TIMS3.SA">TIM (TIMS3)</option>
-            <option value="CCRO3.SA">CCR (CCRO3)</option>
-            <option value="ASAI3.SA">Assaí (ASAI3)</option>
-            <option value="HYPE3.SA">Hypera (HYPE3)</option>
-            <option value="TOTS3.SA">Totvs (TOTS3)</option>
-            <option value="CSNA3.SA">CSN (CSNA3)</option>
-            <option value="MGLU3.SA">Magalu (MGLU3)</option>
-            <option value="VIIA3.SA">Via (VIIA3)</option>
-        </optgroup>
-        <optgroup label="Ações EUA (Top 40)">
-            <option value="AAPL">Apple (AAPL)</option>
-            <option value="MSFT">Microsoft (MSFT)</option>
-            <option value="GOOGL">Alphabet A (GOOGL)</option>
-            <option value="AMZN">Amazon (AMZN)</option>
-            <option value="NVDA">NVIDIA (NVDA)</option>
-            <option value="TSLA">Tesla (TSLA)</option>
-            <option value="META">Meta (META)</option>
-            <option value="BRK-B">Berkshire Hathaway (BRK-B)</option>
-            <option value="LLY">Eli Lilly (LLY)</option>
-            <option value="V">Visa (V)</option>
-            <option value="UNH">UnitedHealth (UNH)</option>
-            <option value="XOM">Exxon Mobil (XOM)</option>
-            <option value="JNJ">Johnson & Johnson (JNJ)</option>
-            <option value="JPM">JPMorgan Chase (JPM)</option>
-            <option value="PG">Procter & Gamble (PG)</option>
-            <option value="MA">Mastercard (MA)</option>
-            <option value="AVGO">Broadcom (AVGO)</option>
-            <option value="HD">Home Depot (HD)</option>
-            <option value="CVX">Chevron (CVX)</option>
-            <option value="MRK">Merck (MRK)</option>
-            <option value="ABBV">AbbVie (ABBV)</option>
-            <option value="PEP">PepsiCo (PEP)</option>
-            <option value="KO">Coca-Cola (KO)</option>
-            <option value="COST">Costco (COST)</option>
-            <option value="ADBE">Adobe (ADBE)</option>
-            <option value="WMT">Walmart (WMT)</option>
-            <option value="MCD">McDonald's (MCD)</option>
-            <option value="CSCO">Cisco (CSCO)</option>
-            <option value="CRM">Salesforce (CRM)</option>
-            <option value="PFE">Pfizer (PFE)</option>
-            <option value="TMO">Thermo Fisher (TMO)</option>
-            <option value="BAC">Bank of America (BAC)</option>
-            <option value="NFLX">Netflix (NFLX)</option>
-            <option value="ABT">Abbott (ABT)</option>
-            <option value="DHR">Danaher (DHR)</option>
-            <option value="CMCSA">Comcast (CMCSA)</option>
-            <option value="AMD">AMD (AMD)</option>
-            <option value="NKE">Nike (NKE)</option>
-            <option value="DIS">Disney (DIS)</option>
-            <option value="INTC">Intel (INTC)</option>
-        </optgroup>
-        <optgroup label="Índices Globais">
-            <option value="^BVSP">Ibovespa</option>
-            <option value="^GSPC">S&P 500</option>
-            <option value="^IXIC">Nasdaq Composite</option>
-            <option value="^DJI">Dow Jones Industrial</option>
-            <option value="^FTSE">FTSE 100</option>
-            <option value="^GDAXI">DAX Performance</option>
-            <option value="^FCHI">CAC 40</option>
-            <option value="^N225">Nikkei 225</option>
-            <option value="^HSI">Hang Seng</option>
-            <option value="GC=F">Ouro (Gold)</option>
-            <option value="CL=F">Petróleo (Crude Oil)</option>
-            <option value="SI=F">Prata (Silver)</option>
-            <option value="HG=F">Cobre (Copper)</option>
-            <option value="EURUSD=X">EUR/USD</option>
-            <option value="GBPUSD=X">GBP/USD</option>
-            <option value="JPY=X">USD/JPY</option>
-            <option value="BRL=X">USD/BRL</option>
-        </optgroup>
-    </select>
+    <!-- Hero Section -->
+    <section class="hero">
+        <canvas id="hero-particles"></canvas>
+        <h1>Inteligência Financeira<br>ao seu Alcance</h1>
+        <p>Monitore o mercado global em tempo real com a precisão que você precisa para tomar as melhores decisões.</p>
+        <a href="#dashboard" class="cta-button">Acessar Plataforma</a>
+        <a href="#dashboard" class="scroll-indicator" style="text-decoration: none; color: rgba(255,255,255,0.5);">↓</a>
+    </section>
 
-    <select id="seletor-periodo" onchange="mudouAtivo()">
-        <option value="1d">1 Dia</option>
-        <option value="5d">5 Dias</option>
-        <option value="1mo" selected>1 Mês</option>
-        <option value="3mo">3 Meses</option>
-        <option value="6mo">6 Meses</option>
-        <option value="1y">1 Ano</option>
-        <option value="2y">2 Anos</option>
-        <option value="5y">5 Anos</option>
-        <option value="max">Máximo</option>
-    </select>
+    <!-- Dashboard Section -->
+    <section id="dashboard">
+        <div class="dashboard-header">
+            <div class="dashboard-title">FinSense Dashboard</div>
+        </div>
 
-    <select id="seletor-intervalo" onchange="mudouAtivo()">
-        <option value="1m">1 Minuto</option>
-        <option value="5m">5 Minutos</option>
-        <option value="15m">15 Minutos</option>
-        <option value="30m">30 Minutos</option>
-        <option value="1h" selected>1 Hora</option>
-        <option value="1d">1 Dia</option>
-        <option value="1wk">1 Semana</option>
-        <option value="1mo">1 Mês</option>
-    </select>
+        <div class="main-container">
 
-    <input type="number" id="input-ma" value="14" min="1" max="200" onchange="mudouAtivo()" style="width: 60px;" title="Período da Média Móvel">
+            <!-- Chart Section (Left) -->
+            <div class="chart-section">
+                <div class="chart-header">
+                    <div class="chart-title-group">
+                        <span id="titulo-ativo" class="chart-title">BTC-USD</span>
+                        <span id="preco" class="price-display">---</span>
+                        <div id="chart-spinner" class="spinner"></div>
+                    </div>
+                    
+                    <div class="controls">
+                        <div class="control-group">
+                            <label class="control-label">Quantidade de Velas</label>
+                            <select id="seletor-periodo" onchange="mudouAtivo()">
+                                <option value="1d">1 Dia</option>
+                                <option value="5d">5 Dias</option>
+                                <option value="1mo" selected>1 Mês</option>
+                                <option value="3mo">3 Meses</option>
+                                <option value="6mo">6 Meses</option>
+                                <option value="1y">1 Ano</option>
+                                <option value="max">Máx</option>
+                            </select>
+                        </div>
 
-    <h2 id="titulo-ativo">BTC-USD</h2>
-    <h3 id="preco" style="color: cyan;">Carregando...</h3>
-    
-    <!-- Seletor de Categoria do Heatmap -->
-    <div style="margin-bottom: 5px;">
-        <label for="heatmap-category" style="margin-right: 10px;">Heatmap:</label>
-        <select id="heatmap-category" onchange="atualizarHeatmap()">
-            <option value="cripto" selected>Criptomoedas</option>
-            <option value="br">Ações Brasil (Top 40)</option>
-            <option value="us">Ações EUA (Top 40)</option>
-            <option value="indices">Índices Globais</option>
-        </select>
-    </div>
+                        <div class="control-group">
+                            <label class="control-label">Tempo</label>
+                            <select id="seletor-intervalo" onchange="mudouAtivo()">
+                                <option value="15m">15 Min</option>
+                                <option value="30m">30 Min</option>
+                                <option value="1h" selected>1 Hora</option>
+                                <option value="1d">1 Dia</option>
+                                <option value="1wk">1 Sem</option>
+                            </select>
+                        </div>
 
-    <!-- Container do Heatmap -->
-    <div id="heatmap" style="width: 95%; height: 400px; margin: 0 auto; margin-bottom: 20px;"></div>
+                        <div class="control-group">
+                            <label class="control-label">Média Móvel</label>
+                            <input type="number" id="input-ma" value="14" min="1" max="200" onchange="mudouAtivo()" title="Média Móvel" style="width: 80px;">
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="grafico" style="width: 100%; flex: 1; min-height: 0;"></div>
+            </div>
 
-    <div id="grafico"></div>
+            <!-- Sidebar (Right) -->
+            <div class="sidebar">
+                <div class="sidebar-header">
+                    <select id="list-category" onchange="carregarListaLateral()" class="custom-select">
+                        <option value="cripto" selected>Criptomoedas</option>
+                        <option value="br">Ações Brasil</option>
+                        <option value="us">Ações EUA</option>
+                        <option value="indices">Índices Globais</option>
+                    </select>
+                </div>
+                <div id="asset-list" class="asset-list">
+                    <div style="padding: 20px; text-align: center; color: #666;">Carregando...</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Market Section (Heatmap) -->
+    <section id="mercado">
+        <div class="market-container">
+            <div class="heatmap-container">
+                <div id="heatmap-loader" class="heatmap-loading">
+                    <div class="spinner active"></div>
+                    <span style="margin-left: 10px; font-weight: 600; color: var(--text-main);">Carregando Mercado...</span>
+                </div>
+                <div class="heatmap-header">
+                    <span class="section-title">Mapa de Mercado</span>
+                    <select id="heatmap-category" onchange="carregarHeatmap()" class="custom-select" style="width: 200px;">
+                        <option value="cripto" selected>Criptomoedas</option>
+                        <option value="br">Ações Brasil</option>
+                        <option value="us">Ações EUA</option>
+                        <option value="indices">Índices Globais</option>
+                    </select>
+                </div>
+
+                <!-- Plotly Treemap Container -->
+                <div id="heatmap-plot" style="width: 100%; height: 600px;"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Hidden Input for State -->
+    <input type="hidden" id="ativo-atual" value="BTC-USD">
+
+    <script src="particles.js"></script>
 
     <script>
-        // Variável global para guardar o layout e evitar piscadas bruscas
-        let layoutAtual = null;
+        // --- Configuração Plotly (Dynamic Theme) ---
+        const plotConfig = { responsive: true, displayModeBar: false };
 
-        function mudouAtivo(tickerOpcional) {
-            if (tickerOpcional) {
-                const seletor = document.getElementById('seletor-ativo');
-                // Verifica se o ticker existe no select
-                let existe = false;
-                for (let i = 0; i < seletor.options.length; i++) {
-                    if (seletor.options[i].value === tickerOpcional) {
-                        seletor.selectedIndex = i;
-                        existe = true;
-                        break;
-                    }
+        function getPlotLayout() {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const bgColor = isDark ? '#112240' : '#ffffff';
+            const gridColor = isDark ? '#233554' : '#e0e0e0';
+            const textColor = isDark ? '#e6f1ff' : '#1a1a1a';
+
+            return {
+                paper_bgcolor: bgColor,
+                plot_bgcolor: bgColor,
+                font: { color: textColor, family: 'Inter, sans-serif' },
+                margin: { t: 30, l: 60, r: 40, b: 60 },
+                xaxis: { 
+                    gridcolor: gridColor,
+                    tickangle: -30,
+                    automargin: true
+                },
+                yaxis: { 
+                    gridcolor: gridColor,
+                    autorange: true,
+                    fixedrange: false
                 }
-                if (!existe) {
-                    // Se não existe, adiciona temporariamente
-                    const option = document.createElement('option');
-                    option.value = tickerOpcional;
-                    option.text = tickerOpcional;
-                    seletor.add(option);
-                    seletor.value = tickerOpcional;
-                }
-            }
-            document.getElementById('titulo-ativo').innerText = "Carregando...";
-            atualizarGrafico();
+            };
         }
 
-        async function atualizarHeatmap() {
-            try {
-                const categoria = document.getElementById('heatmap-category').value;
-                // Mostra loading no titulo do heatmap (opcional, mas visualmente bom)
-                // Plotly.relayout('heatmap', {title: 'Carregando...'});
+        // --- Theme Logic ---
+        function toggleTheme() {
+            const html = document.documentElement;
+            const current = html.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+            
+            // Update button icon
+            const btn = document.getElementById('theme-btn');
+            btn.innerText = next === 'dark' ? '☀️' : '🌙';
 
+            // Refresh chart to apply new theme
+            mudouAtivo();
+            carregarHeatmap();
+        }
+
+        function loadTheme() {
+            const saved = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', saved);
+            const btn = document.getElementById('theme-btn');
+            if(btn) btn.innerText = saved === 'dark' ? '☀️' : '🌙';
+        }
+
+        function toggleSpinner(id, show) {
+            const el = document.getElementById(id);
+            if(el) {
+                if(show) el.classList.add('active');
+                else el.classList.remove('active');
+            }
+        }
+
+        // --- Sidebar Logic ---
+        async function carregarListaLateral() {
+            const listaDiv = document.getElementById('asset-list');
+            listaDiv.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">Atualizando...</div>';
+            
+            try {
+                const categoria = document.getElementById('list-category').value;
                 const response = await fetch(`http://127.0.0.1:5000/api/heatmap?type=${categoria}`);
                 const dados = await response.json();
 
-                const symbols = dados.map(d => d.symbol);
-                const labels = dados.map(d => d.label);
-                const changes = dados.map(d => d.change);
-                const parents = dados.map(d => ""); 
+                listaDiv.innerHTML = '';
 
-                // Cores baseadas na variação
-                const colors = changes.map(c => c >= 0 ? '#00cc00' : '#cc0000');
+                dados.forEach(ativo => {
+                    const item = document.createElement('div');
+                    item.className = 'asset-item';
+                    item.onclick = () => selecionarAtivo(ativo.symbol, item);
+                    
+                    const changeClass = ativo.change >= 0 ? 'positive' : 'negative';
+                    const changeSign = ativo.change >= 0 ? '+' : '';
+                    
+                    let currency = "$";
+                    if (ativo.symbol.endsWith('.SA') || ativo.symbol === 'BRL=X' || ativo.symbol === '^BVSP') {
+                        currency = "R$";
+                    }
+
+                    item.innerHTML = `
+                        <div class="asset-info">
+                            <span class="asset-symbol">${ativo.symbol}</span>
+                        </div>
+                        <div class="asset-price-info">
+                            <div class="asset-price">${currency} ${ativo.price.toFixed(2)}</div>
+                            <div class="asset-change ${changeClass}">${changeSign}${ativo.change.toFixed(2)}%</div>
+                        </div>
+                    `;
+                    listaDiv.appendChild(item);
+                });
+
+            } catch (e) {
+                console.error("Erro lista:", e);
+                listaDiv.innerHTML = '<div style="padding: 20px; text-align: center; color: red;">Erro ao carregar lista.</div>';
+            }
+        }
+
+        function selecionarAtivo(ticker, elementoDOM) {
+            document.getElementById('ativo-atual').value = ticker;
+            
+            document.querySelectorAll('.asset-item').forEach(el => el.classList.remove('active'));
+            if(elementoDOM) elementoDOM.classList.add('active');
+
+            mudouAtivo();
+        }
+
+        // --- Heatmap (Plotly Treemap) Logic ---
+        async function carregarHeatmap() {
+            const loader = document.getElementById('heatmap-loader');
+            
+            // Show loader
+            if(loader) loader.classList.add('active');
+            
+            try {
+                const categoria = document.getElementById('heatmap-category').value;
+                const response = await fetch(`http://127.0.0.1:5000/api/heatmap?type=${categoria}`);
+                const dados = await response.json();
+
+                if (!dados || dados.length === 0) {
+                    document.getElementById('heatmap-plot').innerHTML = '<div style="text-align: center; padding: 50px; color: var(--text-muted);">Sem dados disponíveis</div>';
+                    return;
+                }
+
+                // Prepare data for Treemap
+                const labels = [];
+                const parents = [];
+                const values = []; // Size (abs change)
+                const texts = [];  // Display text
+                const colors = []; // Colors based on change
+
+                dados.forEach(ativo => {
+                    labels.push(ativo.symbol);
+                    parents.push(categoria); // Group all under the category
+                    
+                    // Size: Absolute value of change (min size 0.1 to show even small changes)
+                    values.push(Math.abs(ativo.change) + 0.01); 
+                    
+                    const isPositive = ativo.change >= 0;
+                    const changeSign = isPositive ? '+' : '';
+                    
+                    let currency = "$";
+                    if (ativo.symbol.endsWith('.SA') || ativo.symbol === 'BRL=X' || ativo.symbol === '^BVSP') {
+                        currency = "R$";
+                    }
+
+                    // Custom text for the block
+                    texts.push(`${currency} ${ativo.price.toFixed(2)}<br>${changeSign}${ativo.change.toFixed(2)}%`);
+                    
+                    // Color logic
+                    if (isPositive) {
+                        // Green scale
+                        colors.push('#10b981'); 
+                    } else {
+                        // Red scale
+                        colors.push('#ef4444');
+                    }
+                });
+
+                // Add Root Node
+                labels.push(categoria);
+                parents.push("");
+                values.push(0);
+                texts.push("");
+                colors.push("transparent");
+
+                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                const textColor = isDark ? '#ffffff' : '#ffffff'; // Always white text inside blocks
 
                 const data = [{
                     type: "treemap",
                     labels: labels,
                     parents: parents,
-                    values: Array(dados.length).fill(1), 
+                    values: values,
+                    text: texts,
                     textinfo: "label+text",
-                    marker: {colors: colors},
-                    ids: symbols 
+                    hoverinfo: "label+text+value",
+                    marker: {
+                        colors: colors,
+                        line: { width: 1, color: isDark ? '#112240' : '#ffffff' }
+                    },
+                    textfont: {
+                        family: 'Inter, sans-serif',
+                        size: 14,
+                        color: textColor,
+                        weight: 700
+                    },
+                    tiling: {
+                        packing: 'squarify' // 'squarify', 'binary', 'dice', 'slice', 'slice-dice', 'dice-slice'
+                    }
                 }];
 
                 const layout = {
-                    title: `Heatmap 24h (%) - ${categoria.toUpperCase()}`,
-                    margin: {t: 30, l: 10, r: 10, b: 10},
-                    paper_bgcolor: '#111',
-                    font: {color: 'white'}
+                    margin: { t: 0, l: 0, r: 0, b: 0 },
+                    paper_bgcolor: 'transparent',
+                    font: { family: 'Inter, sans-serif' }
                 };
 
-                Plotly.react('heatmap', data, layout);
+                Plotly.newPlot('heatmap-plot', data, layout, { responsive: true, displayModeBar: false });
+                
+                // Click event removed as requested
 
-                // Adiciona evento de clique
-                const heatmapDiv = document.getElementById('heatmap');
-                heatmapDiv.on('plotly_click', function(data){
-                    const ticker = data.points[0].id;
-                    if (ticker) {
-                        mudouAtivo(ticker);
-                    }
-                });
-
-            } catch (erro) {
-                console.error("Erro no heatmap:", erro);
+            } catch (e) {
+                console.error("Erro heatmap:", e);
+                document.getElementById('heatmap-plot').innerHTML = '<div style="text-align: center; padding: 50px; color: red;">Erro ao carregar mercado</div>';
+            } finally {
+                // Hide loader
+                if(loader) loader.classList.remove('active');
             }
         }
 
-        async function atualizarGrafico() {
+        // --- Chart Logic ---
+        async function mudouAtivo() {
+            toggleSpinner('chart-spinner', true);
+            
+            const ativoSelecionado = document.getElementById('ativo-atual').value;
+            const periodo = document.getElementById('seletor-periodo').value;
+            const intervalo = document.getElementById('seletor-intervalo').value;
+            const maPeriod = document.getElementById('input-ma').value;
+
             try {
-                // 1. AQUI ESTÁ A CORREÇÃO DO "RESET":
-                // Toda vez que essa função roda (seja pelo clique ou pelo timer),
-                // ela lê o que está selecionado NAQUELE MOMENTO na caixinha.
-                const seletor = document.getElementById('seletor-ativo');
-                const ativoSelecionado = seletor.value; 
-                const nomeAtivo = seletor.options[seletor.selectedIndex].text;
-
-                const periodo = document.getElementById('seletor-periodo').value;
-                const intervalo = document.getElementById('seletor-intervalo').value;
-                const maPeriod = document.getElementById('input-ma').value;
-
-                // Chama o backend
                 const response = await fetch(`http://127.0.0.1:5000/api/dados?ticker=${ativoSelecionado}&period=${periodo}&interval=${intervalo}&ma_period=${maPeriod}`);
                 if (!response.ok) throw new Error("Erro na API");
                 const dados = await response.json();
 
-                // Atualiza textos da tela
-                document.getElementById('titulo-ativo').innerText = nomeAtivo;
-                document.getElementById('preco').innerText = "R$ " + dados.preco_atual;
+                document.getElementById('titulo-ativo').innerText = dados.symbol;
+                
+                let currencySymbol = "$";
+                if (dados.symbol.endsWith('.SA') || dados.symbol === 'BRL=X' || dados.symbol === '^BVSP') {
+                    currencySymbol = "R$";
+                }
+                const precoEl = document.getElementById('preco');
+                precoEl.innerText = `${currencySymbol} ${dados.preco_atual}`;
+                // precoEl.style.color = '#0056b3'; // Removed inline style to use CSS class/variable if needed, or keep default
 
-                // --- CONFIGURAÇÃO DOS CANDLES ---
+
                 const candles = {
                     x: dados.datas,
                     close: dados.close,
-                    decreasing: {line: {color: '#ff3333', width: 1}},
+                    decreasing: {line: {color: '#d32f2f', width: 1}},
                     high: dados.high,
-                    increasing: {line: {color: '#00ff00', width: 1}},
+                    increasing: {line: {color: '#008000', width: 1}},
                     low: dados.low,
                     open: dados.open,
                     type: 'candlestick',
                     name: 'Preço'
                 };
 
-                // --- CONFIGURAÇÃO DA MÉDIA ---
                 const mediaMovel = {
                     x: dados.datas,
                     y: dados.ma,
                     type: 'scatter',
                     mode: 'lines',
-                    line: {color: 'yellow', width: 1.5},
+                    mode: 'lines',
+                    line: {color: getComputedStyle(document.documentElement).getPropertyValue('--accent-primary').trim(), width: 1.5},
                     name: dados.ma_label
                 };
 
-                // --- AQUI ESTÁ A CORREÇÃO VISUAL (TIRA OS BURANCOS) ---
                 const layout = {
-                    dragmode: 'pan', // Permite arrastar o gráfico
-                    margin: {r: 40, t: 30, b: 50, l: 60},
-                    showlegend: true,
-                    legend: {x: 0, y: 1, font: {color: 'white'}},
-                    
+                    ...getPlotLayout(),
+                    dragmode: 'pan',
+                    showlegend: false,
                     xaxis: {
-                        type: 'category',  // <--- ESSA LINHA MÁGICA REMOVE OS ESPAÇOS VAZIOS
-                        rangeslider: {visible: false}, 
-                        gridcolor: '#333',
-                        nticks: 10, // Mostra apenas +- 10 datas para não poluir o eixo X
-                        tickangle: -20 // Inclina a data para caber melhor
-                    },
-                    
-                    yaxis: {
-                        gridcolor: '#333',
-                        autorange: true,
-                        fixedrange: false // Permite dar zoom vertical
-                    },
-                    paper_bgcolor: '#111',
-                    plot_bgcolor: '#111',
-                    font: {color: '#ddd'}
+                        ...getPlotLayout().xaxis,
+                        type: 'category',
+                        rangeslider: {visible: false},
+                        nticks: 8
+                    }
                 };
 
-                // Plotly.react é mais eficiente para atualizar dados sem recriar o gráfico do zero
-                Plotly.react('grafico', [candles, mediaMovel], layout);
+                Plotly.react('grafico', [candles, mediaMovel], layout, plotConfig);
 
             } catch (erro) {
                 console.error("Erro:", erro);
+                document.getElementById('titulo-ativo').innerText = "Erro ao carregar";
+            } finally {
+                toggleSpinner('chart-spinner', false);
             }
         }
 
-        // 1. Roda assim que abre a página
-        atualizarGrafico();
-        atualizarHeatmap();
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTheme();
+            carregarListaLateral();
+            carregarHeatmap();
+            mudouAtivo(); 
 
-        // 2. Roda a cada 60 segundos AUTOMATICAMENTE
-        setInterval(atualizarGrafico, 60000);
-        setInterval(atualizarHeatmap, 60000);
+            setInterval(() => mudouAtivo(), 60000);
+            setInterval(() => carregarListaLateral(), 60000);
+            setInterval(() => carregarHeatmap(), 60000);
+        });
     </script>
 </body>
 </html>
