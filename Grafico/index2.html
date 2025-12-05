@@ -785,7 +785,12 @@
             
             try {
                 const categoria = document.getElementById('heatmap-category').value;
-                const response = await fetch(`http://127.0.0.1:5000/api/heatmap?type=${categoria}`);
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
+                const response = await fetch(`http://127.0.0.1:5000/api/heatmap?type=${categoria}`, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                
                 const dados = await response.json();
 
                 if (!dados || dados.length === 0) {
@@ -800,9 +805,17 @@
                 const texts = [];  // Display text
                 const colors = []; // Colors based on change
 
+                const categoryNames = {
+                    'cripto': 'Criptomoedas',
+                    'br': 'Ações Brasil',
+                    'us': 'Ações EUA',
+                    'indices': 'Índices Globais'
+                };
+                const rootLabel = categoryNames[categoria] || "Mercado";
+
                 dados.forEach(ativo => {
                     labels.push(ativo.symbol);
-                    parents.push(categoria); // Group all under the category
+                    parents.push(rootLabel); // Group all under the category
                     
                     // Size: Absolute value of change (min size 0.1 to show even small changes)
                     values.push(Math.abs(ativo.change) + 0.01); 
@@ -829,7 +842,7 @@
                 });
 
                 // Add Root Node
-                labels.push(categoria);
+                labels.push(rootLabel);
                 parents.push("");
                 values.push(0);
                 texts.push("");
@@ -846,6 +859,7 @@
                     text: texts,
                     textinfo: "label+text",
                     hoverinfo: "label+text+value",
+                    pathbar: {visible: false}, // Hide the top bar "Mercado"
                     marker: {
                         colors: colors,
                         line: { width: 1, color: isDark ? '#112240' : '#ffffff' }

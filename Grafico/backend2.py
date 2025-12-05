@@ -2,9 +2,14 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 import yfinance as yf
 import pandas as pd
+import time
 
 app = Flask(__name__)
 CORS(app)
+
+# Cache simples em memória: { 'tipo': {'timestamp': 0, 'data': []} }
+CACHE_HEATMAP = {}
+CACHE_DURATION = 60  # segundos
 
 # Lista de ativos limpa e robusta
 ASSETS = {
@@ -69,6 +74,14 @@ def pegar_dados():
                 df.columns = df.columns.get_level_values(0)
 
         df.columns = [c.capitalize() for c in df.columns]
+
+        # Conversão de Fuso Horário para Brasil (Brasília)
+        if df.index.tz is None:
+            # Se não tiver timezone, assume UTC e converte
+            df.index = df.index.tz_localize('UTC').tz_convert('America/Sao_Paulo')
+        else:
+            # Se já tiver, apenas converte
+            df.index = df.index.tz_convert('America/Sao_Paulo')
         
         # Calcula a Média Móvel Dinâmica
         ma_col_name = f'MA{ma_period}'
@@ -109,14 +122,24 @@ def pegar_dados():
 def heatmap_data():
     try:
         tipo = request.args.get('type', 'cripto')
+        
+        # Verifica Cache
+        now = time.time()
+        if tipo in CACHE_HEATMAP:
+            last_update = CACHE_HEATMAP[tipo]['timestamp']
+            if now - last_update < CACHE_DURATION:
+                print(f"Retornando cache para {tipo}")
+                return jsonify(CACHE_HEATMAP[tipo]['data'])
+
         tickers = ASSETS.get(tipo, ASSETS['cripto'])
         
         dados_heatmap = []
         
         if tickers:
             string_tickers = " ".join(tickers)
-            # Use threads=False for stability
-            data = yf.download(string_tickers, period="5d", group_by='ticker', progress=False, threads=False, auto_adjust=False)
+            # Enable threads for speed, cache handles stability
+            print(f"Baixando dados para heatmap: {tipo}")
+            data = yf.download(string_tickers, period="5d", group_by='ticker', progress=False, threads=True, auto_adjust=False)
             
             if data.empty:
                 return jsonify([])
@@ -157,6 +180,12 @@ def heatmap_data():
                     })
                 except Exception as e:
                     continue
+        
+        # Atualiza Cache
+        CACHE_HEATMAP[tipo] = {
+            'timestamp': now,
+            'data': dados_heatmap
+        }
                 
         return jsonify(dados_heatmap)
 
