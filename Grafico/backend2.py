@@ -74,6 +74,13 @@ def pegar_dados():
         ma_col_name = f'MA{ma_period}'
         df[ma_col_name] = df['Close'].rolling(window=ma_period).mean()
         
+        # Calcula RSI (14 periodos padrao)
+        delta = df['Close'].diff()
+        gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
+        loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
+        rs = gain / loss
+        df['RSI'] = 100 - (100 / (1 + rs))
+        
         df.dropna(inplace=True)
 
         if df.empty:
@@ -88,6 +95,7 @@ def pegar_dados():
             "close": df['Close'].tolist(),
             "ma": df[ma_col_name].tolist(),
             "ma_label": f"MA {ma_period}",
+            "rsi": df['RSI'].tolist(),
             "preco_atual": f"{df['Close'].iloc[-1]:.2f}"
         }
         

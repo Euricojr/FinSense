@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FinSense - Análise de Mercado</title>
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-locale-pt-br-latest.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -508,6 +509,31 @@
         .spinner.active { opacity: 1; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
+        /* Checkbox Style */
+        input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border: 1px solid var(--text-muted);
+            border-radius: 4px;
+            background-color: var(--bg-panel);
+            cursor: pointer;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        input[type="checkbox"]:checked {
+            background-color: var(--accent-primary);
+            border-color: var(--accent-primary);
+        }
+        input[type="checkbox"]:checked::after {
+            content: '✔';
+            font-size: 12px;
+            color: white;
+        }
+
     </style>
 </head>
 <body>
@@ -577,6 +603,13 @@
                             <label class="control-label">Média Móvel</label>
                             <input type="number" id="input-ma" value="14" min="1" max="200" onchange="mudouAtivo()" title="Média Móvel" style="width: 80px;">
                         </div>
+
+                        <div class="control-group">
+                            <label class="control-label">RSI</label>
+                            <div style="display: flex; align-items: center; height: 32px;">
+                                <input type="checkbox" id="check-rsi" onchange="mudouAtivo()">
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
@@ -631,7 +664,7 @@
 
     <script>
         // --- Configuração Plotly (Dynamic Theme) ---
-        const plotConfig = { responsive: true, displayModeBar: false };
+        const plotConfig = { responsive: true, displayModeBar: false, locale: 'pt-BR' };
 
         function getPlotLayout() {
             const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
@@ -646,7 +679,7 @@
                 margin: { t: 30, l: 60, r: 40, b: 60 },
                 xaxis: { 
                     gridcolor: gridColor,
-                    tickangle: -30,
+                    // tickangle: -30, // Let Plotly handle angle
                     automargin: true
                 },
                 yaxis: { 
@@ -656,6 +689,7 @@
                 }
             };
         }
+
 
         // --- Theme Logic ---
         function toggleTheme() {
@@ -854,6 +888,7 @@
             const periodo = document.getElementById('seletor-periodo').value;
             const intervalo = document.getElementById('seletor-intervalo').value;
             const maPeriod = document.getElementById('input-ma').value;
+            const showRSI = document.getElementById('check-rsi').checked;
 
             try {
                 const response = await fetch(`http://127.0.0.1:5000/api/dados?ticker=${ativoSelecionado}&period=${periodo}&interval=${intervalo}&ma_period=${maPeriod}`);
@@ -868,10 +903,11 @@
                 }
                 const precoEl = document.getElementById('preco');
                 precoEl.innerText = `${currencySymbol} ${dados.preco_atual}`;
-                // precoEl.style.color = '#0056b3'; // Removed inline style to use CSS class/variable if needed, or keep default
 
+                const traces = [];
 
-                const candles = {
+                // Main Candle Trace
+                traces.push({
                     x: dados.datas,
                     close: dados.close,
                     decreasing: {line: {color: '#d32f2f', width: 1}},
@@ -881,17 +917,17 @@
                     open: dados.open,
                     type: 'candlestick',
                     name: 'Preço'
-                };
+                });
 
-                const mediaMovel = {
+                // Moving Average Trace
+                traces.push({
                     x: dados.datas,
                     y: dados.ma,
                     type: 'scatter',
                     mode: 'lines',
-                    mode: 'lines',
                     line: {color: getComputedStyle(document.documentElement).getPropertyValue('--accent-primary').trim(), width: 1.5},
                     name: dados.ma_label
-                };
+                });
 
                 const layout = {
                     ...getPlotLayout(),
@@ -899,13 +935,61 @@
                     showlegend: false,
                     xaxis: {
                         ...getPlotLayout().xaxis,
-                        type: 'category',
-                        rangeslider: {visible: false},
-                        nticks: 8
+                        type: 'date',
+                        rangeslider: {visible: false}
                     }
                 };
 
-                Plotly.react('grafico', [candles, mediaMovel], layout, plotConfig);
+                // RSI Logic
+                if (showRSI && dados.rsi) {
+                    // Adjust Main Axis
+                    layout.yaxis.domain = [0.3, 1];
+                    
+                    // RSI Axis
+                    layout.yaxis2 = {
+                        domain: [0, 0.2],
+                        range: [0, 100],
+                        gridcolor: layout.yaxis.gridcolor,
+                        fixedrange: true,
+                        tickfont: layout.yaxis.tickfont
+                    };
+
+                    // RSI Trace
+                    traces.push({
+                        x: dados.datas,
+                        y: dados.rsi,
+                        type: 'scatter',
+                        mode: 'lines',
+                        line: { color: '#9c27b0', width: 1.5 },
+                        name: 'RSI',
+                        yaxis: 'y2'
+                    });
+
+                    // Overbought/Oversold Lines
+                    const lineStyle = { color: 'rgba(128,128,128,0.5)', width: 1, dash: 'dash' };
+                    traces.push({
+                        x: [dados.datas[0], dados.datas[dados.datas.length-1]],
+                        y: [70, 70],
+                        type: 'scatter',
+                        mode: 'lines',
+                        line: lineStyle,
+                        showlegend: false,
+                        hoverinfo: 'none',
+                        yaxis: 'y2'
+                    });
+                    traces.push({
+                        x: [dados.datas[0], dados.datas[dados.datas.length-1]],
+                        y: [30, 30],
+                        type: 'scatter',
+                        mode: 'lines',
+                        line: lineStyle,
+                        showlegend: false,
+                        hoverinfo: 'none',
+                        yaxis: 'y2'
+                    });
+                }
+
+                Plotly.react('grafico', traces, layout, plotConfig);
 
             } catch (erro) {
                 console.error("Erro:", erro);
