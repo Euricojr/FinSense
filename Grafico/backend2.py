@@ -137,7 +137,7 @@ def heatmap_data():
         
         if tickers:
             string_tickers = " ".join(tickers)
-            # Enable threads for speed, cache handles stability
+            # Enable threads for speed, cache handles s
             print(f"Baixando dados para heatmap: {tipo}")
             data = yf.download(string_tickers, period="5d", group_by='ticker', progress=False, threads=True, auto_adjust=False)
             
