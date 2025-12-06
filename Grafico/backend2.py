@@ -75,13 +75,7 @@ def pegar_dados():
 
         df.columns = [c.capitalize() for c in df.columns]
 
-        # Conversão de Fuso Horário para Brasil (Brasília)
-        if df.index.tz is None:
-            # Se não tiver timezone, assume UTC e converte
-            df.index = df.index.tz_localize('UTC').tz_convert('America/Sao_Paulo')
-        else:
-            # Se já tiver, apenas converte
-            df.index = df.index.tz_convert('America/Sao_Paulo')
+
         
         # Calcula a Média Móvel Dinâmica
         ma_col_name = f'MA{ma_period}'

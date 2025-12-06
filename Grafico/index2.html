@@ -954,6 +954,65 @@
                     }
                 };
 
+                // --- Smart Tick Generation Logic ---
+                // Identify target number of ticks
+                const targetTicks = 8;
+                const len = dados.datas.length;
+                const step = Math.max(1, Math.floor(len / targetTicks));
+                
+                const tickVals = [];
+                const tickText = [];
+
+                for (let i = 0; i < len; i += step) {
+                    tickVals.push(dados.datas[i]); // In category axis, the value is the category name itself (the date string)
+                    
+                    // Format Label
+                    const dateObj = new Date(dados.datas[i]);
+                    let label = "";
+                    
+                    if (periodo.includes('d') || periodo.includes('wk') || periodo.includes('mo')) {
+                        // Daily/Weekly: "DD MMM" (e.g., "14 Nov")
+                        const day = dateObj.getDate();
+                        const month = dateObj.toLocaleDateString('pt-BR', { month: 'short' });
+                        // Remove dot from month if present
+                        label = `${day} ${month.replace('.', '')}`;
+                    } else if (periodo.includes('1d') || intervalo.includes('m') || intervalo.includes('h')) {
+                         // Intraday: "HH:mm" (e.g., "14:30") 
+                         // For longer intraday periods, might need date too
+                         if (periodo === '1d' || periodo === '5d') {
+                             const hours = String(dateObj.getHours()).padStart(2, '0');
+                             const mins = String(dateObj.getMinutes()).padStart(2, '0');
+                             const day = dateObj.getDate();
+                             if (periodo === '5d') { 
+                                label = `${day} - ${hours}:${mins}`; 
+                             } else {
+                                label = `${hours}:${mins}`;
+                             }
+                         } else {
+                            // Default fallback
+                            const day = dateObj.getDate();
+                            const month = dateObj.toLocaleDateString('pt-BR', { month: 'short' });
+                            label = `${day} ${month.replace('.', '')}`;
+                         }
+                    } else {
+                        // Default
+                        const day = dateObj.getDate();
+                        const month = dateObj.toLocaleDateString('pt-BR', { month: 'short' });
+                        label = `${day} ${month.replace('.', '')}`;
+                    }
+                    tickText.push(label);
+                }
+
+                // Standardize ALL charts (Crypto + Stocks) to use Category axis with CUSTOM TICKS.
+                layout.xaxis.type = 'category';
+                layout.xaxis.tickmode = 'array'; // Manual ticks
+                layout.xaxis.tickvals = tickVals;
+                layout.xaxis.ticktext = tickText;
+                // layout.xaxis.nticks is ignored when tickmode is array
+
+
+
+
                 // RSI Logic
                 if (showRSI && dados.rsi) {
                     // Adjust Main Axis
