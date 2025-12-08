@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FinSense - Análise de Mercado</title>
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
     <script src="https://cdn.plot.ly/plotly-locale-pt-br-latest.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             /* Light Mode (Default) */
@@ -40,17 +41,42 @@
             --chart-grid: #233554;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-        html { scroll-behavior: smooth; }
+        html {
+            scroll-behavior: smooth;
+        }
 
         body {
             background-color: var(--bg-main);
             color: var(--text-main);
-            font-family: 'Inter', sans-serif;
+            font-family: 'Manrope', sans-serif;
             font-size: 14px;
             overflow-x: hidden;
             transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* --- Scrollbar --- */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-panel);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent-primary);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-hover);
         }
 
         /* --- Header --- */
@@ -80,11 +106,14 @@
             font-weight: 500;
             transition: color 0.2s;
         }
-        nav a:hover { color: white; }
+
+        nav a:hover {
+            color: white;
+        }
 
         .theme-toggle {
             background: none;
-            border: 1px solid rgba(255,255,255,0.3);
+            border: 1px solid rgba(255, 255, 255, 0.3);
             color: white;
             cursor: pointer;
             font-size: 18px;
@@ -93,8 +122,9 @@
             border-radius: 20px;
             transition: all 0.3s;
         }
+
         .theme-toggle:hover {
-            background-color: rgba(255,255,255,0.1);
+            background-color: rgba(255, 255, 255, 0.1);
             border-color: white;
         }
 
@@ -110,7 +140,8 @@
             color: white;
             padding: 0 20px;
             position: relative;
-            overflow: hidden; /* Ensure particles don't overflow */
+            overflow: hidden;
+            /* Ensure particles don't overflow */
         }
 
         #hero-particles {
@@ -119,13 +150,18 @@
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: 1; /* Behind content but above background */
-            pointer-events: none; /* Allow clicks to pass through */
+            z-index: 1;
+            /* Behind content but above background */
+            pointer-events: none;
+            /* Allow clicks to pass through */
         }
 
-        .hero h1, .hero p, .hero .cta-button {
+        .hero h1,
+        .hero p,
+        .hero .cta-button {
             position: relative;
-            z-index: 2; /* Ensure content is above particles */
+            z-index: 2;
+            /* Ensure content is above particles */
         }
 
         .hero h1 {
@@ -171,18 +207,33 @@
         }
 
         @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
-            40% {transform: translateY(-10px);}
-            60% {transform: translateY(-5px);}
+
+            0%,
+            20%,
+            50%,
+            80%,
+            100% {
+                transform: translateY(0);
+            }
+
+            40% {
+                transform: translateY(-10px);
+            }
+
+            60% {
+                transform: translateY(-5px);
+            }
         }
 
         /* --- Dashboard Section --- */
         #dashboard {
-            height: 100vh; /* Full viewport height */
+            height: 100vh;
+            /* Full viewport height */
             display: flex;
             flex-direction: column;
             background-color: var(--bg-main);
-            overflow: hidden; /* Prevent body scroll within dashboard */
+            overflow: hidden;
+            /* Prevent body scroll within dashboard */
         }
 
         .dashboard-header {
@@ -192,8 +243,9 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            height: 50px; /* Fixed height */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            height: 50px;
+            /* Fixed height */
             transition: background-color 0.3s;
         }
 
@@ -208,9 +260,11 @@
             padding: 10px;
             gap: 10px;
             background-color: var(--bg-main);
-            height: calc(100vh - 50px); /* Fill remaining height */
+            height: calc(100vh - 50px);
+            /* Fill remaining height */
             width: 100%;
-            max-width: 100%; /* Full width */
+            max-width: 100%;
+            /* Full width */
             margin: 0;
             box-sizing: border-box;
         }
@@ -223,9 +277,10 @@
             background-color: var(--bg-panel);
             border-radius: 12px;
             padding: 15px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
             border: 1px solid var(--border-color);
-            height: 100%; /* Fill container */
+            height: 100%;
+            /* Fill container */
             overflow: hidden;
         }
 
@@ -237,9 +292,10 @@
             background-color: var(--bg-panel);
             border-radius: 12px;
             padding: 15px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
             border: 1px solid var(--border-color);
-            height: 100%; /* Fill container */
+            height: 100%;
+            /* Fill container */
             overflow: hidden;
         }
 
@@ -250,7 +306,8 @@
             display: flex;
             flex-direction: column;
             background-color: var(--bg-main);
-            padding-top: 70px; /* Header space */
+            padding-top: 70px;
+            /* Header space */
             padding-bottom: 40px;
         }
 
@@ -263,10 +320,10 @@
         }
 
         .heatmap-container {
-            background-color: var(--chart-bg); /* Restored white background */
+            background-color: var(--bg-panel);
             border-radius: 12px;
             padding: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
             border: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
@@ -291,44 +348,48 @@
             height: 75px;
             transition: transform 0.2s, box-shadow 0.2s;
             cursor: default;
-            color: #ffffff !important; /* Force white text */
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            color: #ffffff !important;
+            /* Force white text */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
             position: relative;
             overflow: hidden;
         }
 
         .market-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
         /* Brighter, more readable colors */
-        .market-card.positive { 
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%); 
+        .market-card.positive {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             border: 1px solid #059669;
         }
-        .market-card.negative { 
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); 
+
+        .market-card.negative {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
             border: 1px solid #dc2626;
         }
 
-        .card-symbol { 
-            font-size: 13px; 
-            font-weight: 800; 
-            margin-bottom: 2px; 
-            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        .card-symbol {
+            font-size: 13px;
+            font-weight: 800;
+            margin-bottom: 2px;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
         }
-        .card-price { 
-            font-size: 13px; 
-            font-weight: 600; 
-            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+
+        .card-price {
+            font-size: 13px;
+            font-weight: 600;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
         }
-        .card-change { 
-            font-size: 12px; 
-            font-weight: 700; 
-            margin-top: auto; 
-            opacity: 1; 
-            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+
+        .card-change {
+            font-size: 12px;
+            font-weight: 700;
+            margin-top: auto;
+            opacity: 1;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
         }
 
         .heatmap-loading {
@@ -347,9 +408,11 @@
             pointer-events: none;
             transition: opacity 0.3s;
         }
+
         [data-theme="dark"] .heatmap-loading {
             background-color: rgba(17, 34, 64, 0.8);
         }
+
         .heatmap-loading.active {
             opacity: 1;
             pointer-events: all;
@@ -383,12 +446,21 @@
             gap: 15px;
         }
 
-        .chart-title { font-size: 24px; font-weight: 700; color: var(--text-main); }
-        .price-display { font-size: 24px; font-weight: 400; color: var(--accent-primary); }
+        .chart-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
 
-        .controls { 
-            display: flex; 
-            gap: 15px; 
+        .price-display {
+            font-size: 24px;
+            font-weight: 400;
+            color: var(--accent-primary);
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
             align-items: flex-end;
         }
 
@@ -396,6 +468,7 @@
             display: flex;
             flex-direction: column;
             gap: 5px;
+            align-items: center;
         }
 
         .control-label {
@@ -403,9 +476,11 @@
             font-weight: 600;
             color: var(--text-muted);
             text-transform: uppercase;
+            text-align: center;
         }
 
-        select, input[type="number"] {
+        select,
+        input[type="number"] {
             background-color: var(--bg-panel);
             color: var(--text-main);
             border: 1px solid var(--border-color);
@@ -416,8 +491,13 @@
             outline: none;
             cursor: pointer;
             height: 32px;
+            text-align: center;
         }
-        select:hover, input:hover { border-color: #bbb; }
+
+        select:hover,
+        input:hover {
+            border-color: #bbb;
+        }
 
         /* --- Sidebar (Right) --- */
         .sidebar {
@@ -427,10 +507,11 @@
             flex-direction: column;
             background-color: var(--bg-panel);
             border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
             border: 1px solid var(--border-color);
             overflow: hidden;
-            height: 100%; /* Fill container */
+            height: 100%;
+            /* Fill container */
         }
 
         .sidebar-header {
@@ -456,19 +537,26 @@
             background-size: 16px;
             cursor: pointer;
             transition: all 0.2s;
-            height: auto; /* Override global select height */
+            height: auto;
+            /* Override global select height */
         }
+
         .custom-select:hover {
             border-color: var(--accent-primary);
             background-color: var(--bg-panel);
         }
+
         .custom-select:focus {
             outline: none;
             border-color: var(--accent-primary);
             box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.1);
         }
 
-        .asset-list { flex: 1; overflow-y: auto; max-height: 800px; }
+        .asset-list {
+            flex: 1;
+            overflow-y: auto;
+            max-height: 800px;
+        }
 
         .asset-item {
             padding: 15px 20px;
@@ -479,18 +567,54 @@
             align-items: center;
             transition: background-color 0.2s;
         }
-        .asset-item:hover { background-color: var(--bg-main); }
-        .asset-item.active { background-color: rgba(0, 86, 179, 0.1); border-left: 4px solid var(--accent-primary); }
 
-        .asset-info { display: flex; flex-direction: column; }
-        .asset-symbol { font-weight: 600; font-size: 14px; color: var(--text-main); }
-        .asset-name { font-size: 12px; color: var(--text-muted); }
+        .asset-item:hover {
+            background-color: var(--bg-main);
+        }
 
-        .asset-price-info { text-align: right; }
-        .asset-price { font-weight: 500; font-size: 14px; color: var(--text-main); }
-        .asset-change { font-size: 12px; font-weight: 600; }
-        .positive { color: var(--success-green); }
-        .negative { color: var(--danger-red); }
+        .asset-item.active {
+            background-color: rgba(0, 86, 179, 0.1);
+            border-left: 4px solid var(--accent-primary);
+        }
+
+        .asset-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .asset-symbol {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-main);
+        }
+
+        .asset-name {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .asset-price-info {
+            text-align: right;
+        }
+
+        .asset-price {
+            font-weight: 500;
+            font-size: 14px;
+            color: var(--text-main);
+        }
+
+        .asset-change {
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .positive {
+            color: var(--success-green);
+        }
+
+        .negative {
+            color: var(--danger-red);
+        }
 
         /* --- Spinner --- */
         .spinner {
@@ -506,8 +630,20 @@
             opacity: 0;
             transition: opacity 0.2s;
         }
-        .spinner.active { opacity: 1; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .spinner.active {
+            opacity: 1;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
 
         /* Checkbox Style */
         input[type="checkbox"] {
@@ -524,18 +660,20 @@
             align-items: center;
             justify-content: center;
         }
+
         input[type="checkbox"]:checked {
             background-color: var(--accent-primary);
             border-color: var(--accent-primary);
         }
+
         input[type="checkbox"]:checked::after {
             content: '✔';
             font-size: 12px;
             color: white;
         }
-
     </style>
 </head>
+
 <body>
 
     <header>
@@ -573,7 +711,7 @@
                         <span id="preco" class="price-display">---</span>
                         <div id="chart-spinner" class="spinner"></div>
                     </div>
-                    
+
                     <div class="controls">
                         <div class="control-group">
                             <label class="control-label">Quantidade de Velas</label>
@@ -601,7 +739,8 @@
 
                         <div class="control-group">
                             <label class="control-label">Média Móvel</label>
-                            <input type="number" id="input-ma" value="14" min="1" max="200" onchange="mudouAtivo()" title="Média Móvel" style="width: 80px;">
+                            <input type="number" id="input-ma" value="14" min="1" max="200" onchange="mudouAtivo()"
+                                title="Média Móvel" style="width: 80px;">
                         </div>
 
                         <div class="control-group">
@@ -610,9 +749,16 @@
                                 <input type="checkbox" id="check-rsi" onchange="mudouAtivo()">
                             </div>
                         </div>
+
+                        <div class="control-group">
+                            <label class="control-label">MACD</label>
+                            <div style="display: flex; align-items: center; height: 32px;">
+                                <input type="checkbox" id="check-macd" onchange="mudouAtivo()">
+                            </div>
+                        </div>
                     </div>
                 </div>
-                
+
                 <div id="grafico" style="width: 100%; flex: 1; min-height: 0;"></div>
             </div>
 
@@ -639,11 +785,13 @@
             <div class="heatmap-container">
                 <div id="heatmap-loader" class="heatmap-loading">
                     <div class="spinner active"></div>
-                    <span style="margin-left: 10px; font-weight: 600; color: var(--text-main);">Carregando Mercado...</span>
+                    <span style="margin-left: 10px; font-weight: 600; color: var(--text-main);">Carregando
+                        Mercado...</span>
                 </div>
                 <div class="heatmap-header">
                     <span class="section-title">Mapa de Mercado</span>
-                    <select id="heatmap-category" onchange="carregarHeatmap()" class="custom-select" style="width: 200px;">
+                    <select id="heatmap-category" onchange="carregarHeatmap()" class="custom-select"
+                        style="width: 200px;">
                         <option value="cripto" selected>Criptomoedas</option>
                         <option value="br">Ações Brasil</option>
                         <option value="us">Ações EUA</option>
@@ -675,14 +823,14 @@
             return {
                 paper_bgcolor: bgColor,
                 plot_bgcolor: bgColor,
-                font: { color: textColor, family: 'Inter, sans-serif' },
+                font: { color: textColor, family: 'Manrope, sans-serif' },
                 margin: { t: 30, l: 60, r: 40, b: 60 },
-                xaxis: { 
+                xaxis: {
                     gridcolor: gridColor,
                     // tickangle: -30, // Let Plotly handle angle
                     automargin: true
                 },
-                yaxis: { 
+                yaxis: {
                     gridcolor: gridColor,
                     autorange: true,
                     fixedrange: false
@@ -696,10 +844,10 @@
             const html = document.documentElement;
             const current = html.getAttribute('data-theme');
             const next = current === 'dark' ? 'light' : 'dark';
-            
+
             html.setAttribute('data-theme', next);
             localStorage.setItem('theme', next);
-            
+
             // Update button icon
             const btn = document.getElementById('theme-btn');
             btn.innerText = next === 'dark' ? '☀️' : '🌙';
@@ -713,13 +861,13 @@
             const saved = localStorage.getItem('theme') || 'light';
             document.documentElement.setAttribute('data-theme', saved);
             const btn = document.getElementById('theme-btn');
-            if(btn) btn.innerText = saved === 'dark' ? '☀️' : '🌙';
+            if (btn) btn.innerText = saved === 'dark' ? '☀️' : '🌙';
         }
 
         function toggleSpinner(id, show) {
             const el = document.getElementById(id);
-            if(el) {
-                if(show) el.classList.add('active');
+            if (el) {
+                if (show) el.classList.add('active');
                 else el.classList.remove('active');
             }
         }
@@ -728,7 +876,7 @@
         async function carregarListaLateral() {
             const listaDiv = document.getElementById('asset-list');
             listaDiv.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">Atualizando...</div>';
-            
+
             try {
                 const categoria = document.getElementById('list-category').value;
                 const response = await fetch(`http://127.0.0.1:5000/api/heatmap?type=${categoria}`);
@@ -740,10 +888,10 @@
                     const item = document.createElement('div');
                     item.className = 'asset-item';
                     item.onclick = () => selecionarAtivo(ativo.symbol, item);
-                    
+
                     const changeClass = ativo.change >= 0 ? 'positive' : 'negative';
                     const changeSign = ativo.change >= 0 ? '+' : '';
-                    
+
                     let currency = "$";
                     if (ativo.symbol.endsWith('.SA') || ativo.symbol === 'BRL=X' || ativo.symbol === '^BVSP') {
                         currency = "R$";
@@ -763,15 +911,15 @@
 
             } catch (e) {
                 console.error("Erro lista:", e);
-                listaDiv.innerHTML = '<div style="padding: 20px; text-align: center; color: red;">Erro ao carregar lista.</div>';
+                listaDiv.innerHTML = '<div style="padding: 20px; text-align: center; color: red;">Erro ao carregar lista.<br>Recarregue a página</div>';
             }
         }
 
         function selecionarAtivo(ticker, elementoDOM) {
             document.getElementById('ativo-atual').value = ticker;
-            
+
             document.querySelectorAll('.asset-item').forEach(el => el.classList.remove('active'));
-            if(elementoDOM) elementoDOM.classList.add('active');
+            if (elementoDOM) elementoDOM.classList.add('active');
 
             mudouAtivo();
         }
@@ -779,10 +927,10 @@
         // --- Heatmap (Plotly Treemap) Logic ---
         async function carregarHeatmap() {
             const loader = document.getElementById('heatmap-loader');
-            
+
             // Show loader
-            if(loader) loader.classList.add('active');
-            
+            if (loader) loader.classList.add('active');
+
             try {
                 const categoria = document.getElementById('heatmap-category').value;
                 const controller = new AbortController();
@@ -790,7 +938,7 @@
 
                 const response = await fetch(`http://127.0.0.1:5000/api/heatmap?type=${categoria}`, { signal: controller.signal });
                 clearTimeout(timeoutId);
-                
+
                 const dados = await response.json();
 
                 if (!dados || dados.length === 0) {
@@ -816,13 +964,13 @@
                 dados.forEach(ativo => {
                     labels.push(ativo.symbol);
                     parents.push(rootLabel); // Group all under the category
-                    
+
                     // Size: Absolute value of change (min size 0.1 to show even small changes)
-                    values.push(Math.abs(ativo.change) + 0.01); 
-                    
+                    values.push(Math.abs(ativo.change) + 0.01);
+
                     const isPositive = ativo.change >= 0;
                     const changeSign = isPositive ? '+' : '';
-                    
+
                     let currency = "$";
                     if (ativo.symbol.endsWith('.SA') || ativo.symbol === 'BRL=X' || ativo.symbol === '^BVSP') {
                         currency = "R$";
@@ -830,15 +978,24 @@
 
                     // Custom text for the block
                     texts.push(`${currency} ${ativo.price.toFixed(2)}<br>${changeSign}${ativo.change.toFixed(2)}%`);
-                    
+
                     // Color logic
                     if (isPositive) {
                         // Green scale
-                        colors.push('#10b981'); 
+                        colors.push('#10b981');
                     } else {
                         // Red scale
                         colors.push('#ef4444');
                     }
+                });
+
+                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+                const textColor = '#ffffff'; // Always white text inside blocks
+                const textColors = [];
+
+                // Populate colors for assets
+                dados.forEach(() => {
+                    textColors.push(textColor);
                 });
 
                 // Add Root Node
@@ -848,8 +1005,14 @@
                 texts.push("");
                 colors.push("transparent");
 
-                const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-                const textColor = isDark ? '#ffffff' : '#ffffff'; // Always white text inside blocks
+                // Color for root node label
+                // If dark mode, match background (#112240) to hide it. Else white.
+                if (isDark) {
+                    textColors.push('#112240');
+                } else {
+                    textColors.push(textColor);
+                }
+
 
                 const data = [{
                     type: "treemap",
@@ -859,15 +1022,15 @@
                     text: texts,
                     textinfo: "label+text",
                     hoverinfo: "label+text+value",
-                    pathbar: {visible: false}, // Hide the top bar "Mercado"
+                    pathbar: { visible: false }, // Hide the top bar "Mercado"
                     marker: {
                         colors: colors,
                         line: { width: 1, color: isDark ? '#112240' : '#ffffff' }
                     },
                     textfont: {
-                        family: 'Inter, sans-serif',
+                        family: 'Manrope, sans-serif',
                         size: 14,
-                        color: textColor,
+                        color: textColors,
                         weight: 700
                     },
                     tiling: {
@@ -878,31 +1041,32 @@
                 const layout = {
                     margin: { t: 0, l: 0, r: 0, b: 0 },
                     paper_bgcolor: 'transparent',
-                    font: { family: 'Inter, sans-serif' }
+                    font: { family: 'Manrope, sans-serif' }
                 };
 
                 Plotly.newPlot('heatmap-plot', data, layout, { responsive: true, displayModeBar: false });
-                
-        
+
+
 
             } catch (e) {
                 console.error("Erro heatmap:", e);
-                document.getElementById('heatmap-plot').innerHTML = '<div style="text-align: center; padding: 50px; color: red;">Erro ao carregar mercado</div>';
+                document.getElementById('heatmap-plot').innerHTML = '<div style="text-align: center; padding: 50px; color: red;">Erro ao carregar mercado<br>Recarregue a página</div>';
             } finally {
                 // Hide loader
-                if(loader) loader.classList.remove('active');
+                if (loader) loader.classList.remove('active');
             }
         }
 
         // --- Chart Logic ---
         async function mudouAtivo() {
             toggleSpinner('chart-spinner', true);
-            
+
             const ativoSelecionado = document.getElementById('ativo-atual').value;
             const periodo = document.getElementById('seletor-periodo').value;
             const intervalo = document.getElementById('seletor-intervalo').value;
             const maPeriod = document.getElementById('input-ma').value;
             const showRSI = document.getElementById('check-rsi').checked;
+            const showMACD = document.getElementById('check-macd').checked;
 
             try {
                 const response = await fetch(`http://127.0.0.1:5000/api/dados?ticker=${ativoSelecionado}&period=${periodo}&interval=${intervalo}&ma_period=${maPeriod}`);
@@ -910,7 +1074,7 @@
                 const dados = await response.json();
 
                 document.getElementById('titulo-ativo').innerText = dados.symbol;
-                
+
                 let currencySymbol = "$";
                 if (dados.symbol.endsWith('.SA') || dados.symbol === 'BRL=X' || dados.symbol === '^BVSP') {
                     currencySymbol = "R$";
@@ -924,9 +1088,9 @@
                 traces.push({
                     x: dados.datas,
                     close: dados.close,
-                    decreasing: {line: {color: '#d32f2f', width: 1}},
+                    decreasing: { line: { color: '#d32f2f', width: 1 } },
                     high: dados.high,
-                    increasing: {line: {color: '#008000', width: 1}},
+                    increasing: { line: { color: '#008000', width: 1 } },
                     low: dados.low,
                     open: dados.open,
                     type: 'candlestick',
@@ -939,7 +1103,7 @@
                     y: dados.ma,
                     type: 'scatter',
                     mode: 'lines',
-                    line: {color: getComputedStyle(document.documentElement).getPropertyValue('--accent-primary').trim(), width: 1.5},
+                    line: { color: getComputedStyle(document.documentElement).getPropertyValue('--accent-primary').trim(), width: 1.5 },
                     name: dados.ma_label
                 });
 
@@ -950,7 +1114,7 @@
                     xaxis: {
                         ...getPlotLayout().xaxis,
                         type: 'date',
-                        rangeslider: {visible: false}
+                        rangeslider: { visible: false }
                     }
                 };
 
@@ -959,17 +1123,17 @@
                 const targetTicks = 8;
                 const len = dados.datas.length;
                 const step = Math.max(1, Math.floor(len / targetTicks));
-                
+
                 const tickVals = [];
                 const tickText = [];
 
                 for (let i = 0; i < len; i += step) {
                     tickVals.push(dados.datas[i]); // In category axis, the value is the category name itself (the date string)
-                    
+
                     // Format Label
                     const dateObj = new Date(dados.datas[i]);
                     let label = "";
-                    
+
                     if (periodo.includes('d') || periodo.includes('wk') || periodo.includes('mo')) {
                         // Daily/Weekly: "DD MMM" (e.g., "14 Nov")
                         const day = dateObj.getDate();
@@ -977,23 +1141,23 @@
                         // Remove dot from month if present
                         label = `${day} ${month.replace('.', '')}`;
                     } else if (periodo.includes('1d') || intervalo.includes('m') || intervalo.includes('h')) {
-                         // Intraday: "HH:mm" (e.g., "14:30") 
-                         // For longer intraday periods, might need date too
-                         if (periodo === '1d' || periodo === '5d') {
-                             const hours = String(dateObj.getHours()).padStart(2, '0');
-                             const mins = String(dateObj.getMinutes()).padStart(2, '0');
-                             const day = dateObj.getDate();
-                             if (periodo === '5d') { 
-                                label = `${day} - ${hours}:${mins}`; 
-                             } else {
+                        // Intraday: "HH:mm" (e.g., "14:30") 
+                        // For longer intraday periods, might need date too
+                        if (periodo === '1d' || periodo === '5d') {
+                            const hours = String(dateObj.getHours()).padStart(2, '0');
+                            const mins = String(dateObj.getMinutes()).padStart(2, '0');
+                            const day = dateObj.getDate();
+                            if (periodo === '5d') {
+                                label = `${day} - ${hours}:${mins}`;
+                            } else {
                                 label = `${hours}:${mins}`;
-                             }
-                         } else {
+                            }
+                        } else {
                             // Default fallback
                             const day = dateObj.getDate();
                             const month = dateObj.toLocaleDateString('pt-BR', { month: 'short' });
                             label = `${day} ${month.replace('.', '')}`;
-                         }
+                        }
                     } else {
                         // Default
                         const day = dateObj.getDate();
@@ -1017,7 +1181,7 @@
                 if (showRSI && dados.rsi) {
                     // Adjust Main Axis
                     layout.yaxis.domain = [0.3, 1];
-                    
+
                     // RSI Axis
                     layout.yaxis2 = {
                         domain: [0, 0.2],
@@ -1041,7 +1205,7 @@
                     // Overbought/Oversold Lines
                     const lineStyle = { color: 'rgba(128,128,128,0.5)', width: 1, dash: 'dash' };
                     traces.push({
-                        x: [dados.datas[0], dados.datas[dados.datas.length-1]],
+                        x: [dados.datas[0], dados.datas[dados.datas.length - 1]],
                         y: [70, 70],
                         type: 'scatter',
                         mode: 'lines',
@@ -1051,7 +1215,7 @@
                         yaxis: 'y2'
                     });
                     traces.push({
-                        x: [dados.datas[0], dados.datas[dados.datas.length-1]],
+                        x: [dados.datas[0], dados.datas[dados.datas.length - 1]],
                         y: [30, 30],
                         type: 'scatter',
                         mode: 'lines',
@@ -1059,6 +1223,74 @@
                         showlegend: false,
                         hoverinfo: 'none',
                         yaxis: 'y2'
+                    });
+                }
+
+                // MACD Logic
+                if (showMACD && dados.macd_line) {
+                    // Adjust Main Axis if RSI is also valid
+                    if (showRSI) {
+                        layout.yaxis.domain = [0.45, 1];
+                        layout.yaxis2.domain = [0.25, 0.40];
+
+                        // MACD Axis
+                        layout.yaxis3 = {
+                            domain: [0, 0.20],
+                            gridcolor: layout.yaxis.gridcolor,
+                            fixedrange: true,
+                            tickfont: layout.yaxis.tickfont
+                        };
+                    } else {
+                        layout.yaxis.domain = [0.3, 1];
+                        // MACD Axis
+                        layout.yaxis3 = {
+                            domain: [0, 0.2],
+                            gridcolor: layout.yaxis.gridcolor,
+                            fixedrange: true,
+                            tickfont: layout.yaxis.tickfont
+                        };
+                    }
+
+
+                    const colors = {
+                        macd: '#2962FF',
+                        signal: '#FF6D00',
+                        histUp: '#26A69A',
+                        histDown: '#EF5350'
+                    };
+
+                    // MACD Histogram
+                    traces.push({
+                        x: dados.datas,
+                        y: dados.macd_hist,
+                        type: 'bar',
+                        name: 'Histograma',
+                        marker: {
+                            color: dados.macd_hist.map(v => v >= 0 ? colors.histUp : colors.histDown)
+                        },
+                        yaxis: 'y3'
+                    });
+
+                    // MACD Line
+                    traces.push({
+                        x: dados.datas,
+                        y: dados.macd_line,
+                        type: 'scatter',
+                        mode: 'lines',
+                        line: { color: colors.macd, width: 1.5 },
+                        name: 'MACD',
+                        yaxis: 'y3'
+                    });
+
+                    // Signal Line
+                    traces.push({
+                        x: dados.datas,
+                        y: dados.signal_line,
+                        type: 'scatter',
+                        mode: 'lines',
+                        line: { color: colors.signal, width: 1.5 },
+                        name: 'Sinal',
+                        yaxis: 'y3'
                     });
                 }
 
@@ -1077,7 +1309,7 @@
             loadTheme();
             carregarListaLateral();
             carregarHeatmap();
-            mudouAtivo(); 
+            mudouAtivo();
 
             setInterval(() => mudouAtivo(), 60000);
             setInterval(() => carregarListaLateral(), 60000);
@@ -1085,4 +1317,5 @@
         });
     </script>
 </body>
+
 </html>

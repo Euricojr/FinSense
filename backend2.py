@@ -75,7 +75,7 @@ def pegar_dados():
 
         df.columns = [c.capitalize() for c in df.columns]
 
-
+################################ ATR, Volume, ADX , Estocastico
         
         # Calcula a Média Móvel Dinâmica
         ma_col_name = f'MA{ma_period}'
@@ -87,6 +87,14 @@ def pegar_dados():
         loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
         rs = gain / loss
         df['RSI'] = 100 - (100 / (1 + rs))
+
+        # Calcula MACD
+        # EMA 12 e 26
+        ema12 = df['Close'].ewm(span=12, adjust=False).mean()
+        ema26 = df['Close'].ewm(span=26, adjust=False).mean()
+        df['MACD_Line'] = ema12 - ema26
+        df['Signal_Line'] = df['MACD_Line'].ewm(span=9, adjust=False).mean()
+        df['MACD_Hist'] = df['MACD_Line'] - df['Signal_Line']
         
         df.dropna(inplace=True)
 
@@ -103,6 +111,9 @@ def pegar_dados():
             "ma": df[ma_col_name].tolist(),
             "ma_label": f"MA {ma_period}",
             "rsi": df['RSI'].tolist(),
+            "macd_line": df['MACD_Line'].tolist(),
+            "signal_line": df['Signal_Line'].tolist(),
+            "macd_hist": df['MACD_Hist'].tolist(),
             "preco_atual": f"{df['Close'].iloc[-1]:.2f}"
         }
         
