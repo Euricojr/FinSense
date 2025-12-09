@@ -739,6 +739,145 @@
             flex: 1;
             white-space: nowrap;
         }
+
+        /* --- Market Movers Section --- */
+        .market-movers {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .mover-card {
+            background-color: var(--bg-panel);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .mover-card h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 16px;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .mover-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .mover-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .mover-item:last-child {
+            border-bottom: none;
+        }
+
+        .mover-symbol {
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .mover-price {
+            color: var(--text-muted);
+            font-size: 13px;
+            margin-right: 15px;
+        }
+
+        .mover-change {
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .change-positive {
+            color: #00c853;
+        }
+
+        .change-negative {
+            color: #d32f2f;
+        }
+
+
+
+        /* New Styles for Destaques Section */
+        #destaques {
+            padding: 40px;
+            /* Increased padding overall, effectively more separation */
+            margin-top: 30px;
+            /* Added explicit margin for "descer mais um pouco" */
+        }
+
+        .mover-card {
+            background-color: var(--bg-panel);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .destaques-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .destaques-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .mover-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+
+        .mover-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .mover-item:last-child {
+            border-bottom: none;
+        }
+
+        .mover-symbol {
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .mover-price {
+            color: var(--text-muted);
+            font-size: 13px;
+            margin-right: 15px;
+        }
+
+        .mover-change {
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .change-positive {
+            color: #00c853;
+        }
+
+        .change-negative {
+            color: #d32f2f;
+        }
     </style>
 </head>
 
@@ -857,6 +996,39 @@
                 <div id="asset-list" class="asset-list">
                     <div style="padding: 20px; text-align: center; color: #666;">Carregando...</div>
                 </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Destaques do Mercado Section -->
+    <section id="destaques">
+        <div class="destaques-header">
+            <span class="section-title">Destaques do Mercado</span>
+            <select id="mover-category-select" onchange="loadMarketMovers()" class="custom-select"
+                style="width: 200px;">
+                <option value="all">Todas as Categorias</option>
+                <option value="cripto" selected>Criptomoedas</option>
+                <option value="br">Ações Brasil</option>
+                <option value="us">Ações EUA</option>
+                <option value="indices">Índices Globais</option>
+            </select>
+        </div>
+        <div class="destaques-grid">
+            <div class="mover-card">
+                <h3
+                    style="margin-top: 0; margin-bottom: 15px; font-size: 16px; color: var(--text-muted); border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                    Maiores Altas (Top 5)</h3>
+                <ul id="gainers-list" class="mover-list">
+                    <li class="mover-item"><span class="mover-symbol">Carregando...</span></li>
+                </ul>
+            </div>
+            <div class="mover-card">
+                <h3
+                    style="margin-top: 0; margin-bottom: 15px; font-size: 16px; color: var(--text-muted); border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                    Maiores Baixas (Top 5)</h3>
+                <ul id="losers-list" class="mover-list">
+                    <li class="mover-item"><span class="mover-symbol">Carregando...</span></li>
+                </ul>
             </div>
         </div>
     </section>
@@ -1004,9 +1176,13 @@
                         currency = "R$";
                     }
 
+                    // Friendly Name Logic
+                    const displayName = ativo.name || ativo.symbol;
+
                     item.innerHTML = `
                         <div class="asset-info">
-                            <span class="asset-symbol">${ativo.symbol}</span>
+                            <span class="asset-symbol" style="font-size: 14px;">${displayName}</span>
+                            ${ativo.name ? `<span style="font-size: 11px; color: var(--text-muted);">${ativo.symbol}</span>` : ''}
                         </div>
                         <div class="asset-price-info">
                             <div class="asset-price">${currency} ${ativo.price.toFixed(2)}</div>
@@ -1084,7 +1260,10 @@
                     }
 
                     // Custom text for the block
-                    texts.push(`${currency} ${ativo.price.toFixed(2)}<br>${changeSign}${ativo.change.toFixed(2)}%`);
+                    // Use Name from backend if available
+                    const displayName = ativo.name || ativo.symbol;
+
+                    texts.push(`<b>${displayName}</b><br><span style="font-size:0.8em">${ativo.symbol}</span><br>${currency} ${ativo.price.toFixed(2)}<br>${changeSign}${ativo.change.toFixed(2)}%`);
 
                     // Color logic
                     if (isPositive) {
@@ -1127,7 +1306,7 @@
                     parents: parents,
                     values: values,
                     text: texts,
-                    textinfo: "label+text",
+                    textinfo: "text",
                     hoverinfo: "label+text+value",
                     pathbar: { visible: false }, // Hide the top bar "Mercado"
                     marker: {
@@ -1353,6 +1532,8 @@
                 // activeTypes reversed: Vol, Stoch, MACD, RSI
                 const reversedTypes = [...activeTypes].reverse();
 
+
+
                 // --- RSI Logic ---
                 if (showRSI && dados.rsi) {
                     const slotIndex = reversedTypes.indexOf('rsi');
@@ -1559,16 +1740,75 @@
             }
         }
 
+        // --- Market Movers Logic ---
+        async function loadMarketMovers() {
+            const listGainers = document.getElementById('gainers-list');
+            const listLosers = document.getElementById('losers-list');
+
+            try {
+                const category = document.getElementById('mover-category-select').value;
+                const response = await fetch(`http://127.0.0.1:5000/api/market-movers?type=${category}`);
+                if (!response.ok) throw new Error("API Error");
+                const data = await response.json();
+
+                renderMoverList('gainers-list', data.gainers);
+                renderMoverList('losers-list', data.losers);
+
+            } catch (e) {
+                console.error("Erro loading movers:", e);
+                const retryBtn = `<button onclick="loadMarketMovers()" style="background:none; border:none; color:var(--accent-primary); cursor:pointer; text-decoration:underline;">Recarregar</button>`;
+                const errorHtml = `<li class="mover-item" style="color:var(--text-muted); justify-content:center; flex-direction:column;">
+                                    <span>Erro ao carregar dados.</span>
+                                    ${retryBtn}
+                                   </li>`;
+
+                if (listGainers) listGainers.innerHTML = errorHtml;
+                if (listLosers) listLosers.innerHTML = errorHtml;
+            }
+        }
+
+        function renderMoverList(elementId, items) {
+            const list = document.getElementById(elementId);
+            if (!list) return;
+            list.innerHTML = '';
+
+            items.forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'mover-item';
+
+                const changeClass = item.change >= 0 ? 'change-positive' : 'change-negative';
+                const sign = item.change >= 0 ? '+' : '';
+
+                // Name Logic: Use name if available, else symbol
+                // Prioritize Name as main display
+                const displayName = item.name || item.symbol;
+
+                li.innerHTML = `
+            <div style="display:flex; flex-direction:column;">
+                <span class="mover-symbol" style="font-size:14px;">${displayName}</span>
+                ${item.name ? `<span style="font-size:11px; color:var(--text-muted);">${item.symbol}</span>` : ''}
+            </div>
+            <div>
+                <span class="mover-price">$${item.price.toFixed(2)}</span>
+                <span class="mover-change ${changeClass}">${sign}${item.change.toFixed(2)}%</span>
+            </div>
+        `;
+                list.appendChild(li);
+            });
+        }
+
         // Inicialização
         document.addEventListener('DOMContentLoaded', () => {
             loadTheme();
             carregarListaLateral();
             carregarHeatmap();
             mudouAtivo();
+            loadMarketMovers(); // New
 
             setInterval(() => mudouAtivo(), 60000);
             setInterval(() => carregarListaLateral(), 60000);
             setInterval(() => carregarHeatmap(), 60000);
+            setInterval(() => loadMarketMovers(), 60000); // New
         });
     </script>
 </body>

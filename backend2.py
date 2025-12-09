@@ -38,6 +38,49 @@ ASSETS = {
     ]
 }
 
+# Mapeamento de Nomes Amigáveis
+TICKER_NAMES = {
+    # Cripto
+    "BTC-USD": "Bitcoin", "ETH-USD": "Ethereum", "SOL-USD": "Solana", "BNB-USD": "Binance Coin",
+    "XRP-USD": "XRP", "ADA-USD": "Cardano", "DOGE-USD": "Dogecoin", "AVAX-USD": "Avalanche",
+    "TRX-USD": "Tron", "DOT-USD": "Polkadot", "LINK-USD": "Chainlink", "LTC-USD": "Litecoin",
+    "BCH-USD": "Bitcoin Cash", "ATOM-USD": "Cosmos", "XLM-USD": "Stellar", "ETC-USD": "Ethereum Classic",
+    "FIL-USD": "Filecoin", "HBAR-USD": "Hedera", "NEAR-USD": "Near Protocol", "VET-USD": "VeChain",
+    "QNT-USD": "Quant", "MKR-USD": "Maker", "AAVE-USD": "Aave", "ALGO-USD": "Algorand",
+    "SAND-USD": "The Sandbox", "EOS-USD": "EOS", "MANA-USD": "Decentraland",
+    
+    # BR Actions
+    "VALE3.SA": "Vale", "PETR4.SA": "Petrobras PN", "ITUB4.SA": "Itaú Unibanco", "BBDC4.SA": "Bradesco PN",
+    "BBAS3.SA": "Banco do Brasil", "PETR3.SA": "Petrobras ON", "ABEV3.SA": "Ambev", "WEGE3.SA": "WEG",
+    "RENT3.SA": "Localiza", "BPAC11.SA": "BTG Pactual", "SUZB3.SA": "Suzano", "ITSA4.SA": "Itaúsa",
+    "HAPV3.SA": "Hapvida", "RDOR3.SA": "Rede D'Or", "JBSS3.SA": "JBS", "B3SA3.SA": "B3",
+    "GGBR4.SA": "Gerdau", "RADL3.SA": "Raia Drogasil", "PRIO3.SA": "Prio", "RAIL3.SA": "Rumo",
+    "VBBR3.SA": "Vibra", "ELET3.SA": "Eletrobras", "UGPA3.SA": "Ultrapar", "CSAN3.SA": "Cosan",
+    "BBSE3.SA": "BB Seguridade", "LREN3.SA": "Lojas Renner", "VIVT3.SA": "Vivo", "EQTL3.SA": "Equatorial",
+    "SBSP3.SA": "Sabesp", "CMIG4.SA": "Cemig", "CPLE6.SA": "Copel", "EMBR3.SA": "Embraer",
+    "TIMS3.SA": "TIM", "CCRO3.SA": "CCR", "ASAI3.SA": "Assaí", "HYPE3.SA": "Hypera",
+    "TOTS3.SA": "Totvs", "CSNA3.SA": "CSN", "MGLU3.SA": "Magalu", "BHIA3.SA": "Casas Bahia",
+
+    # US Actions
+    "AAPL": "Apple", "MSFT": "Microsoft", "GOOGL": "Google", "AMZN": "Amazon",
+    "NVDA": "Nvidia", "TSLA": "Tesla", "META": "Meta", "BRK-B": "Berkshire",
+    "LLY": "Eli Lilly", "V": "Visa", "UNH": "UnitedHealth", "XOM": "Exxon Mobil",
+    "JNJ": "Johnson & Johnson", "JPM": "JPMorgan", "PG": "P&G", "MA": "Mastercard",
+    "AVGO": "Broadcom", "HD": "Home Depot", "CVX": "Chevron", "MRK": "Merck",
+    "ABBV": "AbbVie", "PEP": "PepsiCo", "KO": "Coca-Cola", "COST": "Costco",
+    "ADBE": "Adobe", "WMT": "Walmart", "MCD": "McDonald's", "CSCO": "Cisco",
+    "CRM": "Salesforce", "PFE": "Pfizer", "TMO": "Thermo Fisher", "BAC": "Bank of America",
+    "NFLX": "Netflix", "ABT": "Abbott", "DHR": "Danaher", "CMCSA": "Comcast",
+    "AMD": "AMD", "NKE": "Nike", "DIS": "Disney", "INTC": "Intel",
+
+    # Indices
+    "^BVSP": "Ibovespa", "^GSPC": "S&P 500", "^IXIC": "Nasdaq", "^DJI": "Dow Jones",
+    "^FTSE": "FTSE 100", "^GDAXI": "DAX", "^FCHI": "CAC 40", "^N225": "Nikkei 225",
+    "^HSI": "Hang Seng", "GC=F": "Ouro", "CL=F": "Petróleo WTI", "SI=F": "Prata",
+    "HG=F": "Cobre", "EURUSD=X": "EUR/USD", "GBPUSD=X": "GBP/USD", "JPY=X": "USD/JPY",
+    "BRL=X": "USD/BRL"
+}
+
 @app.route('/api/assets')
 def listar_ativos():
     """Retorna a lista completa de ativos para o autocomplete"""
@@ -198,6 +241,7 @@ def heatmap_data():
                     
                     dados_heatmap.append({
                         "symbol": ticker,
+                        "name": TICKER_NAMES.get(ticker, ticker),
                         "price": last_close,
                         "change": change_percent,
                         "label": f"{ticker}"
@@ -215,6 +259,86 @@ def heatmap_data():
 
     except Exception as e:
         print(f"Erro no heatmap: {e}")
+        return jsonify({"erro": str(e)}), 500
+
+@app.route('/api/market-movers')
+def market_movers():
+    try:
+        tipo = request.args.get('type', 'all')
+        
+        # 1. Select Asset List
+        todos_tickers = []
+        if tipo in ASSETS:
+            todos_tickers = ASSETS[tipo]
+        else:
+            # Flatten all
+            for cat, lista in ASSETS.items():
+                todos_tickers.extend(lista)
+            
+        # 2. Batch download (last 5 days)
+        data = yf.download(todos_tickers, period='5d', progress=False, threads=True, auto_adjust=False)
+        
+        # Determine if we have MultiIndex columns (Ticker as level)
+        # If multiple tickers, columns are (PriceType, Ticker) or similar.
+        # We need 'Close'.
+        if isinstance(data.columns, pd.MultiIndex):
+            closes = data['Close']
+        else:
+            # If single ticker or flat, might just be 'Close'
+            # But with list download it's usually MultiIndex or flat if just 1.
+            # Use 'Close' if available, else assume it IS close (unlikely).
+            if 'Close' in data:
+                closes = data['Close']
+            else:
+                closes = data
+
+        variacoes = []
+        
+        # Iterate over all tickers we think we have
+        # Columns of 'closes' should be tickers if MultiIndex was handled correctly by yf
+        # or we might need to check.
+        
+        for ticker in todos_tickers:
+            try:
+                # Get series
+                if ticker in closes.columns:
+                    series = closes[ticker].dropna()
+                else:
+                    continue
+
+                if len(series) >= 2:
+                    current = series.iloc[-1]
+                    prev = series.iloc[-2]
+                    # Avoid zero division
+                    if prev == 0: continue
+                    
+                    change_pct = ((current - prev) / prev) * 100
+                    
+                    variacoes.append({
+                        "symbol": ticker,
+                        "name": TICKER_NAMES.get(ticker, ticker),
+                        "price": float(current),
+                        "change": float(change_pct)
+                    })
+            except Exception:
+                continue
+
+        # 3. Sort
+        # Gainers: Descending
+        variacoes.sort(key=lambda x: x['change'], reverse=True)
+        gainers = variacoes[:5]
+        
+        # Losers: Ascending
+        variacoes.sort(key=lambda x: x['change'])
+        losers = variacoes[:5]
+        
+        return jsonify({
+            "gainers": gainers,
+            "losers": losers
+        })
+
+    except Exception as e:
+        print(f"Erro movers: {e}")
         return jsonify({"erro": str(e)}), 500
 
 if __name__ == '__main__':
