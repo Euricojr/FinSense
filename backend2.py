@@ -51,8 +51,8 @@ def listar_ativos():
 def pegar_dados():
     try:
         ticker = request.args.get('ticker', 'BTC-USD')
-        period = request.args.get('period', '1mo')
-        interval = request.args.get('interval', '1h')
+        period = request.args.get('period', '3mo')
+        interval = request.args.get('interval', '1d')
         ma_period = int(request.args.get('ma_period', 14))
         
         print(f"Buscando dados para: {ticker}, Periodo: {period}, Intervalo: {interval}, MA: {ma_period}") 
@@ -96,6 +96,22 @@ def pegar_dados():
         df['Signal_Line'] = df['MACD_Line'].ewm(span=9, adjust=False).mean()
         df['MACD_Hist'] = df['MACD_Line'] - df['Signal_Line']
         
+        # Calcula Estocastico Lento (14, 3, 3)
+        # Fast %K = 100 * ((Close - Lowest Low) / (Highest High - Lowest Low))
+        # Slow %K = SMA(Fast %K, 3)
+        # Slow %D = SMA(Slow %K, 3)
+        
+        low_min = df['Low'].rolling(window=14).min()
+        high_max = df['High'].rolling(window=14).max()
+        
+        # Evitar divisao por zero
+        denom = high_max - low_min
+        denom = denom.replace(0, 0.000001)
+        
+        df['Fast_K'] = 100 * ((df['Close'] - low_min) / denom)
+        df['Slow_K'] = df['Fast_K'].rolling(window=3).mean()
+        df['Slow_D'] = df['Slow_K'].rolling(window=3).mean()
+
         df.dropna(inplace=True)
 
         if df.empty:
@@ -114,6 +130,9 @@ def pegar_dados():
             "macd_line": df['MACD_Line'].tolist(),
             "signal_line": df['Signal_Line'].tolist(),
             "macd_hist": df['MACD_Hist'].tolist(),
+            "stoch_k": df['Slow_K'].tolist(),
+            "stoch_d": df['Slow_D'].tolist(),
+            "volume": df['Volume'].fillna(0).tolist(),
             "preco_atual": f"{df['Close'].iloc[-1]:.2f}"
         }
         

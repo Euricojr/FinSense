@@ -671,6 +671,74 @@
             font-size: 12px;
             color: white;
         }
+
+        /* --- Multiselect Dropdown --- */
+        .multiselect-container {
+            position: relative;
+            display: inline-block;
+            width: 200px;
+        }
+
+        .multiselect-btn {
+            background-color: var(--bg-panel);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            cursor: pointer;
+            width: 100%;
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .multiselect-btn::after {
+            content: '▼';
+            font-size: 10px;
+            margin-left: 10px;
+        }
+
+        .multiselect-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            margin-top: 5px;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            padding: 5px 0;
+        }
+
+        .multiselect-menu.active {
+            display: block;
+        }
+
+        .multiselect-item {
+            padding: 8px 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .multiselect-item:hover {
+            background-color: var(--bg-main);
+        }
+
+        .multiselect-item label {
+            cursor: pointer;
+            font-size: 13px;
+            color: var(--text-main);
+            flex: 1;
+            white-space: nowrap;
+        }
     </style>
 </head>
 
@@ -718,10 +786,10 @@
                             <select id="seletor-periodo" onchange="mudouAtivo()">
                                 <option value="1d">1 Dia</option>
                                 <option value="5d">5 Dias</option>
-                                <option value="1mo" selected>1 Mês</option>
+                                <option value="1mo">1 Mês</option>
                                 <option value="3mo">3 Meses</option>
                                 <option value="6mo">6 Meses</option>
-                                <option value="1y">1 Ano</option>
+                                <option value="1y" selected>1 Ano</option>
                                 <option value="max">Máx</option>
                             </select>
                         </div>
@@ -731,29 +799,43 @@
                             <select id="seletor-intervalo" onchange="mudouAtivo()">
                                 <option value="15m">15 Min</option>
                                 <option value="30m">30 Min</option>
-                                <option value="1h" selected>1 Hora</option>
-                                <option value="1d">1 Dia</option>
+                                <option value="1h">1 Hora</option>
+                                <option value="1d" selected>1 Dia</option>
                                 <option value="1wk">1 Sem</option>
                             </select>
                         </div>
 
-                        <div class="control-group">
-                            <label class="control-label">Média Móvel</label>
-                            <input type="number" id="input-ma" value="14" min="1" max="200" onchange="mudouAtivo()"
-                                title="Média Móvel" style="width: 80px;">
-                        </div>
+
 
                         <div class="control-group">
-                            <label class="control-label">RSI</label>
-                            <div style="display: flex; align-items: center; height: 32px;">
-                                <input type="checkbox" id="check-rsi" onchange="mudouAtivo()">
-                            </div>
-                        </div>
-
-                        <div class="control-group">
-                            <label class="control-label">MACD</label>
-                            <div style="display: flex; align-items: center; height: 32px;">
-                                <input type="checkbox" id="check-macd" onchange="mudouAtivo()">
+                            <label class="control-label">Indicadores</label>
+                            <div class="multiselect-container">
+                                <button class="multiselect-btn" onclick="toggleMultiselect()">Selecionar...</button>
+                                <div id="multiselect-menu" class="multiselect-menu">
+                                    <div class="multiselect-item" onclick="toggleCheck('check-ma')">
+                                        <input type="checkbox" id="check-ma" checked onchange="mudouAtivo()">
+                                        <label>Média Móvel</label>
+                                        <input type="number" id="input-ma" value="14" min="1" max="200"
+                                            onchange="mudouAtivo()" onclick="event.stopPropagation()"
+                                            style="width: 50px; padding: 2px 5px; font-size: 12px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-main);">
+                                    </div>
+                                    <div class="multiselect-item" onclick="toggleCheck('check-rsi')">
+                                        <input type="checkbox" id="check-rsi" onchange="mudouAtivo()">
+                                        <label>RSI</label>
+                                    </div>
+                                    <div class="multiselect-item" onclick="toggleCheck('check-macd')">
+                                        <input type="checkbox" id="check-macd" onchange="mudouAtivo()">
+                                        <label>MACD</label>
+                                    </div>
+                                    <div class="multiselect-item" onclick="toggleCheck('check-stoch')">
+                                        <input type="checkbox" id="check-stoch" onchange="mudouAtivo()">
+                                        <label>Estocástico</label>
+                                    </div>
+                                    <div class="multiselect-item" onclick="toggleCheck('check-vol')">
+                                        <input type="checkbox" id="check-vol" onchange="mudouAtivo()">
+                                        <label>Volume</label>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -871,6 +953,31 @@
                 else el.classList.remove('active');
             }
         }
+
+        // --- Multiselect Logic ---
+        function toggleMultiselect() {
+            const menu = document.getElementById('multiselect-menu');
+            menu.classList.toggle('active');
+        }
+
+        // Helper to toggle checkbox when clicking the row
+        function toggleCheck(id) {
+            // Prevent double toggle if clicking the checkbox itself
+            if (event.target.type === 'checkbox') return;
+
+            const check = document.getElementById(id);
+            check.checked = !check.checked;
+            mudouAtivo();
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function (event) {
+            const container = document.querySelector('.multiselect-container');
+            const menu = document.getElementById('multiselect-menu');
+            if (container && !container.contains(event.target)) {
+                menu.classList.remove('active');
+            }
+        });
 
         // --- Sidebar Logic ---
         async function carregarListaLateral() {
@@ -1067,6 +1174,10 @@
             const maPeriod = document.getElementById('input-ma').value;
             const showRSI = document.getElementById('check-rsi').checked;
             const showMACD = document.getElementById('check-macd').checked;
+            const showStoch = document.getElementById('check-stoch').checked;
+            const showVol = document.getElementById('check-vol').checked;
+            const checkMaEl = document.getElementById('check-ma');
+            const showMA = checkMaEl ? checkMaEl.checked : true; // Default to true if not found
 
             try {
                 const response = await fetch(`http://127.0.0.1:5000/api/dados?ticker=${ativoSelecionado}&period=${periodo}&interval=${intervalo}&ma_period=${maPeriod}`);
@@ -1098,14 +1209,16 @@
                 });
 
                 // Moving Average Trace
-                traces.push({
-                    x: dados.datas,
-                    y: dados.ma,
-                    type: 'scatter',
-                    mode: 'lines',
-                    line: { color: getComputedStyle(document.documentElement).getPropertyValue('--accent-primary').trim(), width: 1.5 },
-                    name: dados.ma_label
-                });
+                if (showMA) {
+                    traces.push({
+                        x: dados.datas,
+                        y: dados.ma,
+                        type: 'scatter',
+                        mode: 'lines',
+                        line: { color: getComputedStyle(document.documentElement).getPropertyValue('--accent-primary').trim(), width: 1.5 },
+                        name: dados.ma_label
+                    });
+                }
 
                 const layout = {
                     ...getPlotLayout(),
@@ -1177,14 +1290,76 @@
 
 
 
-                // RSI Logic
-                if (showRSI && dados.rsi) {
-                    // Adjust Main Axis
-                    layout.yaxis.domain = [0.3, 1];
 
-                    // RSI Axis
+
+                // Dynamic Layout Logic for Indicators
+                const indicators = [];
+                if (showRSI) indicators.push('rsi');
+                if (showMACD) indicators.push('macd');
+                if (showStoch) indicators.push('stoch');
+                if (showVol) indicators.push('vol');
+
+                const numIndicators = indicators.length;
+                let mainDomain = [0.1, 1];
+
+                if (numIndicators === 0) {
+                    mainDomain = [0, 1];
+                } else if (numIndicators === 1) {
+                    mainDomain = [0.3, 1];
+                } else if (numIndicators === 2) {
+                    mainDomain = [0.45, 1];
+                } else if (numIndicators === 3) {
+                    mainDomain = [0.55, 1];
+                } else if (numIndicators === 4) {
+                    mainDomain = [0.60, 1];
+                }
+
+                layout.yaxis.domain = mainDomain;
+
+                // Helper to get domain for a specific slot index (0 = bottom)
+                function getDomain(idx, total) {
+                    if (total === 1) return [0, 0.2];
+                    if (total === 2) {
+                        if (idx === 0) return [0, 0.2];
+                        if (idx === 1) return [0.25, 0.40];
+                    }
+                    if (total === 3) {
+                        if (idx === 0) return [0, 0.15];
+                        if (idx === 1) return [0.20, 0.35];
+                        if (idx === 2) return [0.40, 0.50];
+                    }
+                    if (total === 4) {
+                        if (idx === 0) return [0, 0.10];
+                        if (idx === 1) return [0.15, 0.25];
+                        if (idx === 2) return [0.30, 0.40];
+                        if (idx === 3) return [0.45, 0.55];
+                    }
+                    return [0, 0.2];
+                }
+
+                // Assign slots based on fixed order: Vol -> Stoch -> MACD -> RSI (Bottom to Top)
+                // Actually let's do: RSI (Top) -> MACD -> Stoch -> Vol (Bottom)
+                // Filter active indicators in that priority
+                const activeTypes = [];
+                if (showRSI) activeTypes.push('rsi');
+                if (showMACD) activeTypes.push('macd');
+                if (showStoch) activeTypes.push('stoch');
+                if (showVol) activeTypes.push('vol');
+                // In this list, index 0 is top-most subplot, index last is bottom-most.
+                // We need to map them to getDomain indices where 0 is bottom.
+                // So 'vol' (if present) should roughly take index 0 of getDomain? 
+
+                // Let's reverse so index 0 is bottom-most?
+                // activeTypes reversed: Vol, Stoch, MACD, RSI
+                const reversedTypes = [...activeTypes].reverse();
+
+                // --- RSI Logic ---
+                if (showRSI && dados.rsi) {
+                    const slotIndex = reversedTypes.indexOf('rsi');
+                    const rsiDomain = getDomain(slotIndex, numIndicators);
+
                     layout.yaxis2 = {
-                        domain: [0, 0.2],
+                        domain: rsiDomain,
                         range: [0, 100],
                         gridcolor: layout.yaxis.gridcolor,
                         fixedrange: true,
@@ -1226,30 +1401,21 @@
                     });
                 }
 
-                // MACD Logic
-                if (showMACD && dados.macd_line) {
-                    // Adjust Main Axis if RSI is also valid
-                    if (showRSI) {
-                        layout.yaxis.domain = [0.45, 1];
-                        layout.yaxis2.domain = [0.25, 0.40];
 
-                        // MACD Axis
-                        layout.yaxis3 = {
-                            domain: [0, 0.20],
-                            gridcolor: layout.yaxis.gridcolor,
-                            fixedrange: true,
-                            tickfont: layout.yaxis.tickfont
-                        };
-                    } else {
-                        layout.yaxis.domain = [0.3, 1];
-                        // MACD Axis
-                        layout.yaxis3 = {
-                            domain: [0, 0.2],
-                            gridcolor: layout.yaxis.gridcolor,
-                            fixedrange: true,
-                            tickfont: layout.yaxis.tickfont
-                        };
-                    }
+
+
+                // --- MACD Logic ---
+                if (showMACD && dados.macd_line) {
+                    const slotIndex = reversedTypes.indexOf('macd');
+                    const macdDomain = getDomain(slotIndex, numIndicators);
+
+                    // MACD Axis
+                    layout.yaxis3 = {
+                        domain: macdDomain,
+                        gridcolor: layout.yaxis.gridcolor,
+                        fixedrange: true,
+                        tickfont: layout.yaxis.tickfont
+                    };
 
 
                     const colors = {
@@ -1291,6 +1457,95 @@
                         line: { color: colors.signal, width: 1.5 },
                         name: 'Sinal',
                         yaxis: 'y3'
+                    });
+                }
+
+
+
+                // --- Slow Stochastic Logic ---
+                if (showStoch && dados.stoch_k) {
+                    const slotIndex = reversedTypes.indexOf('stoch');
+                    const stochDomain = getDomain(slotIndex, numIndicators);
+
+                    layout.yaxis4 = {
+                        domain: stochDomain,
+                        range: [0, 100],
+                        gridcolor: layout.yaxis.gridcolor,
+                        fixedrange: true,
+                        tickfont: layout.yaxis.tickfont
+                    };
+
+                    // Slow K
+                    traces.push({
+                        x: dados.datas,
+                        y: dados.stoch_k,
+                        type: 'scatter',
+                        mode: 'lines',
+                        line: { color: '#00E5FF', width: 1.5 },
+                        name: 'Stoch %K',
+                        yaxis: 'y4'
+                    });
+
+                    // Slow D
+                    traces.push({
+                        x: dados.datas,
+                        y: dados.stoch_d,
+                        type: 'scatter',
+                        mode: 'lines',
+                        line: { color: '#FF4081', width: 1.5 },
+                        name: 'Stoch %D',
+                        yaxis: 'y4'
+                    });
+
+                    // Limits 20/80
+                    const lineStyle = { color: 'rgba(128,128,128,0.5)', width: 1, dash: 'dash' };
+                    traces.push({
+                        x: [dados.datas[0], dados.datas[dados.datas.length - 1]],
+                        y: [80, 80],
+                        type: 'scatter',
+                        mode: 'lines',
+                        line: lineStyle,
+                        showlegend: false,
+                        hoverinfo: 'none',
+                        yaxis: 'y4'
+                    });
+                    traces.push({
+                        x: [dados.datas[0], dados.datas[dados.datas.length - 1]],
+                        y: [20, 20],
+                        type: 'scatter',
+                        mode: 'lines',
+                        line: lineStyle,
+                        showlegend: false,
+                        hoverinfo: 'none',
+                        yaxis: 'y4'
+                    });
+                }
+
+                // --- Volume Logic ---
+                if (showVol && dados.volume) {
+                    const slotIndex = reversedTypes.indexOf('vol');
+                    const volDomain = getDomain(slotIndex, numIndicators);
+
+                    layout.yaxis5 = {
+                        domain: volDomain,
+                        gridcolor: layout.yaxis.gridcolor,
+                        fixedrange: true,
+                        tickfont: layout.yaxis.tickfont
+                    };
+
+                    // Calculate colors (Green if Close > Open, else Red)
+                    const volColors = dados.close.map((c, i) => {
+                        const open = dados.open[i];
+                        return c >= open ? '#008000' : '#d32f2f';
+                    });
+
+                    traces.push({
+                        x: dados.datas,
+                        y: dados.volume,
+                        type: 'bar',
+                        name: 'Volume',
+                        marker: { color: volColors },
+                        yaxis: 'y5'
                     });
                 }
 
