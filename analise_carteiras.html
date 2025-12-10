@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinSense - Análise de Carteiras</title>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Light Mode (Default) */
+            --bg-main: #f0f2f5;
+            --bg-panel: #f8f9fa;
+            --text-main: #1a1a1a;
+            --text-muted: #666666;
+            --accent-primary: #0056b3;
+            --accent-hover: #004494;
+            --border-color: #e0e0e0;
+            --success-green: #008000;
+            --danger-red: #d32f2f;
+            --hero-bg: #0a192f;
+            --chart-bg: #ffffff;
+            --chart-grid: #e0e0e0;
+        }
+
+        [data-theme="dark"] {
+            /* Dark Mode */
+            --bg-main: #0a192f;
+            --bg-panel: #112240;
+            --text-main: #e6f1ff;
+            --text-muted: #8892b0;
+            --accent-primary: #4da3ff;
+            --accent-hover: #2d89ef;
+            --border-color: #233554;
+            --success-green: #64ffda;
+            --danger-red: #ff5f56;
+            --hero-bg: #020c1b;
+            --chart-bg: #112240;
+            --chart-grid: #233554;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-family: 'Manrope', sans-serif;
+            font-size: 14px;
+            overflow-x: hidden;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* --- Header --- */
+        header {
+            background-color: var(--hero-bg);
+            padding: 0 40px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            font-weight: 700;
+            font-size: 22px;
+            color: white;
+        }
+
+        nav a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            margin-left: 30px;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        nav a:hover {
+            color: white;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            cursor: pointer;
+            font-size: 18px;
+            margin-left: 25px;
+            padding: 5px 10px;
+            border-radius: 20px;
+            transition: all 0.3s;
+        }
+
+        .theme-toggle:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: white;
+        }
+
+        /* --- Main Content --- */
+        .content-container {
+            padding: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+            min-height: calc(100vh - 70px);
+        }
+
+        h1 {
+            font-size: 32px;
+            margin-bottom: 20px;
+            color: var(--text-main);
+        }
+
+        p {
+            font-size: 16px;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        .card {
+            background-color: var(--bg-panel);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-color);
+            margin-top: 20px;
+        }
+
+        .cta-button {
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-hover) 100%);
+            color: white;
+            padding: 14px 28px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 86, 179, 0.3);
+            border: none;
+            cursor: pointer;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 86, 179, 0.5);
+            filter: brightness(1.1);
+        }
+
+        .cta-button:active {
+            transform: translateY(1px);
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="logo">FinSense</div>
+        <nav>
+            <a href="index2.html">Início</a>
+            <a href="index2.html#dashboard">Plataforma</a>
+            <a href="index2.html#mercado">Mercado</a>
+            <a href="analise_carteiras.html" style="color: white; font-weight: 700;">Análise de Carteiras</a>
+            <button id="theme-btn" class="theme-toggle" onclick="toggleTheme()" title="Alternar Tema">🌙</button>
+        </nav>
+    </header>
+
+    <div class="content-container">
+        <h1>Análise de Carteiras</h1>
+        <p style="margin-bottom: 30px;">Analise a correlação entre os ativos da sua carteira para entender melhor a
+            diversificação e o risco.</p>
+
+        <!-- Input Section -->
+        <div class="card">
+            <h2 style="font-size: 18px; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;">Configuração da Carteira</h2>
+            
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+                
+                <!-- Autocomplete Asset Input -->
+                <div style="position: relative;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 8px;">Adicionar Ativos</label>
+                    
+                    <div id="tag-container" style="display: flex; flex-wrap: wrap; gap: 8px; border: 1px solid var(--border-color); padding: 8px; border-radius: 8px; background: var(--bg-main); min-height: 48px;">
+                        <!-- Tags will be inserted here -->
+                        <input type="text" id="asset-search" placeholder="Digite o nome ou ticker (ex: Petrobras...)" 
+                            style="flex: 1; border: none; outline: none; background: transparent; color: var(--text-main); min-width: 150px; font-size: 14px;">
+                    </div>
+
+                    <!-- Suggestions Dropdown -->
+                    <ul id="suggestions" style="
+                        position: absolute; 
+                        top: 100%; 
+                        left: 0; 
+                        width: 100%; 
+                        background: var(--bg-panel); 
+                        border: 1px solid var(--border-color); 
+                        border-radius: 8px; 
+                        list-style: none; 
+                        max-height: 200px; 
+                        overflow-y: auto; 
+                        display: none; 
+                        z-index: 1000; 
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                        margin-top: 5px;
+                        padding: 0;
+                    "></ul>
+                </div>
+
+                <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-end;">
+                    <div style="flex: 1; min-width: 180px;">
+                        <label style="display: block; font-weight: 600; margin-bottom: 8px;">Data Início</label>
+                        <input type="date" id="start-date" 
+                            style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-main); font-family: 'Manrope', sans-serif;">
+                    </div>
+                    <div style="flex: 1; min-width: 180px;">
+                        <label style="display: block; font-weight: 600; margin-bottom: 8px;">Data Fim</label>
+                        <input type="date" id="end-date" 
+                            style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-main); font-family: 'Manrope', sans-serif;">
+                    </div>
+                    <div style="min-width: 200px;">
+                        <button onclick="analisarCarteira()" class="cta-button" style="width: 100%; justify-content: center; height: 46px;">
+                            <span>🔍</span> Analisar Correlação
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="error-msg" style="color: var(--danger-red); margin-top: 15px; display: none; font-weight: 600;"></div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="results-area" style="display: none; margin-top: 30px;">
+            
+            <!-- Summary Card -->
+            <div class="card" style="border-left: 5px solid var(--accent-primary);">
+                <h3 style="margin-bottom: 10px;">Resumo da Análise</h3>
+                <div id="summary-text" style="font-size: 16px; font-weight: 500; text-align: justify; line-height: 1.6;"></div>
+                <div style="margin-top: 10px; font-size: 14px; color: var(--text-muted);">
+                    Média de Correlação Absoluta: <span id="avg-corr-val" style="font-weight: 700; color: var(--text-main);"></span>
+                </div>
+            </div>
+
+            <!-- Heatmap Card (Removed as requested) -->
+            <!-- 
+            <div class="card" style="min-height: 600px; display: flex; flex-direction: column;">
+                <div id="heatmap-plot" style="width: 100%; flex: 1;"></div>
+            </div>
+            -->
+        </div>
+        
+        <!-- Loading Overlay -->
+        <div id="loading" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center; flex-direction: column;">
+            <div style="border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid var(--accent-primary); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite;"></div>
+            <span style="color: white; margin-top: 15px; font-weight: 600; font-size: 18px;">Processando Dados...</span>
+        </div>
+
+    </div>
+
+    <!-- Script Plotly -->
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-locale-pt-br-latest.js"></script>
+
+    <script>
+        let allAssets = [];
+        let selectedTickers = [];
+
+        // Init Defaults
+        document.addEventListener('DOMContentLoaded', () => {
+             loadTheme();
+             fetchAssets();
+             setupAutocomplete();
+             
+             // Set default dates (Last 1 year)
+             const today = new Date();
+             const lastYear = new Date();
+             lastYear.setFullYear(today.getFullYear() - 1);
+             
+             document.getElementById('end-date').valueAsDate = today;
+             document.getElementById('start-date').valueAsDate = lastYear;
+        });
+
+        async function fetchAssets() {
+            try {
+                const response = await fetch('http://127.0.0.1:5001/api/assets');
+                if (response.ok) {
+                    allAssets = await response.json();
+                } else {
+                    console.error("Failed to load assets");
+                }
+            } catch (e) {
+                console.error("Error loading assets:", e);
+            }
+        }
+
+        function setupAutocomplete() {
+            const input = document.getElementById('asset-search');
+            const suggestions = document.getElementById('suggestions');
+            const tagContainer = document.getElementById('tag-container');
+
+            // Click anywhere to focus input
+            tagContainer.addEventListener('click', () => input.focus());
+
+            input.addEventListener('input', (e) => {
+                const query = e.target.value.toLowerCase().trim();
+                
+                if (query.length < 1) {
+                    suggestions.style.display = 'none';
+                    return;
+                }
+
+                const matches = allAssets.filter(asset => 
+                    asset.symbol.toLowerCase().includes(query) || 
+                    asset.name.toLowerCase().includes(query)
+                ).slice(0, 10); // Limit to 10
+
+                renderSuggestions(matches);
+            });
+
+            // Hide on click outside
+            document.addEventListener('click', (e) => {
+                if (!tagContainer.contains(e.target) && !suggestions.contains(e.target)) {
+                    suggestions.style.display = 'none';
+                }
+            });
+            
+            // Handle Backspace to remove last tag if input is empty
+            input.addEventListener('keydown', (e) => {
+                if(e.key === 'Backspace' && input.value === '' && selectedTickers.length > 0) {
+                    removeTag(selectedTickers[selectedTickers.length - 1]);
+                }
+            });
+        }
+
+        function renderSuggestions(matches) {
+            const suggestions = document.getElementById('suggestions');
+            suggestions.innerHTML = '';
+            
+            if (matches.length === 0) {
+                suggestions.style.display = 'none';
+                return;
+            }
+
+            matches.forEach(asset => {
+                const li = document.createElement('li');
+                li.style.padding = '10px 15px';
+                li.style.cursor = 'pointer';
+                li.style.borderBottom = '1px solid var(--border-color)';
+                li.style.fontSize = '14px';
+                li.style.color = 'var(--text-main)';
+                li.style.display = 'flex';
+                li.style.justifyContent = 'space-between';
+                
+                li.innerHTML = `
+                    <span><strong>${asset.symbol}</strong> - ${asset.name}</span>
+                    <span style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">${asset.category}</span>
+                `;
+                
+                li.onmouseover = () => li.style.backgroundColor = 'var(--bg-main)';
+                li.onmouseout = () => li.style.backgroundColor = 'transparent';
+                
+                li.onclick = () => {
+                    addTag(asset.symbol);
+                    suggestions.style.display = 'none';
+                    document.getElementById('asset-search').value = '';
+                    document.getElementById('asset-search').focus();
+                };
+                
+                suggestions.appendChild(li);
+            });
+            
+            suggestions.style.display = 'block';
+        }
+
+        function addTag(ticker) {
+            if (selectedTickers.includes(ticker)) return;
+            
+            selectedTickers.push(ticker);
+            renderTags();
+        }
+
+        function removeTag(ticker) {
+            selectedTickers = selectedTickers.filter(t => t !== ticker);
+            renderTags();
+        }
+
+        function renderTags() {
+            const container = document.getElementById('tag-container');
+            const input = document.getElementById('asset-search');
+            
+            // Remove all existing tags (but keep input)
+            const oldTags = container.querySelectorAll('.asset-tag');
+            oldTags.forEach(t => t.remove());
+
+            // Create new tags
+            selectedTickers.forEach(ticker => {
+                const tag = document.createElement('div');
+                tag.className = 'asset-tag';
+                tag.style.display = 'flex';
+                tag.style.alignItems = 'center';
+                tag.style.backgroundColor = 'rgba(0, 86, 179, 0.1)';
+                tag.style.color = 'var(--accent-primary)';
+                tag.style.padding = '4px 10px';
+                tag.style.borderRadius = '16px';
+                tag.style.fontSize = '13px';
+                tag.style.fontWeight = '600';
+                tag.style.cursor = 'default';
+                
+                tag.innerHTML = `
+                    ${ticker}
+                    <span onclick="removeTag('${ticker}')" style="margin-left: 8px; cursor: pointer; font-weight: bold; opacity: 0.6;">✕</span>
+                `;
+                
+                container.insertBefore(tag, input);
+            });
+        }
+
+        async function analisarCarteira() {
+            // Updated to use 'selectedTickers' array
+            
+            const startDate = document.getElementById('start-date').value;
+            const endDate = document.getElementById('end-date').value;
+            const errorDiv = document.getElementById('error-msg');
+            const loading = document.getElementById('loading');
+            const resultsArea = document.getElementById('results-area');
+
+            // Reset
+            errorDiv.style.display = 'none';
+            resultsArea.style.display = 'none';
+            
+            if (selectedTickers.length < 2) {
+                errorDiv.innerText = "Insira pelo menos 2 ativos para calcular correlação.";
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            if (!startDate || !endDate) {
+                errorDiv.innerText = "Por favor, selecione as datas.";
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            loading.style.display = 'flex';
+
+            try {
+                // Call Backend 3 (Port 5001)
+                const response = await fetch('http://127.0.0.1:5001/api/portfolio/correlation', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        tickers: selectedTickers,
+                        start_date: startDate,
+                        end_date: endDate
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || "Erro desconhecido no servidor.");
+                }
+
+                // Render Results
+                renderResults(data);
+                resultsArea.style.display = 'block';
+
+            } catch (e) {
+                errorDiv.innerText = `Erro: ${e.message}`;
+                errorDiv.style.display = 'block';
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+
+        function renderResults(data) {
+            // Update Summary Text
+            document.getElementById('summary-text').innerText = data.summary;
+            document.getElementById('avg-corr-val').innerText = data.avg_correlation.toFixed(2);
+            
+            // Heatmap rendering removed as requested
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const current = html.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+
+            const btn = document.getElementById('theme-btn');
+            btn.innerText = next === 'dark' ? '☀️' : '🌙';
+            
+            // Re-render chart if it exists to clean up styles
+            const results = document.getElementById('results-area');
+            if(results.style.display === 'block') {
+                 // Trigger re-render by calling analise (or just re-plot if we saved data... simplifying by doing nothing, user can re-click if needed, 
+                 // or ideally we store 'lastData' global var)
+                 // For now, let's just leave it, Plotly usually needs explicit relayout for theme.
+            }
+        }
+
+        function loadTheme() {
+            const saved = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', saved);
+            const btn = document.getElementById('theme-btn');
+            if (btn) btn.innerText = saved === 'dark' ? '☀️' : '🌙';
+        }
+
+        document.addEventListener('DOMContentLoaded', loadTheme);
+    </script>
+</body>
+
+</html>
