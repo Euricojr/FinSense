@@ -128,43 +128,95 @@
             line-height: 1.6;
         }
 
+        input, select {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-family: 'Manrope', sans-serif;
+            font-size: 14px;
+            width: 100%;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            outline: none;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 2px rgba(0, 86, 179, 0.1);
+        }
+
         .card {
             background-color: var(--bg-panel);
-            border-radius: 12px;
+            border-radius: 8px; /* Slightly reduced radius */
             padding: 30px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
             border: 1px solid var(--border-color);
             margin-top: 20px;
+            /* Minimalist shadow */
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03); 
         }
 
         .cta-button {
-            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-hover) 100%);
+            background-color: var(--accent-primary);
             color: white;
-            padding: 14px 28px;
-            border-radius: 8px;
+            padding: 12px 24px;
+            border-radius: 6px;
             text-decoration: none;
-            font-weight: 700;
-            font-size: 16px;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(0, 86, 179, 0.3);
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s ease;
             border: none;
             cursor: pointer;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 8px;
         }
 
         .cta-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0, 86, 179, 0.5);
-            filter: brightness(1.1);
+            background-color: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+        
+        .cta-button.secondary {
+            background-color: transparent;
+            border: 1px solid var(--accent-primary);
+            color: var(--accent-primary);
+        }
+        
+        .cta-button.secondary:hover {
+            background-color: rgba(0, 86, 179, 0.05);
         }
 
-        .cta-button:active {
-            transform: translateY(1px);
+        .asset-row {
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            padding: 8px 12px; 
+            background: transparent; 
+            border-bottom: 1px solid var(--border-color);
+            transition: background 0.2s;
+        }
+        
+        .asset-row:last-child {
+            border-bottom: none;
+        }
+        
+        .asset-row:hover {
+            background: var(--bg-main);
+        }
+
+        .section-title {
+            font-size: 14px; 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+            font-weight: 700; 
+            color: var(--text-muted); 
+            margin-bottom: 15px;
+            border-left: 3px solid var(--accent-primary);
+            padding-left: 10px;
+            display: flex; 
+            align-items: center;
         }
     </style>
 </head>
@@ -187,82 +239,113 @@
         <p style="margin-bottom: 30px;">Analise a correlação entre os ativos da sua carteira para entender melhor a
             diversificação e o risco.</p>
 
-        <!-- Input Section -->
-        <div class="card">
-            <h2 style="font-size: 18px; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;">Configuração da Carteira</h2>
-            
-            <div style="display: flex; flex-direction: column; gap: 20px;">
+        <!-- Input & Configuration Config -->
+        <div class="card" style="padding: 0; overflow: hidden;">
+            <div style="padding: 30px;">
+                <h2 style="font-size: 18px; margin-bottom: 25px;">Configuração da Carteira</h2>
                 
-                <!-- Autocomplete Asset Input -->
-                <div style="position: relative;">
-                    <label style="display: block; font-weight: 600; margin-bottom: 8px;">Adicionar Ativos</label>
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 30px;">
                     
-                    <div id="tag-container" style="display: flex; flex-wrap: wrap; gap: 8px; border: 1px solid var(--border-color); padding: 8px; border-radius: 8px; background: var(--bg-main); min-height: 48px;">
-                        <!-- Tags will be inserted here -->
-                        <input type="text" id="asset-search" placeholder="Digite o nome ou ticker (ex: Petrobras...)" 
-                            style="flex: 1; border: none; outline: none; background: transparent; color: var(--text-main); min-width: 150px; font-size: 14px;">
+                    <!-- Left Col: Assets -->
+                    <div>
+                        <div class="section-title">1. Seleção de Ativos</div>
+                        
+                        <div style="position: relative; margin-bottom: 15px;">
+                            <input type="text" id="asset-search" placeholder="Buscar ativo (ex: PETR4)..." autocomplete="off">
+                            <ul id="suggestions" style="
+                                position: absolute; top: 105%; left: 0; width: 100%; 
+                                background: var(--bg-panel); border: 1px solid var(--border-color); 
+                                border-radius: 6px; list-style: none; max-height: 200px; 
+                                overflow-y: auto; display: none; z-index: 1001; 
+                                box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 0;">
+                            </ul>
+                        </div>
+
+                        <div id="asset-list" style="border: 1px solid var(--border-color); border-radius: 6px; overflow: hidden; min-height: 50px;">
+                            <!-- Empty State -->
+                            <div id="empty-assets" style="padding: 20px; text-align: center; color: var(--text-muted); font-size: 13px;">
+                                Nenhum ativo selecionado.
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- Suggestions Dropdown -->
-                    <ul id="suggestions" style="
-                        position: absolute; 
-                        top: 100%; 
-                        left: 0; 
-                        width: 100%; 
-                        background: var(--bg-panel); 
-                        border: 1px solid var(--border-color); 
-                        border-radius: 8px; 
-                        list-style: none; 
-                        max-height: 200px; 
-                        overflow-y: auto; 
-                        display: none; 
-                        z-index: 1000; 
-                        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-                        margin-top: 5px;
-                        padding: 0;
-                    "></ul>
-                </div>
-
-                <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-end;">
-                    <div style="flex: 1; min-width: 180px;">
-                        <label style="display: block; font-weight: 600; margin-bottom: 8px;">Data Início</label>
-                        <input type="date" id="start-date" 
-                            style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-main); font-family: 'Manrope', sans-serif;">
-                    </div>
-                    <div style="flex: 1; min-width: 180px;">
-                        <label style="display: block; font-weight: 600; margin-bottom: 8px;">Data Fim</label>
-                        <input type="date" id="end-date" 
-                            style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-main); font-family: 'Manrope', sans-serif;">
-                    </div>
-                    <div style="min-width: 200px;">
-                        <button onclick="analisarCarteira()" class="cta-button" style="width: 100%; justify-content: center; height: 46px;">
-                            <span>🔍</span> Analisar Correlação
-                        </button>
+                    <!-- Right Col: Period & Dates -->
+                    <div>
+                        <div class="section-title">2. Período da Análise</div>
+                        <div style="display: flex; flex-direction: column; gap: 15px;">
+                            <div>
+                                <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; color: var(--text-muted);">Início</label>
+                                <input type="date" id="start-date">
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; color: var(--text-muted);">Fim</label>
+                                <input type="date" id="end-date">
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            
-            <div id="error-msg" style="color: var(--danger-red); margin-top: 15px; display: none; font-weight: 600;"></div>
-        </div>
 
+            <!-- Actions Footer -->
+            <div style="background-color: rgba(0,0,0,0.02); border-top: 1px solid var(--border-color); padding: 25px 30px;">
+                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
+                    
+                    <!-- Correlation Action -->
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <div>
+                            <div style="font-weight: 700; font-size: 14px; margin-bottom: 3px;">Risco & Correlação</div>
+                            <div style="font-size: 12px; color: var(--text-muted);">Matriz de correlação e análise de diversificação.</div>
+                        </div>
+                        <button onclick="runCorrelationAnalysis()" class="cta-button secondary">
+                            Analisar
+                        </button>
+                    </div>
+
+                    <!-- Benchmark Action -->
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding-left: 40px; border-left: 1px solid var(--border-color);">
+                        <div style="flex: 1; padding-right: 15px;">
+                            <div style="font-weight: 700; font-size: 14px; margin-bottom: 5px;">Benchmark</div>
+                                <select id="benchmark-select" style="padding: 6px 10px; font-size: 13px;">
+                                    <option value="^BVSP">Ibovespa</option>
+                                    <option value="^GSPC">S&P 500</option>
+                                    <option value="^IXIC">Nasdaq</option>
+                                    <option value="BTC-USD">Bitcoin</option>
+                                </select>
+                        </div>
+                        <button onclick="runBenchmarkAnalysis()" class="cta-button">
+                            Comparar
+                        </button>
+                    </div>
+
+                 </div>
+            </div>
+        </div>
+            
+        <!-- Error Message -->
+        <div id="error-msg" style="color: var(--danger-red); margin-top: 15px; display: none; font-weight: 600;"></div>
+        
         <!-- Results Section -->
         <div id="results-area" style="display: none; margin-top: 30px;">
             
-            <!-- Summary Card -->
-            <div class="card" style="border-left: 5px solid var(--accent-primary);">
-                <h3 style="margin-bottom: 10px;">Resumo da Análise</h3>
+            <!-- Correlation Summary Card -->
+            <div id="correlation-card" class="card" style="border-left: 5px solid var(--accent-primary); display: none;">
+                <h3 style="margin-bottom: 10px;">Resumo da Correlação</h3>
                 <div id="summary-text" style="font-size: 16px; font-weight: 500; text-align: justify; line-height: 1.6;"></div>
                 <div style="margin-top: 10px; font-size: 14px; color: var(--text-muted);">
                     Média de Correlação Absoluta: <span id="avg-corr-val" style="font-weight: 700; color: var(--text-main);"></span>
                 </div>
             </div>
 
-            <!-- Heatmap Card (Removed as requested) -->
-            <!-- 
-            <div class="card" style="min-height: 600px; display: flex; flex-direction: column;">
-                <div id="heatmap-plot" style="width: 100%; flex: 1;"></div>
+            <!-- Performance Section -->
+            <div id="benchmark-card" class="card" style="margin-top: 20px; display: none;">
+                <h3 style="margin-bottom: 20px; font-size: 16px;">Comparação de Rentabilidade: Carteira vs Benchmark</h3>
+                <div id="performance-chart" style="width: 100%; height: 500px;"></div>
+                <div style="margin-top: 10px; font-size: 12px; color: var(--text-muted); text-align: center;">* A curva 'Minha Carteira' é calculada com base nos pesos definidos acima.</div>
+                
+                <!-- New Summary Area -->
+                <div id="benchmark-summary" style="display: none;"></div>
             </div>
-            -->
+            
         </div>
         
         <!-- Loading Overlay -->
@@ -280,6 +363,7 @@
     <script>
         let allAssets = [];
         let selectedTickers = [];
+        let lastAnalysisData = null;
 
         // Init Defaults
         document.addEventListener('DOMContentLoaded', () => {
@@ -301,21 +385,21 @@
                 const response = await fetch('http://127.0.0.1:5001/api/assets');
                 if (response.ok) {
                     allAssets = await response.json();
+                    console.log("Assets loaded:", allAssets.length);
                 } else {
-                    console.error("Failed to load assets");
+                    console.error("Failed to load assets: Server returned " + response.status);
+                    document.getElementById('asset-search').placeholder = "Erro ao carregar ativos. Verifique o servidor.";
                 }
             } catch (e) {
                 console.error("Error loading assets:", e);
+                document.getElementById('asset-search').placeholder = "Erro de conexão. Servidor offline?";
             }
         }
 
         function setupAutocomplete() {
             const input = document.getElementById('asset-search');
             const suggestions = document.getElementById('suggestions');
-            const tagContainer = document.getElementById('tag-container');
-
-            // Click anywhere to focus input
-            tagContainer.addEventListener('click', () => input.focus());
+            const assetList = document.getElementById('asset-list'); // Use asset-list as container reference if needed, or just document
 
             input.addEventListener('input', (e) => {
                 const query = e.target.value.toLowerCase().trim();
@@ -326,8 +410,8 @@
                 }
 
                 const matches = allAssets.filter(asset => 
-                    asset.symbol.toLowerCase().includes(query) || 
-                    asset.name.toLowerCase().includes(query)
+                    (asset.symbol && asset.symbol.toLowerCase().includes(query)) || 
+                    (asset.name && asset.name.toLowerCase().includes(query))
                 ).slice(0, 10); // Limit to 10
 
                 renderSuggestions(matches);
@@ -335,7 +419,7 @@
 
             // Hide on click outside
             document.addEventListener('click', (e) => {
-                if (!tagContainer.contains(e.target) && !suggestions.contains(e.target)) {
+                if (!input.contains(e.target) && !suggestions.contains(e.target)) {
                     suggestions.style.display = 'none';
                 }
             });
@@ -343,7 +427,8 @@
             // Handle Backspace to remove last tag if input is empty
             input.addEventListener('keydown', (e) => {
                 if(e.key === 'Backspace' && input.value === '' && selectedTickers.length > 0) {
-                    removeTag(selectedTickers[selectedTickers.length - 1]);
+                    // Remove the last added asset
+                    removeTag(selectedTickers[selectedTickers.length - 1].symbol);
                 }
             });
         }
@@ -389,63 +474,112 @@
         }
 
         function addTag(ticker) {
-            if (selectedTickers.includes(ticker)) return;
+            if (selectedTickers.find(t => t.symbol === ticker)) return;
             
-            selectedTickers.push(ticker);
-            renderTags();
+            selectedTickers.push({ symbol: ticker, weight: 0 }); // Init with 0, will rebalance
+            rebalanceWeights();
+            renderAssetList();
         }
 
         function removeTag(ticker) {
-            selectedTickers = selectedTickers.filter(t => t !== ticker);
-            renderTags();
+            selectedTickers = selectedTickers.filter(t => t.symbol !== ticker);
+            rebalanceWeights();
+            renderAssetList();
+        }
+        
+        function rebalanceWeights() {
+            if (selectedTickers.length === 0) return;
+            const w = parseFloat((100 / selectedTickers.length).toFixed(2));
+            selectedTickers.forEach(t => t.weight = w);
+        }
+        
+        function updateWeight(ticker, newWeight) {
+            const asset = selectedTickers.find(t => t.symbol === ticker);
+            if(asset) asset.weight = parseFloat(newWeight) || 0;
+            // Note: We don't auto-rebalance others here to allow manual tweaking, 
+            // but user should ensure sum is 100 technically. Backend normalizes anyway.
         }
 
-        function renderTags() {
-            const container = document.getElementById('tag-container');
-            const input = document.getElementById('asset-search');
+        function renderAssetList() {
+            const container = document.getElementById('asset-list');
+            const emptyState = document.getElementById('empty-assets');
             
-            // Remove all existing tags (but keep input)
-            const oldTags = container.querySelectorAll('.asset-tag');
-            oldTags.forEach(t => t.remove());
+            // Clear but keep empty state if needed
+            const currentRows = container.querySelectorAll('.asset-row');
+            currentRows.forEach(r => r.remove());
 
-            // Create new tags
-            selectedTickers.forEach(ticker => {
-                const tag = document.createElement('div');
-                tag.className = 'asset-tag';
-                tag.style.display = 'flex';
-                tag.style.alignItems = 'center';
-                tag.style.backgroundColor = 'rgba(0, 86, 179, 0.1)';
-                tag.style.color = 'var(--accent-primary)';
-                tag.style.padding = '4px 10px';
-                tag.style.borderRadius = '16px';
-                tag.style.fontSize = '13px';
-                tag.style.fontWeight = '600';
-                tag.style.cursor = 'default';
+            if (selectedTickers.length === 0) {
+                 if(!document.getElementById('empty-assets')) {
+                     container.innerHTML = `<div id="empty-assets" style="padding: 20px; text-align: center; color: var(--text-muted); font-size: 13px;">Nenhum ativo selecionado.</div>`;
+                 } else {
+                     emptyState.style.display = 'block';
+                 }
+                 return;
+            } else {
+                if(emptyState) emptyState.style.display = 'none';
+            }
+
+            selectedTickers.forEach(asset => {
+                const row = document.createElement('div');
+                row.className = 'asset-row';
                 
-                tag.innerHTML = `
-                    ${ticker}
-                    <span onclick="removeTag('${ticker}')" style="margin-left: 8px; cursor: pointer; font-weight: bold; opacity: 0.6;">✕</span>
+                row.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-weight: 700; font-size: 14px; color: var(--text-main);">${asset.symbol}</span>
+                    </div>
+                    
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="display: flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.03); padding: 4px 8px; border-radius: 4px;">
+                            <span style="font-size: 11px; font-weight: 600; color: var(--text-muted);">PESO</span>
+                            <div style="position: relative; width: 50px;">
+                                <input type="number" value="${asset.weight}" onchange="updateWeight('${asset.symbol}', this.value)" 
+                                style="width: 100%; padding: 2px 5px; border: none; background: transparent; text-align: right; font-weight: 700; font-size: 13px; outline: none;">
+                                <span style="position: absolute; right: 0; top: 2px; font-size: 10px; pointer-events: none;">%</span>
+                            </div>
+                        </div>
+                        
+                        <button onclick="removeTag('${asset.symbol}')" style="background: none; border: none; color: var(--text-muted); font-size: 16px; cursor: pointer; padding: 5px; margin-left: 5px; transition: color 0.2s;">
+                            &times;
+                        </button>
+                    </div>
                 `;
                 
-                container.insertBefore(tag, input);
+                // Add hover effect for delete button
+                const btn = row.querySelector('button');
+                btn.onmouseover = () => btn.style.color = 'var(--danger-red)';
+                btn.onmouseout = () => btn.style.color = 'var(--text-muted)';
+
+                container.appendChild(row);
             });
         }
 
-        async function analisarCarteira() {
-            // Updated to use 'selectedTickers' array
-            
+        async function runCorrelationAnalysis() {
+             await performAnalysis('correlation');
+        }
+
+        async function runBenchmarkAnalysis() {
+             await performAnalysis('benchmark');
+        }
+        
+        async function performAnalysis(mode) {
             const startDate = document.getElementById('start-date').value;
             const endDate = document.getElementById('end-date').value;
             const errorDiv = document.getElementById('error-msg');
             const loading = document.getElementById('loading');
             const resultsArea = document.getElementById('results-area');
-
-            // Reset
-            errorDiv.style.display = 'none';
-            resultsArea.style.display = 'none';
             
-            if (selectedTickers.length < 2) {
+            // Only hide the specific card we are running, or both if running all?
+            // For simplicity, lets show the results area main container
+            resultsArea.style.display = 'block'; 
+            errorDiv.style.display = 'none';
+
+            if (selectedTickers.length < 2 && mode === 'correlation') {
                 errorDiv.innerText = "Insira pelo menos 2 ativos para calcular correlação.";
+                errorDiv.style.display = 'block';
+                return;
+            }
+             if (selectedTickers.length < 1 && mode === 'benchmark') {
+                errorDiv.innerText = "Insira pelo menos 1 ativo para o benchmark.";
                 errorDiv.style.display = 'block';
                 return;
             }
@@ -459,26 +593,44 @@
             loading.style.display = 'flex';
 
             try {
-                // Call Backend 3 (Port 5001)
-                const response = await fetch('http://127.0.0.1:5001/api/portfolio/correlation', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        tickers: selectedTickers,
-                        start_date: startDate,
-                        end_date: endDate
-                    })
-                });
+                const tickersList = selectedTickers.map(t => t.symbol);
+                const weightsList = selectedTickers.map(t => t.weight / 100.0);
 
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data.error || "Erro desconhecido no servidor.");
+                if (mode === 'correlation') {
+                    const response = await fetch('http://127.0.0.1:5001/api/portfolio/correlation', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ tickers: tickersList, start_date: startDate, end_date: endDate })
+                    });
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.error);
+                    
+                    document.getElementById('correlation-card').style.display = 'block';
+                    document.getElementById('summary-text').innerText = data.summary;
+                    document.getElementById('avg-corr-val').innerText = data.avg_correlation.toFixed(2);
+                    lastAnalysisData = { ...lastAnalysisData, corr: data };
                 }
+                
+                if (mode === 'benchmark') {
+                    const benchmark = document.getElementById('benchmark-select').value;
+                    const response = await fetch('http://127.0.0.1:5001/api/portfolio/benchmark', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            tickers: tickersList,
+                            weights: weightsList,
+                            benchmark: benchmark,
+                            start_date: startDate,
+                            end_date: endDate
+                        })
+                    });
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.error);
 
-                // Render Results
-                renderResults(data);
-                resultsArea.style.display = 'block';
+                    document.getElementById('benchmark-card').style.display = 'block';
+                    renderBenchmarkChart(data);
+                    lastAnalysisData = { ...lastAnalysisData, bench: data };
+                }
 
             } catch (e) {
                 errorDiv.innerText = `Erro: ${e.message}`;
@@ -487,14 +639,107 @@
                 loading.style.display = 'none';
             }
         }
-
-
-        function renderResults(data) {
-            // Update Summary Text
-            document.getElementById('summary-text').innerText = data.summary;
-            document.getElementById('avg-corr-val').innerText = data.avg_correlation.toFixed(2);
+        
+        function renderBenchmarkChart(benchData) {
+            if(!benchData) return;
             
-            // Heatmap rendering removed as requested
+            const portfolio = benchData.portfolio;
+            const benchmark = benchData.benchmark;
+            const dates = benchData.dates;
+            const benchSymbol = benchData.benchmark_symbol;
+            
+            // Map symbol to friendly name
+            const benchmarkMap = {
+                '^BVSP': 'Ibovespa',
+                '^GSPC': 'S&P 500',
+                '^IXIC': 'Nasdaq',
+                'BTC-USD': 'Bitcoin'
+            };
+            const benchName = benchmarkMap[benchSymbol] || benchSymbol;
+            
+            // Calculate Performance
+            const finalPort = portfolio[portfolio.length - 1];
+            const finalBench = benchmark[benchmark.length - 1];
+            const diff = finalPort - finalBench;
+            
+            // Update Summary Text
+            const summaryDiv = document.getElementById('benchmark-summary');
+            const winner = finalPort > finalBench ? 'Sua Carteira superou o Benchmark!' : 'O Benchmark superou sua Carteira.';
+            const color = finalPort > finalBench ? 'var(--success-green)' : 'var(--danger-red)';
+            const diffText = Math.abs(diff).toFixed(2) + '%';
+            
+            summaryDiv.innerHTML = `
+                <div style="margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.03); border-radius: 8px; border-left: 4px solid ${color};">
+                    <h4 style="margin-bottom: 5px; color: var(--text-main); font-size: 16px;">${winner}</h4>
+                    <p style="margin: 0; font-size: 14px; color: var(--text-muted);">
+                        No período analisado, sua carteira rendeu <strong>${finalPort.toFixed(2)}%</strong>, enquanto o <strong>${benchName}</strong> rendeu <strong>${finalBench.toFixed(2)}%</strong>.
+                        Uma diferença de <strong style="color: ${color}">${diff > 0 ? '+' : '-'}${diffText}</strong>.
+                    </p>
+                </div>
+            `;
+            summaryDiv.style.display = 'block';
+
+            const traces = [];
+            
+            // Add Gradient
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const portColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-primary').trim();
+            
+            traces.push({
+                x: dates, 
+                y: portfolio, 
+                type: 'scatter', 
+                mode: 'lines', 
+                name: 'Minha Carteira',
+                line: { width: 3, color: portColor, shape: 'spline' }, 
+                fill: 'tozeroy', 
+                fillcolor: isDark ? 'rgba(77, 163, 255, 0.1)' : 'rgba(0, 86, 179, 0.1)'
+            });
+
+            traces.push({
+                x: dates, 
+                y: benchmark, 
+                type: 'scatter', 
+                mode: 'lines', 
+                name: benchName,
+                line: { width: 2, color: '#ffb142' }, // Solid High Contrast Orange
+                hoverinfo: 'y+name'
+            });
+            
+            const layout = {
+                title: { text: '' },
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: { family: 'Manrope, sans-serif', color: getComputedStyle(document.documentElement).getPropertyValue('--text-main') },
+                xaxis: { 
+                    showgrid: false, 
+                    color: getComputedStyle(document.documentElement).getPropertyValue('--text-muted') 
+                },
+                yaxis: { 
+                    showgrid: true, 
+                    gridcolor: getComputedStyle(document.documentElement).getPropertyValue('--chart-grid'), 
+                    color: getComputedStyle(document.documentElement).getPropertyValue('--text-muted'), 
+                    ticksuffix: '%',
+                    zeroline: true,
+                    zerolinecolor: getComputedStyle(document.documentElement).getPropertyValue('--border-color')
+                },
+                margin: { t: 20, r: 20, b: 40, l: 60 },
+                showlegend: true,
+                legend: { orientation: 'h', y: -0.2 },
+                hovermode: 'x unified',
+                hoverlabel: {
+                    bgcolor: isDark ? '#1e293b' : '#ffffff',
+                    bordercolor: isDark ? '#334155' : '#e2e8f0',
+                    font: { color: isDark ? '#ffffff' : '#1e293b' } // Force high contrast text/bg
+                }
+            };
+            
+            Plotly.newPlot('performance-chart', traces, layout, { responsive: true, displayModeBar: false });
+        }
+
+
+        function renderResults(corrData, benchData) {
+             // Retired function in favor of renderBenchmarkChart and individual calls
         }
 
         function toggleTheme() {
@@ -509,11 +754,8 @@
             btn.innerText = next === 'dark' ? '☀️' : '🌙';
             
             // Re-render chart if it exists to clean up styles
-            const results = document.getElementById('results-area');
-            if(results.style.display === 'block') {
-                 // Trigger re-render by calling analise (or just re-plot if we saved data... simplifying by doing nothing, user can re-click if needed, 
-                 // or ideally we store 'lastData' global var)
-                 // For now, let's just leave it, Plotly usually needs explicit relayout for theme.
+            if(lastAnalysisData && lastAnalysisData.bench && document.getElementById('benchmark-card').style.display === 'block') {
+                 renderBenchmarkChart(lastAnalysisData.bench);
             }
         }
 

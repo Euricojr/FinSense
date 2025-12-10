@@ -237,7 +237,7 @@ def analyze_portfolio_correlation():
         if close_data.shape[1] < 2:
              return jsonify({"error": "Insufficient valid data for at least 2 assets after cleaning."}), 400
         
-        # Calculate Returns
+        # Calculate Returns for Correlation
         returns = close_data.pct_change().dropna()
 
         if returns.empty:
@@ -245,6 +245,18 @@ def analyze_portfolio_correlation():
 
         # Correlation Matrix
         correlation_matrix = returns.corr()
+
+        # Calculate Cumulative Performance (Normalized to 0%)
+        # (Price / Initial Price) - 1
+        normalized_performance = (close_data / close_data.iloc[0]) - 1
+        normalized_performance = normalized_performance * 100
+        
+        # Prepare Performance Data for Frontend
+        performance_dates = normalized_performance.index.strftime('%Y-%m-%d').tolist()
+        performance_traces = {}
+        for col in normalized_performance.columns:
+            # Replace NaN with None for JSON compliance
+            performance_traces[col] = normalized_performance[col].where(pd.notnull(normalized_performance[col]), None).tolist()
 
         # Summary Analysis
         mask = np.ones(correlation_matrix.shape, dtype=bool)
@@ -283,13 +295,177 @@ def analyze_portfolio_correlation():
             "tickers": valid_tickers,
             "z": z_values,
             "avg_correlation": round(avg_correlation, 4),
-            "summary": summary_text
+            "summary": summary_text,
+            "performance": {
+                "dates": performance_dates,
+                "traces": performance_traces
+            }
+        }
+
+        result = {
+            "tickers": valid_tickers,
+            "z": z_values,
+            "avg_correlation": round(avg_correlation, 4),
+            "summary": summary_text,
+            "performance": {
+                "dates": performance_dates,
+                "traces": performance_traces
+            }
         }
 
         return jsonify(result)
 
     except Exception as e:
         logger.error(f"Error in correlation analysis: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/portfolio/benchmark', methods=['POST'])
+def analyze_benchmark_comparison():
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+
+        tickers = data.get('tickers', [])
+        weights = data.get('weights', []) # List of floats, e.g. [0.5, 0.5]
+        benchmark_ticker = data.get('benchmark', '^BVSP')
+        start_date = data.get('start_date')
+        end_date = data.get('end_date')
+
+        if not tickers or not start_date or not end_date:
+            return jsonify({"error": "Missing required fields: tickers, start_date, end_date"}), 400
+
+        # Clean tickers
+        tickers = [t.strip().upper() for t in tickers if t.strip()]
+        
+        # Validate Weights
+        if not weights:
+            # Default to equal weights if not provided
+            w = 1.0 / len(tickers)
+            weights = [w] * len(tickers)
+        
+        if len(tickers) != len(weights):
+             return jsonify({"error": f"Number of weights ({len(weights)}) must match number of assets ({len(tickers)})"}), 400
+
+        # Create a dictionary for easy weight lookup
+        asset_weights = dict(zip(tickers, weights))
+
+        # 2. Download Data (Portfolio + Benchmark)
+        unique_tickers = list(set(tickers + [benchmark_ticker]))
+        
+        logger.info(f"Downloading for Benchmark Analysis: {unique_tickers}")
+        
+        df = yf.download(unique_tickers, start=start_date, end=end_date, progress=False, auto_adjust=True, threads=True)
+        
+        # Extract Close/Adj Close
+        price_data = pd.DataFrame()
+        
+        # Handle MultiIndex if multiple tickers
+        if len(unique_tickers) > 1:
+            if isinstance(df.columns, pd.MultiIndex):
+                # Try to get Close or Adj Close
+                try:
+                    price_data = df['Close']
+                except KeyError:
+                    try:
+                        price_data = df['Adj Close']
+                    except KeyError:
+                        price_data = df # Fallback
+            else:
+                 # Should not happen with yfinance usually if multiple tickers, but fallback
+                 price_data = df
+        else:
+            # Single ticker case handling
+             if isinstance(df.columns, pd.MultiIndex):
+                  price_data = df.xs('Close', level=1, axis=1) # Simplified
+             else:
+                  price_data = df['Close'] if 'Close' in df else df
+
+        # Ensure we have data
+        if price_data.empty:
+             return jsonify({"error": "Could not download data."}), 404
+
+        # Filter for our specific assets
+        available_assets = [t for t in tickers if t in price_data.columns]
+        
+        if not available_assets:
+             return jsonify({"error": "No valid data found for portfolio assets."}), 400
+             
+        # Recalculate weights for available assets if some are missing?
+        # Creating a safe weight list
+        safe_weights = []
+        final_assets = []
+        for asset in available_assets:
+            if asset in asset_weights:
+                final_assets.append(asset)
+                safe_weights.append(asset_weights[asset])
+        
+        # Normalize weights to sum to 1 if some assets were dropped
+        total_weight = sum(safe_weights)
+        if total_weight > 0:
+            safe_weights = [w / total_weight for w in safe_weights]
+        
+        # Check Benchmark
+        if benchmark_ticker not in price_data.columns:
+            # Try single download if it failed in bulk? (Unlikely but possible)
+            return jsonify({"error": f"Benchmark {benchmark_ticker} not found in data."}), 400
+
+        # 3. Clean NaN
+        cleaned_data = price_data[final_assets + [benchmark_ticker]].dropna()
+
+        if cleaned_data.empty:
+             return jsonify({"error": "Insufficient overlapping data for assets and benchmark."}), 400
+
+        # 4. Calculate Cumulative Returns
+        # Start at 0%
+        daily_returns = cleaned_data.pct_change().dropna()
+        cumulative_returns = (1 + daily_returns).cumprod() - 1
+        
+        # 5. Create "My Portfolio" Curve
+        # Multiply returns by weights
+        # We need to apply weights to the DAILY returns first for accuracy in rebalancing simulation?
+        # Quote from prompt: "Multiplica o retorno de cada ativo pelo seu peso e soma para criar a linha 'Minha Carteira'"
+        # Prompt uses: weighted_returns = (carteira_retornos * pesos).sum(axis=1) on CUMULATIVE returns.
+        # Note: Summing cumulative returns weighted is an approximation (fixed mix assumption vs buy-and-hold),
+        # but requested by user prompt pattern. Let's follow the prompt's math logic for consistency.
+        
+        # Prompt logic:
+        # retornos_acumulados = (1 + retornos_diarios).cumprod() - 1
+        # carteira_retornos = retornos_acumulados[ativos_carteira_presentes]
+        # weighted_returns = (carteira_retornos * pesos).sum(axis=1)
+        
+        # Applying prompt logic:
+        portfolio_cumulative_component = cumulative_returns[final_assets]
+        # Align weights for matrix multiplication
+        weights_array = np.array(safe_weights)
+        
+        # weighted sum
+        my_portfolio_curve = (portfolio_cumulative_component * weights_array).sum(axis=1)
+        
+        # Benchmark curve
+        benchmark_curve = cumulative_returns[benchmark_ticker]
+        
+        # Prepare for JSON
+        dates = my_portfolio_curve.index.strftime('%Y-%m-%d').tolist()
+        
+        # Multiply by 100 for percentage
+        portfolio_values = (my_portfolio_curve * 100).tolist()
+        benchmark_values = (benchmark_curve * 100).tolist()
+        
+        # Also return individual assets for detail if needed? User chart only showed Portfolio vs Benchmark.
+        # Let's stick to the requested plot requirements.
+
+        result = {
+            "dates": dates,
+            "portfolio": portfolio_values,
+            "benchmark": benchmark_values,
+            "benchmark_symbol": benchmark_ticker
+        }
+
+        return jsonify(result)
+
+    except Exception as e:
+        logger.error(f"Error in benchmark analysis: {e}")
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
