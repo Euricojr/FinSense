@@ -105,9 +105,26 @@
             margin-left: 30px;
             font-weight: 500;
             transition: color 0.2s;
+            font-size: 16px;
         }
 
         nav a:hover {
+            color: white;
+        }
+
+        .nav-btn-drop {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.8);
+            font-family: inherit;
+            font-size: 16px;
+            font-weight: 500;
+            margin-left: 30px;
+            cursor: pointer;
+            padding: 10px 0;
+        }
+
+        .nav-btn-drop:hover {
             color: white;
         }
 
@@ -941,6 +958,8 @@
         <div class="logo">FinSense</div>
         <nav style="display: flex; align-items: center;">
             <a href="#">Início</a>
+            <a href="#dashboard">Plataforma</a>
+            <a href="#mercado">Mercado</a>
 
             <div class="dropdown">
                 <button class="nav-btn-drop">Análise ▼</button>
@@ -950,8 +969,6 @@
                 </div>
             </div>
 
-            <a href="#dashboard">Plataforma</a>
-            <a href="#mercado">Mercado</a>
             <button id="theme-btn" class="theme-toggle" onclick="toggleTheme()" title="Alternar Tema">🌙</button>
         </nav>
     </header>

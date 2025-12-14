@@ -8,16 +8,94 @@
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         :root {
-            --bg-main: #0d1117;
-            --bg-panel: #161b22;
-            --text-main: #e6edf3;
-            --text-muted: #8b949e;
-            --accent-primary: #1f6feb;
-            --accent-hover: #388bfd;
-            --border-color: #30363d;
-            --success-color: #238636;
-            --danger-color: #da3633;
+            /* Dark Theme (Default) - Matching analise_carteiras.html */
+            --bg-main: #0a192f;
+            --bg-panel: #112240;
+            --text-main: #e6f1ff;
+            --text-muted: #8892b0;
+            --accent-primary: #4da3ff;
+            --accent-hover: #2d89ef;
+            --border-color: #233554;
+            --success-green: #64ffda;
+            --danger-red: #ff5f56;
+            --hero-bg: #020c1b;
+            --chart-bg: #112240;
+        }
+
+        /* Override for Light Theme if user toggles (Optional) */
+        [data-theme="light"] {
+            --bg-main: #f0f2f5;
+            --bg-panel: #ffffff;
+            --text-main: #1a1a1a;
+            --text-muted: #666666;
+            --accent-primary: #0056b3;
+            --accent-hover: #004494;
+            --border-color: #e0e0e0;
+            --hero-bg: #ffffff;
+        }
+
+        /* --- Global Inputs & Buttons --- */
+        input,
+        select,
+        .form-control {
+            background-color: var(--bg-main) !important;
+            color: var(--text-main) !important;
+            border: 1px solid var(--border-color) !important;
+            padding: 12px 15px !important;
+            border-radius: 6px !important;
+            font-family: 'Manrope', sans-serif;
+            font-size: 14px;
+            width: 100%;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input:focus,
+        select:focus,
+        .form-control:focus {
+            border-color: var(--accent-primary) !important;
+            box-shadow: 0 0 0 2px rgba(77, 163, 255, 0.2) !important;
+        }
+
+        button.btn-add,
+        button.btn-calc,
+        .delete-btn {
+            border: none;
+            border-radius: 6px;
+            padding: 12px 24px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Manrope', sans-serif;
+        }
+
+        button.btn-add {
+            background-color: var(--accent-primary);
+            color: #0a192f;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        button.btn-add:hover {
+            background-color: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
+        button.btn-calc {
+            background-color: transparent;
+            border: 1px solid var(--success-green);
+            color: var(--success-green);
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        button.btn-calc:hover {
+            background-color: rgba(100, 255, 218, 0.1);
         }
 
         body {
@@ -26,25 +104,48 @@
             background-color: var(--bg-main);
             color: var(--text-main);
             font-family: 'Manrope', sans-serif;
-            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background-color 0.3s, color 0.3s;
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
         }
 
-        /* Header Override */
+        ::-webkit-scrollbar-track {
+            background: var(--bg-main);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background-color: var(--border-color);
+            border-radius: 5px;
+            border: 2px solid var(--bg-main);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: var(--text-muted);
+        }
+
+        /* --- Header - Matching analise_carteiras.html --- */
         header {
-            background-color: var(--hero-bg);
+            background-color: #020c1b;
             padding: 0 40px;
             height: 70px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            border-bottom: 1px solid var(--border-color);
-            margin-bottom: 30px;
+            position: sticky;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
         }
 
         /* Nav Links */
@@ -58,6 +159,23 @@
 
         nav a:hover {
             color: white;
+        }
+
+        .theme-toggle {
+            background: none;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            cursor: pointer;
+            font-size: 18px;
+            margin-left: 25px;
+            padding: 5px 10px;
+            border-radius: 20px;
+            transition: all 0.3s;
+        }
+
+        .theme-toggle:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: white;
         }
 
         /* --- Dropdown Nav --- */
@@ -137,49 +255,49 @@
             color: var(--accent-primary);
         }
 
-        /* Stats Cards */
+        /* Stats Cards - Updated to match new card style */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 24px;
             margin-bottom: 40px;
         }
 
         .stat-card {
-            background: linear-gradient(145deg, var(--bg-panel), #1c2128);
+            background-color: var(--bg-panel);
+            /* Flat color, no gradient */
             border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 24px;
-            transition: transform 0.2s, box-shadow 0.2s;
+            border-radius: 8px;
+            /* Slightly sharper styling */
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             position: relative;
-            overflow: hidden;
+            /* Keep for optional accents if desired */
         }
 
         .stat-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-            border-color: var(--text-muted);
+            transform: translateY(-3px);
+            transition: transform 0.2s;
         }
 
+        /* Remove the side-stripes to match the clean look of the target image */
         .stat-card::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            width: 4px;
-            background: var(--accent-primary);
-            opacity: 0.5;
+            display: none;
         }
 
-        /* Specific accents */
-        .stat-card:nth-child(2)::before {
-            background: #ab7df6;
+        .stat-label {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            font-weight: 600;
         }
 
-        /* Valor Atual - Purpleish */
-        .stat-card:nth-child(3)::before {
-            background: var(--success-color);
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-main);
         }
 
         /* Lucro - Green */
@@ -217,14 +335,16 @@
             gap: 30px;
         }
 
-        /* Input Form */
-        .form-panel {
+        /* Panel Styling (Inputs & Tables) */
+        .form-panel,
+        .transactions-panel {
             background-color: var(--bg-panel);
             border: 1px solid var(--border-color);
-            border-radius: 16px;
+            border-radius: 8px;
             padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
             height: fit-content;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         .form-group {
@@ -483,81 +603,85 @@
             }
         }
     </style>
+    <script>
+        function toggleTheme() {
+            const body = document.body;
+            const btn = document.getElementById('theme-btn');
+            const isLight = body.getAttribute('data-theme') === 'light';
+
+            if (isLight) {
+                // Swithing to Dark
+                body.removeAttribute('data-theme');
+                btn.textContent = '☀️';
+            } else {
+                // Switching to Light
+                body.setAttribute('data-theme', 'light');
+                btn.textContent = '🌙';
+            }
+        }
+    </script>
 </head>
 
 <body>
 
+
     <div id="loadingOverlay">
-        <div class="spinner"></div>
-        <span>Calculando Rentabilidade...</span>
+        <div class="spinner"></div><span>Calculando Rentabilidade...</span>
     </div>
 
-    <div class="container">
-        <header>
-            <div class="logo" style="font-weight: 700; font-size: 22px; color: white;">FinSense</div>
-            <nav style="display: flex; align-items: center;">
-                <a href="index2.html">Início</a>
-
-                <div class="dropdown">
-                    <button class="nav-btn-drop" style="color: white; font-weight: 700;">Análise ▼</button>
-                    <div class="dropdown-content">
-                        <a href="analise_carteiras.html">Correlação & Risco</a>
-                        <a href="portfolio.html">Gerenciar Portfólio</a>
-                    </div>
+    <header>
+        <div class="logo" style="font-weight: 700; font-size: 22px; color: white;">FinSense</div>
+        <nav style="display: flex; align-items: center;">
+            <a href="index2.html" style="font-size: 16px;">Início</a>
+            <a href="index2.html#dashboard" style="font-size: 16px;">Plataforma</a>
+            <a href="index2.html#mercado" style="font-size: 16px;">Mercado</a>
+            <div class="dropdown">
+                <button class="nav-btn-drop" style="color: white; font-weight: 700; font-size: 16px;">Análise ▼</button>
+                <div class="dropdown-content">
+                    <a href="analise_carteiras.html">Correlação & Risco</a>
+                    <a href="portfolio.html">Gerenciar Portfólio</a>
                 </div>
+            </div>
+            <button id="theme-btn" class="theme-toggle" onclick="toggleTheme()" title="Alternar Tema">☀️</button>
+        </nav>
+    </header>
 
-                <a href="index2.html#dashboard">Plataforma</a>
-                <a href="index2.html#mercado">Mercado</a>
-                <button id="theme-btn" class="theme-toggle" onclick="toggleTheme()" title="Alternar Tema">🌙</button>
-            </nav>
-        </header>
-
+    <div class="container">
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-label">Total Investido</div>
-                <div class="stat-value" id="totalInvested">R$ 0,00</div>
+                <div class="stat-value" id="totalInvested">R$ 0,
+                    00</div>
             </div>
             <div class="stat-card">
                 <div class="stat-label">Valor Atual</div>
-                <div class="stat-value" id="currentValue">R$ 0,00</div>
+                <div class="stat-value" id="currentValue">R$ 0,
+                    00</div>
             </div>
             <div class="stat-card">
                 <div class="stat-label">Lucro / Prejuízo</div>
-                <div class="stat-value" id="totalProfit">R$ 0,00 (0.00%)</div>
+                <div class="stat-value" id="totalProfit">R$ 0,
+                    00 (0.00%)</div>
             </div>
         </div>
-
         <div class="content-grid">
             <!-- Input Form -->
             <div class="form-panel">
                 <h3 style="margin-top: 0; margin-bottom: 20px;">Nova Transação</h3>
-
-                <div class="form-group" style="position: relative;">
-                    <label>Ativo (Ticker)</label>
-                    <input type="text" id="tickerInput" class="form-control" placeholder="Buscar ativo (ex: PETR4)..."
+                <div class="form-group" style="position: relative;"><label>Ativo (Ticker)</label><input type="text"
+                        id="tickerInput" class="form-control" placeholder="Buscar ativo (ex: PETR4)..."
                         autocomplete="off">
                     <ul id="suggestions"></ul>
                 </div>
-
-                <div class="form-group">
-                    <label>Data da Compra</label>
-                    <input type="date" id="dateInput" class="form-control">
-                </div>
-
-                <div class="form-group">
-                    <label>Quantidade</label>
-                    <input type="number" id="qtyInput" class="form-control" placeholder="0">
-                </div>
-
-                <div class="form-group">
-                    <label>Preço Unitário (R$)</label>
-                    <input type="number" id="priceInput" class="form-control" placeholder="0.00" step="0.01">
-                </div>
-
-                <button class="btn-add" onclick="addTransaction()">Adicionar</button>
-                <button class="btn-calc" onclick="calculatePortfolio()">Calcular Rentabilidade</button>
+                <div class="form-group"><label>Data da Compra</label><input type="date" id="dateInput"
+                        class="form-control"></div>
+                <div class="form-group"><label>Quantidade</label><input type="number" id="qtyInput" class="form-control"
+                        placeholder="0"></div>
+                <div class="form-group"><label>Preço Unitário (R$)</label><input type="number" id="priceInput"
+                        class="form-control" placeholder="0.00" step="0.01"></div><button class="btn-add"
+                    onclick="addTransaction()">Adicionar</button><button class="btn-calc"
+                    onclick="calculatePortfolio()">Calcular Rentabilidade</button>
             </div>
-
             <!-- List -->
             <div class="transactions-panel">
                 <h3 style="margin-top: 0; margin-bottom: 20px;">Histórico de Transações</h3>
@@ -577,8 +701,7 @@
                     </tbody>
                 </table>
                 <p id="emptyState" style="text-align: center; color: var(--text-muted); margin-top: 50px;">
-                    Nenhuma transação adicionada.
-                </p>
+                    Nenhuma transação adicionada. </p>
             </div>
         </div>
         <div class="charts-section" style="margin-top: 40px;">
@@ -593,11 +716,9 @@
                     </div>
                 </div>
             </div>
-
             <div class="form-panel" style="margin-top: 20px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h3 style="margin: 0;">Evolução Patrimonial</h3>
-                    <select id="benchmarkSelector" class="form-control"
+                    <h3 style="margin: 0;">Evolução Patrimonial</h3><select id="benchmarkSelector" class="form-control"
                         style="width: auto; padding: 8px 12px; margin: 0;"
                         onchange="updateBenchmarkChart(transactions)">
                         <option value="^BVSP">Ibovespa</option>
@@ -610,9 +731,7 @@
             </div>
         </div>
     </div>
-
-    <script>
-        let transactions = [];
+    <script>let transactions = [];
         let allAssets = [];
 
         // Load available tickers on mount
@@ -637,11 +756,15 @@
                     allAssets = await response.json();
                     document.getElementById('tickerInput').placeholder = "Buscar ativo (ex: PETR4)...";
                     console.log("Assets loaded:", allAssets.length);
-                } else {
+                }
+
+                else {
                     console.error("Failed to load assets");
                     document.getElementById('tickerInput').placeholder = "Erro ao carregar ativos";
                 }
-            } catch (e) {
+            }
+
+            catch (e) {
                 console.error("Error loading assets:", e);
                 document.getElementById('tickerInput').placeholder = "Erro de conexão";
             }
@@ -659,10 +782,7 @@
                     return;
                 }
 
-                const matches = allAssets.filter(asset =>
-                    (asset.symbol && asset.symbol.toLowerCase().includes(query)) ||
-                    (asset.name && asset.name.toLowerCase().includes(query))
-                ).slice(0, 10);
+                const matches = allAssets.filter(asset => (asset.symbol && asset.symbol.toLowerCase().includes(query)) || (asset.name && asset.name.toLowerCase().includes(query))).slice(0, 10);
 
                 renderSuggestions(matches);
             });
@@ -686,15 +806,15 @@
 
             matches.forEach(asset => {
                 const li = document.createElement('li');
-                li.innerHTML = `
-                    <span><strong>${asset.symbol}</strong> - ${asset.name}</span>
-                    <span style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">${asset.category}</span>
-                `;
+
+                li.innerHTML = `<span><strong>${asset.symbol}</strong> - ${asset.name}</span> <span style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">${asset.category}</span>`;
 
                 li.onclick = () => {
                     document.getElementById('tickerInput').value = asset.symbol;
                     suggestions.style.display = 'none';
-                };
+                }
+
+                    ;
 
                 suggestions.appendChild(li);
             });
@@ -720,7 +840,9 @@
                 qty,
                 price,
                 total: qty * price
-            };
+            }
+
+                ;
 
             transactions.push(transaction);
             renderTable();
@@ -746,14 +868,8 @@
 
             transactions.forEach(t => {
                 const tr = document.createElement('tr');
-                tr.innerHTML = `
-                <td><span class="ticker-badge">${t.ticker}</span></td>
-                <td>${formatDate(t.date)}</td>
-                <td class="val-col">${t.qty}</td>
-                <td class="val-col">R$ ${t.price.toFixed(2)}</td>
-                <td class="val-col">R$ ${t.total.toFixed(2)}</td>
-                <td style="text-align: center;"><button class="delete-btn" onclick="removeTransaction(${t.id})" title="Remover">🗑️</button></td>
-            `;
+
+                tr.innerHTML = `<td><span class="ticker-badge">${t.ticker}</span></td> <td>${formatDate(t.date)}</td> <td class="val-col">${t.qty}</td> <td class="val-col">R$ ${t.price.toFixed(2)}</td> <td class="val-col">R$ ${t.total.toFixed(2)}</td> <td style="text-align: center;"><button class="delete-btn" onclick="removeTransaction(${t.id})" title="Remover">🗑️</button></td>`;
                 tbody.appendChild(tr);
             });
         }
@@ -766,8 +882,23 @@
         }
 
         function formatDate(dateString) {
-            const [year, month, day] = dateString.split('-');
-            return `${day}/${month}/${year}`;
+            const [year,
+                month,
+                day] = dateString.split('-');
+
+            return `$ {
+                    day
+                }
+
+                /$ {
+                    month
+                }
+
+                /$ {
+                    year
+                }
+
+                `;
         }
 
         async function calculatePortfolio() {
@@ -779,10 +910,20 @@
             document.getElementById('loadingOverlay').style.display = 'flex';
 
             try {
-                const response = await fetch(`${API_BASE_URL}/api/calculate_portfolio`, {
+                const response = await fetch(`$ {
+                            API_BASE_URL
+                        }
+
+                        /api/calculate_portfolio`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ transactions })
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+
+                    ,
+                    body: JSON.stringify({
+                        transactions
+                    })
                 });
 
                 const result = await response.json();
@@ -794,10 +935,14 @@
 
                 updateStats(result);
 
-            } catch (e) {
+            }
+
+            catch (e) {
                 console.error(e);
                 alert("Erro ao calcular carteira.");
-            } finally {
+            }
+
+            finally {
                 document.getElementById('loadingOverlay').style.display = 'none';
             }
         }
@@ -828,38 +973,56 @@
 
             // 1. Render Pie Chart
             const data = [{
+
                 values: values,
                 labels: labels,
                 type: 'pie',
-                textinfo: 'percent', // hide label on pie to reduce clutter if legend is next to it
+                textinfo: 'percent',
+                // hide label on pie to reduce clutter if legend is next to it
                 textposition: 'inside',
                 automargin: true,
                 marker: {
-                    colors: [
-                        '#1f6feb', '#238636', '#da3633', '#f0883e', '#8957e5',
+                    colors: ['#1f6feb', '#238636', '#da3633', '#f0883e', '#8957e5',
                         '#fa4549', '#2ea043', '#56d364', '#0d1117'
                     ]
                 }
-            }];
+            }
+
+            ];
 
             const layout = {
+
                 height: 350,
-                margin: { t: 10, b: 10, l: 10, r: 10 },
+                margin: {
+                    t: 10, b: 10, l: 10, r: 10
+                }
+
+                ,
                 paper_bgcolor: 'rgba(0,0,0,0)',
                 plot_bgcolor: 'rgba(0,0,0,0)',
                 font: {
                     family: 'Manrope, sans-serif',
                     color: '#e6edf3'
-                },
-                showlegend: false, // Custom legend
+                }
+
+                ,
+                showlegend: false,
+                // Custom legend
                 hoverlabel: {
+
                     bgcolor: '#161b22',
                     bordercolor: '#30363d',
-                    font: { color: '#e6edf3' }
+                    font: {
+                        color: '#e6edf3'
+                    }
                 }
-            };
+            }
 
-            Plotly.newPlot('allocationChart', data, layout, { displayModeBar: false, responsive: true });
+                ;
+
+            Plotly.newPlot('allocationChart', data, layout, {
+                displayModeBar: false, responsive: true
+            });
 
             // 2. Render Allocation List
             if (categories) {
@@ -874,21 +1037,22 @@
                     if (cat.category.includes('EUA')) icon = '🇺🇸';
 
                     html += `
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 8px;">
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <span style="font-size: 18px;">${icon}</span>
-                                <span style="font-weight: 600; font-size: 14px;">${cat.category}</span>
-                            </div>
-                            <div style="text-align: right;">
-                                <div style="font-weight: 700; color: var(--text-main);">${cat.percentage.toFixed(1)}%</div>
-                                <div style="font-size: 12px; color: var(--text-muted);">${formatCurrency(cat.value)}</div>
-                            </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 8px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 18px;">${icon}</span>
+                            <span style="font-weight: 600; font-size: 14px;">${cat.category}</span>
                         </div>
-                    `;
+                        <div style="text-align: right;">
+                            <div style="font-weight: 700; color: var(--text-main);">${cat.percentage.toFixed(1)}%</div>
+                            <div style="font-size: 12px; color: var(--text-muted);">${formatCurrency(cat.value)}</div>
+                        </div>
+                    </div>`;
                 });
                 html += '</div>';
                 legendEl.innerHTML = html;
-            } else {
+            }
+
+            else {
                 document.getElementById('allocationLegend').innerHTML = '';
             }
         }
@@ -896,17 +1060,26 @@
         async function updateBenchmarkChart(transactions) {
             try {
                 const benchmark = document.getElementById('benchmarkSelector').value;
+
                 const response = await fetch(`${API_BASE_URL}/api/portfolio/evolution`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ tickers: transactions, benchmark: benchmark })
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+
+                    ,
+                    body: JSON.stringify({
+                        tickers: transactions, benchmark: benchmark
+                    })
                 });
 
                 if (!response.ok) return;
                 const data = await response.json();
                 renderPerformanceChart(data);
 
-            } catch (e) {
+            }
+
+            catch (e) {
                 console.error("Error fetching benchmark:", e);
             }
         }
@@ -922,71 +1095,154 @@
             // Let's stick to Total Value for clarity as Kinvo does "Saldo Bruto vs Valor Aplicado"
 
             const tracePortfolio = {
-                x: dates, y: portfolio,
-                type: 'scatter', mode: 'lines', name: 'Minha Carteira',
-                line: { color: '#1f6feb', width: 3 },
-                fill: 'tozeroy', fillcolor: 'rgba(31, 111, 235, 0.1)'
-            };
+
+                x: dates,
+                y: portfolio,
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Minha Carteira',
+                line: {
+                    color: '#1f6feb', width: 3
+                }
+
+                ,
+                fill: 'tozeroy',
+                fillcolor: 'rgba(31, 111, 235, 0.1)'
+            }
+
+                ;
 
             const traceInvested = {
-                x: dates, y: invested,
-                type: 'scatter', mode: 'lines', name: 'Valor Aplicado',
-                line: { color: '#8b949e', width: 2, dash: 'dot' }
-            };
+
+                x: dates,
+                y: invested,
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Valor Aplicado',
+                line: {
+                    color: '#8b949e', width: 2, dash: 'dot'
+                }
+            }
+
+                ;
 
             const benchmarkName = data.benchmark_symbol === 'CDI' ? 'CDI' : data.benchmark_symbol;
 
             const traceBenchmark = {
-                x: dates, y: benchmark,
-                type: 'scatter', mode: 'lines', name: benchmarkName,
-                line: { color: '#f0883e', width: 2 }
-            };
+
+                x: dates,
+                y: benchmark,
+                type: 'scatter',
+                mode: 'lines',
+                name: benchmarkName,
+                line: {
+                    color: '#f0883e', width: 2
+                }
+            }
+
+                ;
 
             const layout = {
-                title: { text: 'Evolução Patrimonial', font: { color: '#e6edf3', size: 18 } },
+                title: {
+
+                    text: 'Evolução Patrimonial',
+                    font: {
+                        color: '#e6edf3', size: 18
+                    }
+                }
+
+                ,
                 height: 400,
                 paper_bgcolor: 'rgba(0,0,0,0)',
                 plot_bgcolor: 'rgba(0,0,0,0)',
-                font: { family: 'Manrope, sans-serif', color: '#e6edf3' },
+                font: {
+                    family: 'Manrope, sans-serif', color: '#e6edf3'
+                }
+
+                ,
                 xaxis: {
+
                     showgrid: false,
                     color: '#8b949e',
                     rangeselector: {
-                        buttons: [
-                            { count: 1, label: '1M', step: 'month', stepmode: 'backward' },
-                            { count: 3, label: '3M', step: 'month', stepmode: 'backward' },
-                            { count: 6, label: '6M', step: 'month', stepmode: 'backward' },
-                            { count: 1, label: 'YTD', step: 'year', stepmode: 'todate' },
-                            { count: 1, label: '1Y', step: 'year', stepmode: 'backward' },
-                            { step: 'all', label: 'Tudo' }
+                        buttons: [{
+                            count: 1, label: '1M', step: 'month', stepmode: 'backward'
+                        }
+
+                            ,
+                        {
+                            count: 3, label: '3M', step: 'month', stepmode: 'backward'
+                        }
+
+                            ,
+                        {
+                            count: 6, label: '6M', step: 'month', stepmode: 'backward'
+                        }
+
+                            ,
+                        {
+                            count: 1, label: 'YTD', step: 'year', stepmode: 'todate'
+                        }
+
+                            ,
+                        {
+                            count: 1, label: '1Y', step: 'year', stepmode: 'backward'
+                        }
+
+                            ,
+                        {
+                            step: 'all', label: 'Tudo'
+                        }
+
                         ],
-                        font: { color: '#e6edf3' },
+                        font: {
+                            color: '#e6edf3'
+                        }
+
+                        ,
                         bgcolor: '#161b22',
                         activecolor: '#1f6feb',
                         bordercolor: '#30363d'
                     }
-                },
+                }
+
+                ,
                 yaxis: {
                     showgrid: true, gridcolor: '#30363d', color: '#8b949e',
                     tickprefix: 'R$ '
-                },
+                }
+
+                ,
                 hovermode: 'x unified',
-                legend: { orientation: 'h', y: -0.2 },
+                legend: {
+                    orientation: 'h', y: -0.2
+                }
+
+                ,
                 hoverlabel: {
+
                     bgcolor: '#161b22',
                     bordercolor: '#30363d',
-                    font: { color: '#e6edf3' }
+                    font: {
+                        color: '#e6edf3'
+                    }
                 }
-            };
+            }
 
-            Plotly.newPlot('performanceChart', [traceInvested, traceBenchmark, tracePortfolio], layout, { displayModeBar: false, responsive: true });
+                ;
+
+            Plotly.newPlot('performanceChart', [traceInvested, traceBenchmark, tracePortfolio], layout, {
+                displayModeBar: false, responsive: true
+            });
         }
 
         function formatCurrency(val) {
-            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
+            return new Intl.NumberFormat('pt-BR', {
+                style: 'currency', currency: 'BRL'
+            }).format(val);
         }
-    </script>
 
+    </script>
 </body>
 
 </html>
