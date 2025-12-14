@@ -1,8 +1,10 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
+import os
 from flask_cors import CORS
 import yfinance as yf
 import pandas as pd
 import numpy as np
+from bcb import sgs
 import logging
 
 app = Flask(__name__)
@@ -11,6 +13,29 @@ CORS(app)  # Enable CORS for all routes
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# --- STATIC FILE SERVING ---
+# Assuming files are in the same directory as this script.
+# If they are in a 'templates' or 'static' folder, adjust accordingly.
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+@app.route('/')
+def serve_index():
+    return send_from_directory(BASE_DIR, 'index2.html')
+
+@app.route('/portfolio')
+def serve_portfolio():
+    return send_from_directory(BASE_DIR, 'portfolio.html')
+
+@app.route('/analise')
+def serve_analise():
+    return send_from_directory(BASE_DIR, 'analise_carteiras.html')
+
+@app.route('/<path:filename>')
+def serve_static(filename):
+    # Serve other static files (js, css, images) if they exist in root
+    return send_from_directory(BASE_DIR, filename)
+
 
 # --- EXPANDED ASSET LIST (More Comprehensive B3) ---
 ASSETS = {
@@ -466,6 +491,340 @@ def analyze_benchmark_comparison():
 
     except Exception as e:
         logger.error(f"Error in benchmark analysis: {e}")
+        return jsonify({"error": str(e)}), 500
+
+# ==========================================
+# --- PORTFOLIO MANAGEMENT MODULE (NEW) ---
+# ==========================================
+
+@app.route('/api/assets', methods=['GET'])
+def get_assets():
+    flat_list = []
+    # Build a flat list with category info
+    for category, tickers in ASSETS.items():
+        for t in tickers:
+            name = TICKER_NAMES_UPDATE_BR.get(t) or TICKER_NAMES_BASE.get(t) or t
+            flat_list.append({
+                "symbol": t,
+                "name": name,
+                "category": category
+            })
+    return jsonify(flat_list)
+
+@app.route('/api/calculate_portfolio', methods=['POST'])
+def calculate_portfolio():
+    try:
+        data = request.get_json()
+        transactions = data.get('transactions', [])
+        
+        if not transactions:
+             return jsonify({"error": "No transactions provided"}), 400
+
+        # Validate transaction format
+        # [ { "ticker": "PETR4.SA", "qty": 100, "price": 25.50, "date": "2023-01-01" }, ... ]
+        
+        # 1. Fetch Current Prices
+        unique_tickers = list(set(t['ticker'] for t in transactions))
+        if not unique_tickers:
+             return jsonify({"error": "No valid tickers found"}), 400
+
+        # Fetch live data
+        tickers_str = " ".join(unique_tickers)
+        # Using Ticker or download? download is batch efficient
+        # period='1d' is enough for current price
+        df = yf.download(unique_tickers, period='1d', progress=False)
+        
+        latest_prices = {}
+        
+        # Helper to extract last price
+        def get_last_price(symbol, dataframe):
+            try:
+                if isinstance(dataframe.columns, pd.MultiIndex):
+                     # Try Close then Adj Close
+                    try:
+                        return float(dataframe['Close'][symbol].iloc[-1])
+                    except:
+                        return float(dataframe['Adj Close'][symbol].iloc[-1])
+                else:
+                    # Single ticker result
+                    return float(dataframe['Close'].iloc[-1])
+            except:
+                return 0.0
+
+        for t in unique_tickers:
+            price = get_last_price(t, df)
+            if price == 0.0:
+                 # Fallback for funds or weird tickers?
+                 pass
+            latest_prices[t] = price
+
+        # 2. Calculate Portfolio Stats
+        total_invested = 0.0
+        current_value = 0.0
+        
+        holdings_map = {} # Ticker -> { qty, avg_price, ... }
+        
+        for tx in transactions:
+            t = tx['ticker']
+            qty = float(tx['qty'])
+            price = float(tx['price'])
+            
+            total_invested += qty * price
+            
+            if t not in holdings_map:
+                holdings_map[t] = {'ticker': t, 'qty': 0, 'invested': 0.0, 'current_value': 0.0}
+            
+            holdings_map[t]['qty'] += qty
+            holdings_map[t]['invested'] += qty * price
+        
+        # Update current values for holdings
+        for t, h in holdings_map.items():
+            live_p = latest_prices.get(t, 0.0)
+            h['current_price'] = live_p
+            h['current_value'] = h['qty'] * live_p
+            current_value += h['current_value']
+            
+            h['profit'] = h['current_value'] - h['invested']
+            h['profit_pct'] = (h['profit'] / h['invested'] * 100) if h['invested'] > 0 else 0.0
+
+        holdings = list(holdings_map.values())
+        
+        # Calculate Allocation by Category
+        category_totals = {}
+        total_val_check = 0.0
+        
+        for h in holdings:
+            sym = h['ticker']
+            cat = 'Outros'
+            # Find category
+            for c, lst in ASSETS.items():
+                if sym in lst:
+                    cat = c
+                    break
+            
+            # Map friendly names for categories
+            friendly_cat = {
+                'br': 'Ações Brasil',
+                'us': 'Ações EUA',
+                'cripto': 'Cripto'
+            }.get(cat, 'Outros')
+            
+            h['category'] = friendly_cat # Add category to holding for frontend use
+            
+            if friendly_cat not in category_totals:
+                category_totals[friendly_cat] = 0.0
+            category_totals[friendly_cat] += h['current_value']
+            total_val_check += h['current_value']
+            
+        allocation_by_category = []
+        if total_val_check > 0:
+            for cat, val in category_totals.items():
+                allocation_by_category.append({
+                    "category": cat,
+                    "value": val,
+                    "percentage": (val / total_val_check) * 100
+                })
+        
+        # Sort by percentage desc
+        allocation_by_category.sort(key=lambda x: x['percentage'], reverse=True)
+
+        profit_loss = current_value - total_invested
+        profit_loss_pct = (profit_loss / total_invested * 100) if total_invested > 0 else 0.0
+
+        return jsonify({
+            "total_invested": total_invested,
+            "current_value": current_value,
+            "profit_loss": profit_loss,
+            "profit_loss_pct": profit_loss_pct,
+            "holdings": holdings,
+            "allocation_by_category": allocation_by_category,
+            "prices": latest_prices
+        })
+
+    except Exception as e:
+        logger.error(f"Error calculating portfolio: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/portfolio/evolution', methods=['POST'])
+def calculate_portfolio_evolution():
+    try:
+        data = request.get_json()
+        transactions = data.get('tickers', []) # Using 'tickers' key as passed by frontend for list of tx objects
+        benchmark_ticker = data.get('benchmark', '^BVSP')
+        
+        if not transactions:
+            return jsonify({"error": "No transactions provided"}), 400
+            
+        # We need historical data for all assets + benchmark
+        # 1. Determine Date Range (First transaction date to Today)
+        df_tx = pd.DataFrame(transactions)
+        df_tx['date'] = pd.to_datetime(df_tx['date'])
+        df_tx['qty'] = df_tx['qty'].astype(float)
+        df_tx['price'] = df_tx['price'].astype(float)
+        
+        start_date = df_tx['date'].min()
+        end_date = pd.Timestamp.now()
+        
+        # 2. Download Data (Portfolio Tickers + Benchmark)
+        unique_tickers = df_tx['ticker'].unique().tolist()
+        
+        # Handle CDI special case
+        is_cdi = (benchmark_ticker == 'CDI')
+        # If CDI, we don't download it from Yahoo
+        download_tickers = unique_tickers + ([benchmark_ticker] if not is_cdi else [])
+        
+        all_tickers = download_tickers
+        
+        # Download history
+        has_crypto = any(t.endswith('-USD') for t in unique_tickers)
+        
+        # Optimization: Fetch usually includes weekends for Crypto? 
+        # yfinance auto-adjusts.
+        df_hist = yf.download(all_tickers, start=start_date, end=end_date, progress=False)
+        
+        # Handle Close prices
+        close_data = pd.DataFrame()
+        if len(all_tickers) == 1:
+             # Just one ticker
+             close_data[all_tickers[0]] = df_hist['Close']
+        else:
+             try:
+                 close_data = df_hist['Close']
+             except:
+                 # fallback if structure is weird
+                 pass
+        
+        # Fill missing data (forward fill)
+        close_data.fillna(method='ffill', inplace=True)
+        close_data.fillna(0, inplace=True) # If starts with NaN
+        
+        # 3. Simulate Portfolio Evolution
+        # Create a timeline
+        all_days = close_data.index
+        
+        portfolio_series = pd.Series(0.0, index=all_days)
+        invested_series = pd.Series(0.0, index=all_days)
+        
+        # Reconstruct portfolio value day by day
+        # Better approach: For each asset, create a "Holdings Series" (units held over time)
+        
+        for ticker in unique_tickers:
+            units_held = pd.Series(0.0, index=all_days)
+            
+            # Filter txs for this ticker
+            txs = df_tx[df_tx['ticker'] == ticker]
+            
+            for _, row in txs.iterrows():
+                # Add qty from transaction date onwards
+                # Using searchsorted to find index
+                if row['date'] in all_days:
+                     mask = all_days >= row['date']
+                     units_held.loc[mask] += row['qty']
+                else:
+                     # Closest date?
+                     pass
+            
+            # Value of this asset over time
+            if ticker in close_data.columns:
+                asset_value = units_held * close_data[ticker]
+                portfolio_series += asset_value
+            
+            # Invested Amount Logic
+            # Simply adds cash invested at that date
+            for _, row in txs.iterrows():
+                 mask = all_days >= row['date']
+                 invested_series.loc[mask] += (row['qty'] * row['price'])
+
+        # 4. Calculate Benchmark Evolution (Scaled)
+        # Strategy: Benchmark mimics the cash inflows. 
+        # When user invests $X at date D, "Benchmark Portfolio" buys $X worth of underlying index.
+        bench_series = pd.Series(0.0, index=all_days)
+        
+        if not is_cdi and benchmark_ticker in close_data.columns:
+            bench_prices = close_data[benchmark_ticker]
+            bench_qty_held = pd.Series(0.0, index=all_days)
+            
+            for _, tx in df_tx.iterrows():
+                # Buy benchmark units with the transaction amount
+                if tx['date'] in all_days: # Simplification
+                    # Find price at that date
+                    try:
+                        idx = all_days.get_indexer([tx['date']], method='pad')[0]
+                        if idx == -1: idx = 0 # Should not happen if start_date min
+                        
+                        price_at_buy = bench_prices.iloc[idx]
+                        if price_at_buy > 0:
+                            amt = tx['qty'] * tx['price']
+                            units = amt / price_at_buy
+                            
+                            mask = all_days >= tx['date']
+                            bench_qty_held.loc[mask] += units
+                    except:
+                        pass
+            
+            # Now Calculate Value of Bench Portfolio
+            bench_series = bench_qty_held * bench_prices
+            
+        elif is_cdi:
+            try:
+                # Fetch Real CDI Data using python-bcb
+                # Code 12 = Taxa de juros - CDI (% a.d.)
+                start_str = start_date.strftime('%Y-%m-%d')
+                cdi_daily = sgs.get({'CDI': 12}, start=start_str)
+                
+                # The API returns % (e.g., 0.05). We need factor (1 + 0.05/100)
+                cdi_daily['factor'] = 1 + (cdi_daily['CDI'] / 100)
+                
+                # Create a cumulative index
+                # We need to reindex this to our 'all_days' to match portfolio
+                # This handles weekends/holidays (ffill the index, though CDI is daily business day)
+                
+                # Reindex to all_days (business days + weekends from yfinance range)
+                # Fill missing with factor 1.0 (no growth on weekends)
+                cdi_aligned = cdi_daily['factor'].reindex(all_days, fill_value=1.0)
+                
+                # Calculate cumulative product
+                cdi_accum = cdi_aligned.cumprod()
+                
+                # Bench logic using Index
+                bench_qty_held = pd.Series(0.0, index=all_days)
+                
+                for _, tx in df_tx.iterrows():
+                    mask = all_days >= tx['date']
+                    try:
+                        # get index val at tx date
+                        idx = all_days.get_indexer([tx['date']], method='pad')[0]
+                        if idx == -1: idx = 0
+                        index_val_at_buy = cdi_accum.iloc[idx]
+                        
+                        if index_val_at_buy == 0: index_val_at_buy = 1.0
+                        
+                        investment = tx['qty'] * tx['price']
+                        units_bought = investment / index_val_at_buy
+                        
+                        bench_qty_held.loc[mask] += units_bought
+                    except:
+                        pass
+                
+                bench_series = bench_qty_held * cdi_accum
+                
+            except Exception as e:
+                logger.error(f"Error fetching CDI from BCB: {e}")
+                # Fallback to zeros or flat line
+                bench_series = pd.Series(0.0, index=all_days)
+        
+        # 5. Format for JSON
+        result = {
+            "dates": all_days.strftime('%Y-%m-%d').tolist(),
+            "portfolio": portfolio_series.fillna(0).tolist(),
+            "invested": invested_series.fillna(0).tolist(),
+            "benchmark": bench_series.fillna(0).tolist(),
+            "benchmark_symbol": benchmark_ticker
+        }
+        return jsonify(result)
+
+    except Exception as e:
+        logger.error(f"Error in portfolio evolution: {e}")
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':

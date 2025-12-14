@@ -13,6 +13,42 @@ CORS(app)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# --- STATIC FILE SERVING ---
+# Assuming files are in the same directory as this script.
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+@app.route('/')
+def serve_index():
+    return send_file(os.path.join(BASE_DIR, 'index2.html'))
+
+@app.route('/portfolio')
+def serve_portfolio():
+    return send_file(os.path.join(BASE_DIR, 'portfolio.html'))
+
+@app.route('/analise')
+def serve_analise():
+    return send_file(os.path.join(BASE_DIR, 'analise_carteiras.html'))
+
+@app.route('/<path:filename>')
+def serve_static(filename):
+    # Serve other static files (js, css, images) if they exist in root
+    return send_file(os.path.join(BASE_DIR, filename))
+
+@app.route('/api/assets', methods=['GET'])
+def get_assets():
+    flat_list = []
+    # Build a flat list with category info
+    for category, tickers in ASSETS.items():
+        for t in tickers:
+            name = TICKER_NAMES_UPDATE_BR.get(t) or TICKER_NAMES_BASE.get(t) or t
+            flat_list.append({
+                "symbol": t,
+                "name": name,
+                "category": category
+            })
+    return jsonify(flat_list)
+
+
 # --- DATA DEFINITIONS (Copied from backend3.py for consistency) ---
 ASSETS = {
     'cripto': [

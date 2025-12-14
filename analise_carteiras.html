@@ -70,7 +70,7 @@
             top: 0;
             width: 100%;
             z-index: 1000;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
 
         .logo {
@@ -108,6 +108,59 @@
             border-color: white;
         }
 
+        /* --- Dropdown Nav --- */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: var(--bg-panel);
+            min-width: 160px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            z-index: 1001;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            top: 100%;
+        }
+
+        .dropdown-content a {
+            color: var(--text-main);
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            margin-left: 0;
+            font-size: 14px;
+        }
+
+        .dropdown-content a:hover {
+            background-color: var(--bg-main);
+            color: var(--accent-primary);
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        .nav-btn-drop {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.8);
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 500;
+            margin-left: 30px;
+            cursor: pointer;
+            padding: 10px 0;
+        }
+
+        .nav-btn-drop:hover {
+            color: white;
+        }
+
         /* --- Main Content --- */
         .content-container {
             padding: 40px;
@@ -128,7 +181,8 @@
             line-height: 1.6;
         }
 
-        input, select {
+        input,
+        select {
             background-color: var(--bg-main);
             color: var(--text-main);
             border: 1px solid var(--border-color);
@@ -141,19 +195,21 @@
             outline: none;
         }
 
-        input:focus, select:focus {
+        input:focus,
+        select:focus {
             border-color: var(--accent-primary);
             box-shadow: 0 0 0 2px rgba(0, 86, 179, 0.1);
         }
 
         .card {
             background-color: var(--bg-panel);
-            border-radius: 8px; /* Slightly reduced radius */
+            border-radius: 8px;
+            /* Slightly reduced radius */
             padding: 30px;
             border: 1px solid var(--border-color);
             margin-top: 20px;
             /* Minimalist shadow */
-            box-shadow: 0 2px 8px rgba(0,0,0,0.03); 
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
         }
 
         .cta-button {
@@ -177,45 +233,45 @@
             background-color: var(--accent-hover);
             transform: translateY(-1px);
         }
-        
+
         .cta-button.secondary {
             background-color: transparent;
             border: 1px solid var(--accent-primary);
             color: var(--accent-primary);
         }
-        
+
         .cta-button.secondary:hover {
             background-color: rgba(0, 86, 179, 0.05);
         }
 
         .asset-row {
-            display: flex; 
-            align-items: center; 
-            justify-content: space-between; 
-            padding: 8px 12px; 
-            background: transparent; 
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: transparent;
             border-bottom: 1px solid var(--border-color);
             transition: background 0.2s;
         }
-        
+
         .asset-row:last-child {
             border-bottom: none;
         }
-        
+
         .asset-row:hover {
             background: var(--bg-main);
         }
 
         .section-title {
-            font-size: 14px; 
-            text-transform: uppercase; 
-            letter-spacing: 1px; 
-            font-weight: 700; 
-            color: var(--text-muted); 
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+            color: var(--text-muted);
             margin-bottom: 15px;
             border-left: 3px solid var(--accent-primary);
             padding-left: 10px;
-            display: flex; 
+            display: flex;
             align-items: center;
         }
     </style>
@@ -225,11 +281,19 @@
 
     <header>
         <div class="logo">FinSense</div>
-        <nav>
+        <nav style="display: flex; align-items: center;">
             <a href="index2.html">Início</a>
+
+            <div class="dropdown">
+                <button class="nav-btn-drop" style="color: white; font-weight: 700;">Análise ▼</button>
+                <div class="dropdown-content">
+                    <a href="analise_carteiras.html">Correlação & Risco</a>
+                    <a href="portfolio.html">Gerenciar Portfólio</a>
+                </div>
+            </div>
+
             <a href="index2.html#dashboard">Plataforma</a>
             <a href="index2.html#mercado">Mercado</a>
-            <a href="analise_carteiras.html" style="color: white; font-weight: 700;">Análise de Carteiras</a>
             <button id="theme-btn" class="theme-toggle" onclick="toggleTheme()" title="Alternar Tema">🌙</button>
         </nav>
     </header>
@@ -243,15 +307,16 @@
         <div class="card" style="padding: 0; overflow: hidden;">
             <div style="padding: 30px;">
                 <h2 style="font-size: 18px; margin-bottom: 25px;">Configuração da Carteira</h2>
-                
+
                 <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 30px;">
-                    
+
                     <!-- Left Col: Assets -->
                     <div>
                         <div class="section-title">1. Seleção de Ativos</div>
-                        
+
                         <div style="position: relative; margin-bottom: 15px;">
-                            <input type="text" id="asset-search" placeholder="Buscar ativo (ex: PETR4)..." autocomplete="off">
+                            <input type="text" id="asset-search" placeholder="Buscar ativo (ex: PETR4)..."
+                                autocomplete="off">
                             <ul id="suggestions" style="
                                 position: absolute; top: 105%; left: 0; width: 100%; 
                                 background: var(--bg-panel); border: 1px solid var(--border-color); 
@@ -261,9 +326,11 @@
                             </ul>
                         </div>
 
-                        <div id="asset-list" style="border: 1px solid var(--border-color); border-radius: 6px; overflow: hidden; min-height: 50px;">
+                        <div id="asset-list"
+                            style="border: 1px solid var(--border-color); border-radius: 6px; overflow: hidden; min-height: 50px;">
                             <!-- Empty State -->
-                            <div id="empty-assets" style="padding: 20px; text-align: center; color: var(--text-muted); font-size: 13px;">
+                            <div id="empty-assets"
+                                style="padding: 20px; text-align: center; color: var(--text-muted); font-size: 13px;">
                                 Nenhum ativo selecionado.
                             </div>
                         </div>
@@ -274,11 +341,13 @@
                         <div class="section-title">2. Período da Análise</div>
                         <div style="display: flex; flex-direction: column; gap: 15px;">
                             <div>
-                                <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; color: var(--text-muted);">Início</label>
+                                <label
+                                    style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; color: var(--text-muted);">Início</label>
                                 <input type="date" id="start-date">
                             </div>
                             <div>
-                                <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; color: var(--text-muted);">Fim</label>
+                                <label
+                                    style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; color: var(--text-muted);">Fim</label>
                                 <input type="date" id="end-date">
                             </div>
                         </div>
@@ -287,14 +356,16 @@
             </div>
 
             <!-- Actions Footer -->
-            <div style="background-color: rgba(0,0,0,0.02); border-top: 1px solid var(--border-color); padding: 25px 30px;">
-                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
-                    
+            <div
+                style="background-color: rgba(0,0,0,0.02); border-top: 1px solid var(--border-color); padding: 25px 30px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
+
                     <!-- Correlation Action -->
                     <div style="display: flex; align-items: center; justify-content: space-between;">
                         <div>
                             <div style="font-weight: 700; font-size: 14px; margin-bottom: 3px;">Risco & Correlação</div>
-                            <div style="font-size: 12px; color: var(--text-muted);">Matriz de correlação e análise de diversificação.</div>
+                            <div style="font-size: 12px; color: var(--text-muted);">Matriz de correlação e análise de
+                                diversificação.</div>
                         </div>
                         <button onclick="runCorrelationAnalysis()" class="cta-button secondary">
                             Analisar
@@ -302,55 +373,64 @@
                     </div>
 
                     <!-- Benchmark Action -->
-                    <div style="display: flex; align-items: center; justify-content: space-between; padding-left: 40px; border-left: 1px solid var(--border-color);">
+                    <div
+                        style="display: flex; align-items: center; justify-content: space-between; padding-left: 40px; border-left: 1px solid var(--border-color);">
                         <div style="flex: 1; padding-right: 15px;">
                             <div style="font-weight: 700; font-size: 14px; margin-bottom: 5px;">Benchmark</div>
-                                <select id="benchmark-select" style="padding: 6px 10px; font-size: 13px;">
-                                    <option value="^BVSP">Ibovespa</option>
-                                    <option value="^GSPC">S&P 500</option>
-                                    <option value="^IXIC">Nasdaq</option>
-                                    <option value="BTC-USD">Bitcoin</option>
-                                </select>
+                            <select id="benchmark-select" style="padding: 6px 10px; font-size: 13px;">
+                                <option value="^BVSP">Ibovespa</option>
+                                <option value="^GSPC">S&P 500</option>
+                                <option value="^IXIC">Nasdaq</option>
+                                <option value="BTC-USD">Bitcoin</option>
+                            </select>
                         </div>
                         <button onclick="runBenchmarkAnalysis()" class="cta-button">
                             Comparar
                         </button>
                     </div>
 
-                 </div>
+                </div>
             </div>
         </div>
-            
+
         <!-- Error Message -->
         <div id="error-msg" style="color: var(--danger-red); margin-top: 15px; display: none; font-weight: 600;"></div>
-        
+
         <!-- Results Section -->
         <div id="results-area" style="display: none; margin-top: 30px;">
-            
+
             <!-- Correlation Summary Card -->
-            <div id="correlation-card" class="card" style="border-left: 5px solid var(--accent-primary); display: none;">
+            <div id="correlation-card" class="card"
+                style="border-left: 5px solid var(--accent-primary); display: none;">
                 <h3 style="margin-bottom: 10px;">Resumo da Correlação</h3>
-                <div id="summary-text" style="font-size: 16px; font-weight: 500; text-align: justify; line-height: 1.6;"></div>
+                <div id="summary-text"
+                    style="font-size: 16px; font-weight: 500; text-align: justify; line-height: 1.6;"></div>
                 <div style="margin-top: 10px; font-size: 14px; color: var(--text-muted);">
-                    Média de Correlação Absoluta: <span id="avg-corr-val" style="font-weight: 700; color: var(--text-main);"></span>
+                    Média de Correlação Absoluta: <span id="avg-corr-val"
+                        style="font-weight: 700; color: var(--text-main);"></span>
                 </div>
             </div>
 
             <!-- Performance Section -->
             <div id="benchmark-card" class="card" style="margin-top: 20px; display: none;">
-                <h3 style="margin-bottom: 20px; font-size: 16px;">Comparação de Rentabilidade: Carteira vs Benchmark</h3>
+                <h3 style="margin-bottom: 20px; font-size: 16px;">Comparação de Rentabilidade: Carteira vs Benchmark
+                </h3>
                 <div id="performance-chart" style="width: 100%; height: 500px;"></div>
-                <div style="margin-top: 10px; font-size: 12px; color: var(--text-muted); text-align: center;">* A curva 'Minha Carteira' é calculada com base nos pesos definidos acima.</div>
-                
+                <div style="margin-top: 10px; font-size: 12px; color: var(--text-muted); text-align: center;">* A curva
+                    'Minha Carteira' é calculada com base nos pesos definidos acima.</div>
+
                 <!-- New Summary Area -->
                 <div id="benchmark-summary" style="display: none;"></div>
             </div>
-            
+
         </div>
-        
+
         <!-- Loading Overlay -->
-        <div id="loading" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center; flex-direction: column;">
-            <div style="border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid var(--accent-primary); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite;"></div>
+        <div id="loading"
+            style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; justify-content: center; align-items: center; flex-direction: column;">
+            <div
+                style="border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid var(--accent-primary); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite;">
+            </div>
             <span style="color: white; margin-top: 15px; font-weight: 600; font-size: 18px;">Processando Dados...</span>
         </div>
 
@@ -367,17 +447,17 @@
 
         // Init Defaults
         document.addEventListener('DOMContentLoaded', () => {
-             loadTheme();
-             fetchAssets();
-             setupAutocomplete();
-             
-             // Set default dates (Last 1 year)
-             const today = new Date();
-             const lastYear = new Date();
-             lastYear.setFullYear(today.getFullYear() - 1);
-             
-             document.getElementById('end-date').valueAsDate = today;
-             document.getElementById('start-date').valueAsDate = lastYear;
+            loadTheme();
+            fetchAssets();
+            setupAutocomplete();
+
+            // Set default dates (Last 1 year)
+            const today = new Date();
+            const lastYear = new Date();
+            lastYear.setFullYear(today.getFullYear() - 1);
+
+            document.getElementById('end-date').valueAsDate = today;
+            document.getElementById('start-date').valueAsDate = lastYear;
         });
 
         async function fetchAssets() {
@@ -403,14 +483,14 @@
 
             input.addEventListener('input', (e) => {
                 const query = e.target.value.toLowerCase().trim();
-                
+
                 if (query.length < 1) {
                     suggestions.style.display = 'none';
                     return;
                 }
 
-                const matches = allAssets.filter(asset => 
-                    (asset.symbol && asset.symbol.toLowerCase().includes(query)) || 
+                const matches = allAssets.filter(asset =>
+                    (asset.symbol && asset.symbol.toLowerCase().includes(query)) ||
                     (asset.name && asset.name.toLowerCase().includes(query))
                 ).slice(0, 10); // Limit to 10
 
@@ -423,10 +503,10 @@
                     suggestions.style.display = 'none';
                 }
             });
-            
+
             // Handle Backspace to remove last tag if input is empty
             input.addEventListener('keydown', (e) => {
-                if(e.key === 'Backspace' && input.value === '' && selectedTickers.length > 0) {
+                if (e.key === 'Backspace' && input.value === '' && selectedTickers.length > 0) {
                     // Remove the last added asset
                     removeTag(selectedTickers[selectedTickers.length - 1].symbol);
                 }
@@ -436,7 +516,7 @@
         function renderSuggestions(matches) {
             const suggestions = document.getElementById('suggestions');
             suggestions.innerHTML = '';
-            
+
             if (matches.length === 0) {
                 suggestions.style.display = 'none';
                 return;
@@ -451,31 +531,31 @@
                 li.style.color = 'var(--text-main)';
                 li.style.display = 'flex';
                 li.style.justifyContent = 'space-between';
-                
+
                 li.innerHTML = `
                     <span><strong>${asset.symbol}</strong> - ${asset.name}</span>
                     <span style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">${asset.category}</span>
                 `;
-                
+
                 li.onmouseover = () => li.style.backgroundColor = 'var(--bg-main)';
                 li.onmouseout = () => li.style.backgroundColor = 'transparent';
-                
+
                 li.onclick = () => {
                     addTag(asset.symbol);
                     suggestions.style.display = 'none';
                     document.getElementById('asset-search').value = '';
                     document.getElementById('asset-search').focus();
                 };
-                
+
                 suggestions.appendChild(li);
             });
-            
+
             suggestions.style.display = 'block';
         }
 
         function addTag(ticker) {
             if (selectedTickers.find(t => t.symbol === ticker)) return;
-            
+
             selectedTickers.push({ symbol: ticker, weight: 0 }); // Init with 0, will rebalance
             rebalanceWeights();
             renderAssetList();
@@ -486,16 +566,16 @@
             rebalanceWeights();
             renderAssetList();
         }
-        
+
         function rebalanceWeights() {
             if (selectedTickers.length === 0) return;
             const w = parseFloat((100 / selectedTickers.length).toFixed(2));
             selectedTickers.forEach(t => t.weight = w);
         }
-        
+
         function updateWeight(ticker, newWeight) {
             const asset = selectedTickers.find(t => t.symbol === ticker);
-            if(asset) asset.weight = parseFloat(newWeight) || 0;
+            if (asset) asset.weight = parseFloat(newWeight) || 0;
             // Note: We don't auto-rebalance others here to allow manual tweaking, 
             // but user should ensure sum is 100 technically. Backend normalizes anyway.
         }
@@ -503,26 +583,26 @@
         function renderAssetList() {
             const container = document.getElementById('asset-list');
             const emptyState = document.getElementById('empty-assets');
-            
+
             // Clear but keep empty state if needed
             const currentRows = container.querySelectorAll('.asset-row');
             currentRows.forEach(r => r.remove());
 
             if (selectedTickers.length === 0) {
-                 if(!document.getElementById('empty-assets')) {
-                     container.innerHTML = `<div id="empty-assets" style="padding: 20px; text-align: center; color: var(--text-muted); font-size: 13px;">Nenhum ativo selecionado.</div>`;
-                 } else {
-                     emptyState.style.display = 'block';
-                 }
-                 return;
+                if (!document.getElementById('empty-assets')) {
+                    container.innerHTML = `<div id="empty-assets" style="padding: 20px; text-align: center; color: var(--text-muted); font-size: 13px;">Nenhum ativo selecionado.</div>`;
+                } else {
+                    emptyState.style.display = 'block';
+                }
+                return;
             } else {
-                if(emptyState) emptyState.style.display = 'none';
+                if (emptyState) emptyState.style.display = 'none';
             }
 
             selectedTickers.forEach(asset => {
                 const row = document.createElement('div');
                 row.className = 'asset-row';
-                
+
                 row.innerHTML = `
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <span style="font-weight: 700; font-size: 14px; color: var(--text-main);">${asset.symbol}</span>
@@ -543,7 +623,7 @@
                         </button>
                     </div>
                 `;
-                
+
                 // Add hover effect for delete button
                 const btn = row.querySelector('button');
                 btn.onmouseover = () => btn.style.color = 'var(--danger-red)';
@@ -554,23 +634,23 @@
         }
 
         async function runCorrelationAnalysis() {
-             await performAnalysis('correlation');
+            await performAnalysis('correlation');
         }
 
         async function runBenchmarkAnalysis() {
-             await performAnalysis('benchmark');
+            await performAnalysis('benchmark');
         }
-        
+
         async function performAnalysis(mode) {
             const startDate = document.getElementById('start-date').value;
             const endDate = document.getElementById('end-date').value;
             const errorDiv = document.getElementById('error-msg');
             const loading = document.getElementById('loading');
             const resultsArea = document.getElementById('results-area');
-            
+
             // Only hide the specific card we are running, or both if running all?
             // For simplicity, lets show the results area main container
-            resultsArea.style.display = 'block'; 
+            resultsArea.style.display = 'block';
             errorDiv.style.display = 'none';
 
             if (selectedTickers.length < 2 && mode === 'correlation') {
@@ -578,12 +658,12 @@
                 errorDiv.style.display = 'block';
                 return;
             }
-             if (selectedTickers.length < 1 && mode === 'benchmark') {
+            if (selectedTickers.length < 1 && mode === 'benchmark') {
                 errorDiv.innerText = "Insira pelo menos 1 ativo para o benchmark.";
                 errorDiv.style.display = 'block';
                 return;
             }
-            
+
             if (!startDate || !endDate) {
                 errorDiv.innerText = "Por favor, selecione as datas.";
                 errorDiv.style.display = 'block';
@@ -604,13 +684,13 @@
                     });
                     const data = await response.json();
                     if (!response.ok) throw new Error(data.error);
-                    
+
                     document.getElementById('correlation-card').style.display = 'block';
                     document.getElementById('summary-text').innerText = data.summary;
                     document.getElementById('avg-corr-val').innerText = data.avg_correlation.toFixed(2);
                     lastAnalysisData = { ...lastAnalysisData, corr: data };
                 }
-                
+
                 if (mode === 'benchmark') {
                     const benchmark = document.getElementById('benchmark-select').value;
                     const response = await fetch('http://127.0.0.1:5001/api/portfolio/benchmark', {
@@ -639,15 +719,15 @@
                 loading.style.display = 'none';
             }
         }
-        
+
         function renderBenchmarkChart(benchData) {
-            if(!benchData) return;
-            
+            if (!benchData) return;
+
             const portfolio = benchData.portfolio;
             const benchmark = benchData.benchmark;
             const dates = benchData.dates;
             const benchSymbol = benchData.benchmark_symbol;
-            
+
             // Map symbol to friendly name
             const benchmarkMap = {
                 '^BVSP': 'Ibovespa',
@@ -656,18 +736,18 @@
                 'BTC-USD': 'Bitcoin'
             };
             const benchName = benchmarkMap[benchSymbol] || benchSymbol;
-            
+
             // Calculate Performance
             const finalPort = portfolio[portfolio.length - 1];
             const finalBench = benchmark[benchmark.length - 1];
             const diff = finalPort - finalBench;
-            
+
             // Update Summary Text
             const summaryDiv = document.getElementById('benchmark-summary');
             const winner = finalPort > finalBench ? 'Sua Carteira superou o Benchmark!' : 'O Benchmark superou sua Carteira.';
             const color = finalPort > finalBench ? 'var(--success-green)' : 'var(--danger-red)';
             const diffText = Math.abs(diff).toFixed(2) + '%';
-            
+
             summaryDiv.innerHTML = `
                 <div style="margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.03); border-radius: 8px; border-left: 4px solid ${color};">
                     <h4 style="margin-bottom: 5px; color: var(--text-main); font-size: 16px;">${winner}</h4>
@@ -680,45 +760,45 @@
             summaryDiv.style.display = 'block';
 
             const traces = [];
-            
+
             // Add Gradient
             const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
             const portColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-primary').trim();
-            
+
             traces.push({
-                x: dates, 
-                y: portfolio, 
-                type: 'scatter', 
-                mode: 'lines', 
+                x: dates,
+                y: portfolio,
+                type: 'scatter',
+                mode: 'lines',
                 name: 'Minha Carteira',
-                line: { width: 3, color: portColor, shape: 'spline' }, 
-                fill: 'tozeroy', 
+                line: { width: 3, color: portColor, shape: 'spline' },
+                fill: 'tozeroy',
                 fillcolor: isDark ? 'rgba(77, 163, 255, 0.1)' : 'rgba(0, 86, 179, 0.1)'
             });
 
             traces.push({
-                x: dates, 
-                y: benchmark, 
-                type: 'scatter', 
-                mode: 'lines', 
+                x: dates,
+                y: benchmark,
+                type: 'scatter',
+                mode: 'lines',
                 name: benchName,
                 line: { width: 2, color: '#ffb142' }, // Solid High Contrast Orange
                 hoverinfo: 'y+name'
             });
-            
+
             const layout = {
                 title: { text: '' },
                 paper_bgcolor: 'rgba(0,0,0,0)',
                 plot_bgcolor: 'rgba(0,0,0,0)',
                 font: { family: 'Manrope, sans-serif', color: getComputedStyle(document.documentElement).getPropertyValue('--text-main') },
-                xaxis: { 
-                    showgrid: false, 
-                    color: getComputedStyle(document.documentElement).getPropertyValue('--text-muted') 
+                xaxis: {
+                    showgrid: false,
+                    color: getComputedStyle(document.documentElement).getPropertyValue('--text-muted')
                 },
-                yaxis: { 
-                    showgrid: true, 
-                    gridcolor: getComputedStyle(document.documentElement).getPropertyValue('--chart-grid'), 
-                    color: getComputedStyle(document.documentElement).getPropertyValue('--text-muted'), 
+                yaxis: {
+                    showgrid: true,
+                    gridcolor: getComputedStyle(document.documentElement).getPropertyValue('--chart-grid'),
+                    color: getComputedStyle(document.documentElement).getPropertyValue('--text-muted'),
                     ticksuffix: '%',
                     zeroline: true,
                     zerolinecolor: getComputedStyle(document.documentElement).getPropertyValue('--border-color')
@@ -733,13 +813,13 @@
                     font: { color: isDark ? '#ffffff' : '#1e293b' } // Force high contrast text/bg
                 }
             };
-            
+
             Plotly.newPlot('performance-chart', traces, layout, { responsive: true, displayModeBar: false });
         }
 
 
         function renderResults(corrData, benchData) {
-             // Retired function in favor of renderBenchmarkChart and individual calls
+            // Retired function in favor of renderBenchmarkChart and individual calls
         }
 
         function toggleTheme() {
@@ -752,10 +832,10 @@
 
             const btn = document.getElementById('theme-btn');
             btn.innerText = next === 'dark' ? '☀️' : '🌙';
-            
+
             // Re-render chart if it exists to clean up styles
-            if(lastAnalysisData && lastAnalysisData.bench && document.getElementById('benchmark-card').style.display === 'block') {
-                 renderBenchmarkChart(lastAnalysisData.bench);
+            if (lastAnalysisData && lastAnalysisData.bench && document.getElementById('benchmark-card').style.display === 'block') {
+                renderBenchmarkChart(lastAnalysisData.bench);
             }
         }
 
