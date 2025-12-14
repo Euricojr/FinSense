@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinSense - Minha Carteira</title>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        :root {
+            --bg-main: #0d1117;
+            --bg-panel: #161b22;
+            --text-main: #e6edf3;
+            --text-muted: #8b949e;
+            --accent-primary: #1f6feb;
+            --accent-hover: #388bfd;
+            --border-color: #30363d;
+            --success-color: #238636;
+            --danger-color: #da3633;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-family: 'Manrope', sans-serif;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .back-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover {
+            color: var(--accent-primary);
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .stat-value.profit {
+            color: var(--success-color);
+        }
+
+        .stat-value.loss {
+            color: var(--danger-color);
+        }
+
+        /* Main Content Grid */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 30px;
+        }
+
+        /* Input Form */
+        .form-panel {
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 25px;
+            height: fit-content;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--bg-main);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 14px;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+
+        .btn-add {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--accent-primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-add:hover {
+            background-color: var(--accent-hover);
+        }
+
+        .btn-calc {
+            background-color: var(--success-color);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        /* Transactions List */
+        .transactions-panel {
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 25px;
+            min-height: 400px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        th {
+            text-align: left;
+            padding: 12px 15px;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 600;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .ticker-badge {
+            background-color: rgba(31, 111, 235, 0.1);
+            color: var(--accent-primary);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            color: var(--danger-color);
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+
+        .delete-btn:hover {
+            opacity: 1;
+        }
+
+        /* Suggestions */
+        #suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            list-style: none;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+            z-index: 1001;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            padding: 0;
+            margin: 0;
+        }
+
+        #suggestions li {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 14px;
+            color: var(--text-main);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        #suggestions li:hover {
+            background-color: var(--bg-main);
+        }
+
+        /* Suggestions */
+        #suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            list-style: none;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+            z-index: 1001;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            padding: 0;
+            margin: 0;
+        }
+
+        #suggestions li {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 14px;
+            color: var(--text-main);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        #suggestions li:hover {
+            background-color: var(--bg-main);
+        }
+
+        /* Loading */
+        #loadingOverlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(13, 17, 23, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            flex-direction: column;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--border-color);
+            border-top: 4px solid var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="loadingOverlay">
+        <div class="spinner"></div>
+        <span>Calculando Rentabilidade...</span>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1>Minha Carteira</h1>
+            <a href="/" class="back-link">← Voltar para Análise</a>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Investido</div>
+                <div class="stat-value" id="totalInvested">R$ 0,00</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Valor Atual</div>
+                <div class="stat-value" id="currentValue">R$ 0,00</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Lucro / Prejuízo</div>
+                <div class="stat-value" id="totalProfit">R$ 0,00 (0.00%)</div>
+            </div>
+        </div>
+
+        <div class="content-grid">
+            <!-- Input Form -->
+            <div class="form-panel">
+                <h3 style="margin-top: 0; margin-bottom: 20px;">Nova Transação</h3>
+
+                <div class="form-group" style="position: relative;">
+                    <label>Ativo (Ticker)</label>
+                    <input type="text" id="tickerInput" class="form-control" placeholder="Buscar ativo (ex: PETR4)..."
+                        autocomplete="off">
+                    <ul id="suggestions"></ul>
+                </div>
+
+                <div class="form-group">
+                    <label>Data da Compra</label>
+                    <input type="date" id="dateInput" class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label>Quantidade</label>
+                    <input type="number" id="qtyInput" class="form-control" placeholder="0">
+                </div>
+
+                <div class="form-group">
+                    <label>Preço Unitário (R$)</label>
+                    <input type="number" id="priceInput" class="form-control" placeholder="0.00" step="0.01">
+                </div>
+
+                <button class="btn-add" onclick="addTransaction()">Adicionar</button>
+                <button class="btn-calc" onclick="calculatePortfolio()">Calcular Rentabilidade</button>
+            </div>
+
+            <!-- List -->
+            <div class="transactions-panel">
+                <h3 style="margin-top: 0; margin-bottom: 20px;">Histórico de Transações</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Ativo</th>
+                            <th>Data</th>
+                            <th>Qtd</th>
+                            <th>Preço Médio</th>
+                            <th>Total</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionsTableBody">
+                        <!-- Rows will be added here -->
+                    </tbody>
+                </table>
+                <p id="emptyState" style="text-align: center; color: var(--text-muted); margin-top: 50px;">
+                    Nenhuma transação adicionada.
+                </p>
+            </div>
+        </div>
+        <div class="charts-section" style="margin-top: 40px;">
+            <div class="form-panel">
+                <h3 style="margin-top: 0; margin-bottom: 20px;">Alocação da Carteira</h3>
+                <div id="allocationChart" style="width:100%; height:350px;"></div>
+            </div>
+
+            <div class="form-panel" style="margin-top: 20px;">
+                <div id="performanceChart" style="width:100%; height:400px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let transactions = [];
+        let allAssets = [];
+
+        // Load available tickers on mount
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check if running via file://
+            if (window.location.protocol === 'file:') {
+                alert("Aviso: Você abriu este arquivo diretamente.\nPara que o sistema funcione, acesse via servidor:\nhttp://localhost:5002/portfolio");
+                document.getElementById('tickerInput').placeholder = "Erro: Acesse via localhost:5002";
+                return;
+            }
+
+            document.getElementById('tickerInput').placeholder = "Carregando ativos...";
+            fetchAssets();
+            setupAutocomplete();
+        });
+
+        async function fetchAssets() {
+            try {
+                const response = await fetch('/api/assets');
+                if (response.ok) {
+                    allAssets = await response.json();
+                    document.getElementById('tickerInput').placeholder = "Buscar ativo (ex: PETR4)...";
+                    console.log("Assets loaded:", allAssets.length);
+                } else {
+                    console.error("Failed to load assets");
+                    document.getElementById('tickerInput').placeholder = "Erro ao carregar ativos";
+                }
+            } catch (e) {
+                console.error("Error loading assets:", e);
+                document.getElementById('tickerInput').placeholder = "Erro de conexão";
+            }
+        }
+
+        function setupAutocomplete() {
+            const input = document.getElementById('tickerInput');
+            const suggestions = document.getElementById('suggestions');
+
+            input.addEventListener('input', (e) => {
+                const query = e.target.value.toLowerCase().trim();
+
+                if (query.length < 1) {
+                    suggestions.style.display = 'none';
+                    return;
+                }
+
+                const matches = allAssets.filter(asset =>
+                    (asset.symbol && asset.symbol.toLowerCase().includes(query)) ||
+                    (asset.name && asset.name.toLowerCase().includes(query))
+                ).slice(0, 10);
+
+                renderSuggestions(matches);
+            });
+
+            // Hide on click outside
+            document.addEventListener('click', (e) => {
+                if (!input.contains(e.target) && !suggestions.contains(e.target)) {
+                    suggestions.style.display = 'none';
+                }
+            });
+        }
+
+        function renderSuggestions(matches) {
+            const suggestions = document.getElementById('suggestions');
+            suggestions.innerHTML = '';
+
+            if (matches.length === 0) {
+                suggestions.style.display = 'none';
+                return;
+            }
+
+            matches.forEach(asset => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <span><strong>${asset.symbol}</strong> - ${asset.name}</span>
+                    <span style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">${asset.category}</span>
+                `;
+
+                li.onclick = () => {
+                    document.getElementById('tickerInput').value = asset.symbol;
+                    suggestions.style.display = 'none';
+                };
+
+                suggestions.appendChild(li);
+            });
+
+            suggestions.style.display = 'block';
+        }
+
+        function addTransaction() {
+            const ticker = document.getElementById('tickerInput').value.toUpperCase();
+            const date = document.getElementById('dateInput').value;
+            const qty = parseFloat(document.getElementById('qtyInput').value);
+            const price = parseFloat(document.getElementById('priceInput').value);
+
+            if (!ticker || !date || !qty || !price) {
+                alert("Por favor, preencha todos os campos.");
+                return;
+            }
+
+            const transaction = {
+                id: Date.now(),
+                ticker,
+                date,
+                qty,
+                price,
+                total: qty * price
+            };
+
+            transactions.push(transaction);
+            renderTable();
+            clearForm();
+        }
+
+        function removeTransaction(id) {
+            transactions = transactions.filter(t => t.id !== id);
+            renderTable();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('transactionsTableBody');
+            const emptyState = document.getElementById('emptyState');
+            tbody.innerHTML = '';
+
+            if (transactions.length === 0) {
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+
+            transactions.forEach(t => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                <td><span class="ticker-badge">${t.ticker}</span></td>
+                <td>${formatDate(t.date)}</td>
+                <td>${t.qty}</td>
+                <td>R$ ${t.price.toFixed(2)}</td>
+                <td>R$ ${t.total.toFixed(2)}</td>
+                <td><button class="delete-btn" onclick="removeTransaction(${t.id})">🗑️</button></td>
+            `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function clearForm() {
+            document.getElementById('tickerInput').value = '';
+            document.getElementById('qtyInput').value = '';
+            document.getElementById('priceInput').value = '';
+            // Date kept for convenience
+        }
+
+        function formatDate(dateString) {
+            const [year, month, day] = dateString.split('-');
+            return `${day}/${month}/${year}`;
+        }
+
+        async function calculatePortfolio() {
+            if (transactions.length === 0) {
+                alert("Adicione transações primeiro.");
+                return;
+            }
+
+            document.getElementById('loadingOverlay').style.display = 'flex';
+
+            try {
+                const response = await fetch('/api/calculate_portfolio', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(transactions)
+                });
+
+                const result = await response.json();
+
+                if (result.error) {
+                    alert('Erro: ' + result.error);
+                    return;
+                }
+
+                updateStats(result);
+
+            } catch (e) {
+                console.error(e);
+                alert("Erro ao calcular carteira.");
+            } finally {
+                document.getElementById('loadingOverlay').style.display = 'none';
+            }
+        }
+
+        function updateStats(data) {
+            document.getElementById('totalInvested').innerText = formatCurrency(data.total_invested);
+            document.getElementById('currentValue').innerText = formatCurrency(data.current_value);
+
+            const profitEl = document.getElementById('totalProfit');
+            const profitVal = data.profit_loss;
+            const profitPct = data.profit_loss_pct;
+
+            profitEl.innerText = `${formatCurrency(profitVal)} (${profitPct.toFixed(2)}%)`;
+            profitEl.className = 'stat-value ' + (profitVal >= 0 ? 'profit' : 'loss');
+
+            // Render Charts
+            renderAllocationChart(data.holdings);
+            updateBenchmarkChart(transactions); // Trigger benchmark calc
+        }
+
+        function renderAllocationChart(holdings) {
+            if (!holdings || holdings.length === 0) return;
+
+            const labels = holdings.map(h => h.ticker);
+            const values = holdings.map(h => h.current_value);
+
+            const isDark = true; // Fixed for now as body has dark theme vars
+
+            const data = [{
+                values: values,
+                labels: labels,
+                type: 'pie',
+                textinfo: 'label+percent',
+                textposition: 'outside',
+                automargin: true,
+                marker: {
+                    colors: [
+                        '#1f6feb', '#238636', '#da3633', '#f0883e', '#8957e5',
+                        '#fa4549', '#2ea043', '#56d364', '#0d1117'
+                    ] // Custom palette matching theme
+                }
+            }];
+
+            const layout = {
+                height: 350,
+                margin: { t: 20, b: 20, l: 20, r: 20 },
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: {
+                    family: 'Manrope, sans-serif',
+                    color: '#e6edf3'
+                },
+                showlegend: true,
+                legend: { orientation: 'h', x: 0, y: -0.1 }
+            };
+
+            Plotly.newPlot('allocationChart', data, layout, { displayModeBar: false });
+        }
+
+        async function updateBenchmarkChart(transactions) {
+            try {
+                // Default benchmark to Ibovespa
+                const response = await fetch('/api/portfolio/benchmark', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tickers: transactions, benchmark: '^BVSP' })
+                });
+
+                if (!response.ok) return;
+                const data = await response.json();
+                renderPerformanceChart(data);
+
+            } catch (e) {
+                console.error("Error fetching benchmark:", e);
+            }
+        }
+
+        function renderPerformanceChart(data) {
+            const dates = data.dates;
+            const portfolio = data.portfolio;
+            const invested = data.invested;
+            const benchmark = data.benchmark; // Simulated benchmark portfolio
+
+            // We will plot "Total Value" vs "Total Invested" vs "Benchmark Equivalent"
+            // Or better: Percentage Return.
+            // Let's stick to Total Value for clarity as Kinvo does "Saldo Bruto vs Valor Aplicado"
+
+            const tracePortfolio = {
+                x: dates, y: portfolio,
+                type: 'scatter', mode: 'lines', name: 'Minha Carteira',
+                line: { color: '#1f6feb', width: 3 },
+                fill: 'tozeroy', fillcolor: 'rgba(31, 111, 235, 0.1)'
+            };
+
+            const traceInvested = {
+                x: dates, y: invested,
+                type: 'scatter', mode: 'lines', name: 'Valor Aplicado',
+                line: { color: '#8b949e', width: 2, dash: 'dot' }
+            };
+
+            const traceBenchmark = {
+                x: dates, y: benchmark,
+                type: 'scatter', mode: 'lines', name: 'Benchmark (Ibov)',
+                line: { color: '#f0883e', width: 2 }
+            };
+
+            const layout = {
+                title: { text: 'Evolução Patrimonial', font: { color: '#e6edf3' } },
+                height: 400,
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: { family: 'Manrope, sans-serif', color: '#e6edf3' },
+                xaxis: { showgrid: false, color: '#8b949e' },
+                yaxis: {
+                    showgrid: true, gridcolor: '#30363d', color: '#8b949e',
+                    tickprefix: 'R$ '
+                },
+                hovermode: 'x unified',
+                legend: { orientation: 'h', y: -0.2 }
+            };
+
+            Plotly.newPlot('performanceChart', [traceInvested, traceBenchmark, tracePortfolio], layout, { displayModeBar: false });
+        }
+
+        function formatCurrency(val) {
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
+        }
+    </script>
+
+</body>
+
+</html>
