@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request, send_file
 from flask_cors import CORS
 import yfinance as yf
 import pandas as pd
+from bcb import sgs
 import logging
 import os
 
@@ -207,6 +208,45 @@ def calculate_portfolio():
             holdings_map[ticker]['invested'] += invested
 
         holdings = list(holdings_map.values())
+        
+        # Calculate Allocation by Category
+        category_totals = {}
+        total_val_check = 0.0
+        
+        for h in holdings:
+            sym = h['ticker']
+            cat = 'Outros'
+            # Find category
+            for c, lst in ASSETS.items():
+                if sym in lst:
+                    cat = c
+                    break
+            
+            # Map friendly names for categories
+            friendly_cat = {
+                'br': 'Ações Brasil',
+                'us': 'Ações EUA',
+                'cripto': 'Cripto'
+            }.get(cat, 'Outros')
+            
+            h['category'] = friendly_cat # Add category to holding for frontend use
+            
+            if friendly_cat not in category_totals:
+                category_totals[friendly_cat] = 0.0
+            category_totals[friendly_cat] += h['current_value']
+            total_val_check += h['current_value']
+            
+        allocation_by_category = []
+        if total_val_check > 0:
+            for cat, val in category_totals.items():
+                allocation_by_category.append({
+                    "category": cat,
+                    "value": val,
+                    "percentage": (val / total_val_check) * 100
+                })
+        
+        # Sort by percentage desc
+        allocation_by_category.sort(key=lambda x: x['percentage'], reverse=True)
 
         profit_loss = current_value - total_invested
         profit_loss_pct = (profit_loss / total_invested * 100) if total_invested > 0 else 0.0
@@ -217,6 +257,7 @@ def calculate_portfolio():
             "profit_loss": profit_loss,
             "profit_loss_pct": profit_loss_pct,
             "holdings": holdings,
+            "allocation_by_category": allocation_by_category,
             "prices": latest_prices
         })
 
@@ -255,7 +296,13 @@ def calculate_portfolio_history(transactions, benchmark_ticker='^BVSP'):
     
     # 2. Download Data (Portfolio Tickers + Benchmark)
     unique_tickers = df_tx['ticker'].unique().tolist()
-    all_tickers = unique_tickers + [benchmark_ticker]
+    
+    # Handle CDI special case
+    is_cdi = (benchmark_ticker == 'CDI')
+    # If CDI, we don't download it from Yahoo
+    download_tickers = unique_tickers + ([benchmark_ticker] if not is_cdi else [])
+    
+    all_tickers = download_tickers
     
     # Download history
     has_crypto = any(t.endswith('-USD') for t in unique_tickers)
@@ -349,6 +396,56 @@ def calculate_portfolio_history(transactions, benchmark_ticker='^BVSP'):
         
         # Now Calculate Value of Bench Portfolio
         bench_series = bench_qty_held * bench_prices
+        
+    elif is_cdi:
+        try:
+            # Fetch Real CDI Data using python-bcb
+            # Code 12 = Taxa de juros - CDI (% a.d.)
+            start_str = start_date.strftime('%Y-%m-%d')
+            cdi_daily = sgs.get({'CDI': 12}, start=start_str)
+            
+            # The API returns % (e.g., 0.05). We need factor (1 + 0.05/100)
+            cdi_daily['factor'] = 1 + (cdi_daily['CDI'] / 100)
+            
+            # Create a cumulative index
+            # We need to reindex this to our 'all_days' to match portfolio
+            # This handles weekends/holidays (ffill the index, though CDI is daily business day)
+            
+            # Reindex to all_days (business days + weekends from yfinance range)
+            # Fill missing with factor 1.0 (no growth on weekends)
+            cdi_aligned = cdi_daily['factor'].reindex(all_days, fill_value=1.0)
+            
+            # Calculate cumulative product
+            cdi_accum = cdi_aligned.cumprod()
+            
+            # Now we have an index (e.g. 1.0, 1.0004...). 
+            # We use this "price" to buy units.
+            
+            bench_qty_held = pd.Series(0.0, index=all_days)
+            
+            for _, tx in df_tx.iterrows():
+                mask = all_days >= tx['date']
+                try:
+                    # get index val at tx date
+                    idx = all_days.get_indexer([tx['date']], method='pad')[0]
+                    if idx == -1: idx = 0
+                    index_val_at_buy = cdi_accum.iloc[idx]
+                    
+                    if index_val_at_buy == 0: index_val_at_buy = 1.0
+                    
+                    investment = tx['qty'] * tx['price']
+                    units_bought = investment / index_val_at_buy
+                    
+                    bench_qty_held.loc[mask] += units_bought
+                except:
+                    pass
+            
+            bench_series = bench_qty_held * cdi_accum
+            
+        except Exception as e:
+            logger.error(f"Error fetching CDI from BCB: {e}")
+            # Fallback to zeros or flat line
+            bench_series = pd.Series(0.0, index=all_days)
     
     # 5. Format for JSON
     # Resample to reduce data size if huge? No, daily is fine for 1 year.
