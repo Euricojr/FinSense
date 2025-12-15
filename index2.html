@@ -957,12 +957,12 @@
     <header>
         <div class="logo">FinSense</div>
         <nav style="display: flex; align-items: center;">
-            <a href="#">Início</a>
-            <a href="#dashboard">Plataforma</a>
-            <a href="#mercado">Mercado</a>
+            <a href="#" style="font-size: 16px;">Início</a>
+            <a href="#dashboard" style="font-size: 16px;">Plataforma</a>
+            <a href="#mercado" style="font-size: 16px;">Mercado</a>
 
             <div class="dropdown">
-                <button class="nav-btn-drop">Análise ▼</button>
+                <button class="nav-btn-drop" style="color: white; font-weight: 700; font-size: 16px;">Análise ▼</button>
                 <div class="dropdown-content">
                     <a href="analise_carteiras.html">Correlação & Risco</a>
                     <a href="portfolio.html">Gerenciar Portfólio</a>
@@ -1142,9 +1142,28 @@
     <!-- Hidden Input for State -->
     <input type="hidden" id="ativo-atual" value="BTC-USD">
 
-    <script src="particles.js"></script>
+    <script src="static/js/particles.js"></script>
 
     <script>
+        // --- API Config ---
+        function getBaseUrl() {
+            const hostname = window.location.hostname;
+            const port = window.location.port;
+
+            // If running on localhost/127.0.0.1 AND port is NOT 5000 (likely Live Server on 5500),
+            // point to the Flask backend on port 5000.
+            if ((hostname === 'localhost' || hostname === '127.0.0.1') && port !== '5000') {
+                console.log("Dev Mode detected (Live Server?). Pointing API to http://127.0.0.1:5000");
+                return 'http://127.0.0.1:5000';
+            }
+
+            // Otherwise (Production or running directly on Flask port 5000), use relative paths.
+            return '';
+        }
+
+        const API_BASE_URL = getBaseUrl();
+        // ------------------
+
         // --- Configuração Plotly (Dynamic Theme) ---
         const plotConfig = { responsive: true, displayModeBar: false, locale: 'pt-BR' };
 
@@ -1238,7 +1257,7 @@
 
             try {
                 const categoria = document.getElementById('list-category').value;
-                const response = await fetch(`http://127.0.0.1:5000/api/heatmap?type=${categoria}`);
+                const response = await fetch(`${API_BASE_URL}/api/heatmap?type=${categoria}`);
                 const dados = await response.json();
 
                 listaDiv.innerHTML = '';
@@ -1299,7 +1318,7 @@
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
 
-                const response = await fetch(`http://127.0.0.1:5000/api/heatmap?type=${categoria}`, { signal: controller.signal });
+                const response = await fetch(`${API_BASE_URL}/api/heatmap?type=${categoria}`, { signal: controller.signal });
                 clearTimeout(timeoutId);
 
                 const dados = await response.json();
@@ -1439,7 +1458,7 @@
             const showMA = checkMaEl ? checkMaEl.checked : true; // Default to true if not found
 
             try {
-                const response = await fetch(`http://127.0.0.1:5000/api/dados?ticker=${ativoSelecionado}&period=${periodo}&interval=${intervalo}&ma_period=${maPeriod}`);
+                const response = await fetch(`${API_BASE_URL}/api/dados?ticker=${ativoSelecionado}&period=${periodo}&interval=${intervalo}&ma_period=${maPeriod}`);
                 if (!response.ok) throw new Error("Erro na API");
                 const dados = await response.json();
 
@@ -1827,7 +1846,7 @@
 
             try {
                 const category = document.getElementById('mover-category-select').value;
-                const response = await fetch(`http://127.0.0.1:5000/api/market-movers?type=${category}`);
+                const response = await fetch(`${API_BASE_URL}/api/market-movers?type=${category}`);
                 if (!response.ok) throw new Error("API Error");
                 const data = await response.json();
 

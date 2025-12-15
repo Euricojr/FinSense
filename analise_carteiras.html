@@ -441,9 +441,23 @@
     <script src="https://cdn.plot.ly/plotly-locale-pt-br-latest.js"></script>
 
     <script>
+
+        // --- API Config ---
+        function getBaseUrl() {
+            const hostname = window.location.hostname;
+            const port = window.location.port;
+            if ((hostname === 'localhost' || hostname === '127.0.0.1') && port !== '5000') {
+                return 'http://127.0.0.1:5000';
+            }
+            return '';
+        }
+
+        const API_BASE_URL = getBaseUrl();
+
         let allAssets = [];
         let selectedTickers = [];
         let lastAnalysisData = null;
+
 
         // Init Defaults
         document.addEventListener('DOMContentLoaded', () => {
@@ -462,7 +476,7 @@
 
         async function fetchAssets() {
             try {
-                const response = await fetch('http://127.0.0.1:5001/api/assets');
+                const response = await fetch(`${API_BASE_URL}/api/assets`);
                 if (response.ok) {
                     allAssets = await response.json();
                     console.log("Assets loaded:", allAssets.length);
@@ -677,7 +691,7 @@
                 const weightsList = selectedTickers.map(t => t.weight / 100.0);
 
                 if (mode === 'correlation') {
-                    const response = await fetch('http://127.0.0.1:5001/api/portfolio/correlation', {
+                    const response = await fetch(`${API_BASE_URL}/api/portfolio/correlation`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ tickers: tickersList, start_date: startDate, end_date: endDate })
@@ -693,7 +707,7 @@
 
                 if (mode === 'benchmark') {
                     const benchmark = document.getElementById('benchmark-select').value;
-                    const response = await fetch('http://127.0.0.1:5001/api/portfolio/benchmark', {
+                    const response = await fetch(`${API_BASE_URL}/api/portfolio/benchmark`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({

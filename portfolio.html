@@ -737,7 +737,18 @@
         // Load available tickers on mount
         // Load available tickers on mount
         // Explicitly point to Backend 3 on Port 5001 (matches analise_carteiras.html)
-        const API_BASE_URL = 'http://127.0.0.1:5001';
+        // --- API Config ---
+        function getBaseUrl() {
+            const hostname = window.location.hostname;
+            const port = window.location.port;
+            if ((hostname === 'localhost' || hostname === '127.0.0.1') && port !== '5000') {
+                return 'http://127.0.0.1:5000';
+            }
+            return '';
+        }
+
+        const API_BASE_URL = getBaseUrl();
+
 
         document.addEventListener('DOMContentLoaded', () => {
             if (window.location.protocol === 'file:') {
@@ -910,11 +921,7 @@
             document.getElementById('loadingOverlay').style.display = 'flex';
 
             try {
-                const response = await fetch(`$ {
-                            API_BASE_URL
-                        }
-
-                        /api/calculate_portfolio`, {
+                const response = await fetch(`${API_BASE_URL}/api/calculate_portfolio`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
