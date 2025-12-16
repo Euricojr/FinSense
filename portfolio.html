@@ -643,6 +643,8 @@
                 </div>
             </div>
             <button id="theme-btn" class="theme-toggle" onclick="toggleTheme()" title="Alternar Tema">☀️</button>
+            <a href="#" class="btn-logout" onclick="logout()"
+                style="margin-left: 15px; padding: 5px 12px; border-radius: 6px; border: 1px solid rgba(255, 69, 58, 0.3); color: #ff6b6b; text-decoration: none; font-size: 14px;">Sair</a>
         </nav>
     </header>
 
@@ -731,7 +733,7 @@
             </div>
         </div>
     </div>
-    <script>let transactions = [];
+    <script>
         let allAssets = [];
 
         // Load available tickers on mount
@@ -758,7 +760,53 @@
             document.getElementById('tickerInput').placeholder = "Carregando ativos...";
             fetchAssets();
             setupAutocomplete();
+            checkAuth(); // Verify login and load data
         });
+
+        async function checkAuth() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/me`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (!data.authenticated) {
+                        // User not authenticated - removed redirect per request
+                        // window.location.href = 'login.html'; 
+                        console.log("User not logged in");
+                        return;
+                    }
+                    // User authenticated
+                    loadTransactions();
+                } else {
+                    // window.location.href = 'login.html';
+                }
+            } catch (e) {
+                console.log("Auth check error:", e);
+                // window.location.href = 'login.html';
+            }
+        }
+
+        let transactions = [];
+
+        async function loadTransactions() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/transactions`);
+                if (response.ok) {
+                    transactions = await response.json();
+                    renderTable();
+                    if (transactions.length > 0) calculatePortfolio();
+                }
+            } catch (e) { console.error("Error loading txs", e); }
+        }
+
+        async function logout() {
+            try {
+                await fetch(`${API_BASE_URL}/logout`);
+                window.location.href = 'index2.html';
+            } catch (e) {
+                console.error("Logout failed", e);
+                window.location.href = 'index2.html';
+            }
+        }
 
         async function fetchAssets() {
             try {
@@ -833,7 +881,7 @@
             suggestions.style.display = 'block';
         }
 
-        function addTransaction() {
+        async function addTransaction() {
             const ticker = document.getElementById('tickerInput').value.toUpperCase();
             const date = document.getElementById('dateInput').value;
             const qty = parseFloat(document.getElementById('qtyInput').value);
@@ -844,25 +892,32 @@
                 return;
             }
 
-            const transaction = {
-                id: Date.now(),
-                ticker,
-                date,
-                qty,
-                price,
-                total: qty * price
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/transactions`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ticker, date, qty, price })
+                });
+
+                if (response.ok) {
+                    await loadTransactions();
+                    clearForm();
+                } else {
+                    const err = await response.json();
+                    alert("Erro: " + (err.error || "Desconhecido"));
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Erro de conexão.");
             }
-
-                ;
-
-            transactions.push(transaction);
-            renderTable();
-            clearForm();
         }
 
-        function removeTransaction(id) {
-            transactions = transactions.filter(t => t.id !== id);
-            renderTable();
+        async function removeTransaction(id) {
+            if (!confirm("Tem certeza?")) return;
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/transactions/${id}`, { method: 'DELETE' });
+                if (response.ok) loadTransactions();
+            } catch (e) { console.error(e); }
         }
 
         function renderTable() {
@@ -893,23 +948,8 @@
         }
 
         function formatDate(dateString) {
-            const [year,
-                month,
-                day] = dateString.split('-');
-
-            return `$ {
-                    day
-                }
-
-                /$ {
-                    month
-                }
-
-                /$ {
-                    year
-                }
-
-                `;
+            const [year, month, day] = dateString.split('-');
+            return `${day}/${month}/${year}`;
         }
 
         async function calculatePortfolio() {

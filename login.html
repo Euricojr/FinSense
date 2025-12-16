@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - FinSense</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0a192f;
+            --text-color: #e6edf3;
+            --accent-color: #1f6feb;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Manrope', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Particles container to mimic index2.html */
+        #particles-js {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            /* Behind the content */
+        }
+
+        .login-container {
+            background: rgba(17, 34, 64, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 40px;
+            width: 400px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .logo {
+            text-align: center;
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(90deg, #4da3ff, #8957e5);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 14px;
+            color: gray;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: white;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-block {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: var(--accent-color);
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-top: 10px;
+        }
+
+        .btn-block:hover {
+            transform: translateY(-2px);
+        }
+
+        .toggle-link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 13px;
+        }
+
+        .toggle-link a {
+            color: var(--accent-color);
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* Alerts */
+        .alert {
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            text-align: center;
+        }
+
+        .alert-error {
+            background: rgba(255, 0, 0, 0.2);
+            color: #ff6b6b;
+            border: 1px solid #ff6b6b;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="particles-js"></div>
+
+    <div class="login-container">
+        <div class="logo">FinSense</div>
+        <div class="subtitle">Acesse sua carteira inteligente</div>
+
+        <!-- Alert Container -->
+        <div id="alert-box" class="alert" style="display: none;"></div>
+
+        <form id="authForm" onsubmit="handleAuth(event)">
+            <!-- Hidden action field -->
+            <input type="hidden" name="action" id="actionInput" value="login">
+
+            <div class="form-group">
+                <label for="username">Usuário</label>
+                <input type="text" id="username" name="username" required placeholder="Digite seu usuário">
+            </div>
+
+            <div class="form-group">
+                <label for="password">Senha</label>
+                <input type="password" id="password" name="password" required placeholder="Digite sua senha">
+            </div>
+
+            <button type="submit" class="btn-block" id="submitBtn">Entrar</button>
+        </form>
+
+        <div class="toggle-link">
+            <span id="toggleText">Não tem uma conta?</span>
+            <a onclick="toggleMode()" id="toggleBtn">Registrar-se</a>
+        </div>
+    </div>
+
+    <!-- Particles Script -->
+    <script src="static/js/particles.js"></script>
+    <script>
+        // Use logic from index2.html to determine API URL
+        function getBaseUrl() {
+            const hostname = window.location.hostname;
+            const port = window.location.port;
+            if ((hostname === '127.0.0.1' || hostname === 'localhost') && port !== '5000') {
+                return 'http://127.0.0.1:5000';
+            }
+            return '';
+        }
+        const API_BASE_URL = getBaseUrl();
+
+        function toggleMode() {
+            const actionInput = document.getElementById('actionInput');
+            const submitBtn = document.getElementById('submitBtn');
+            const toggleText = document.getElementById('toggleText');
+            const toggleBtn = document.getElementById('toggleBtn');
+            const title = document.querySelector('.subtitle');
+            const alertBox = document.getElementById('alert-box');
+
+            alertBox.style.display = 'none'; // Hide alerts on toggle
+
+            if (actionInput.value === 'login') {
+                // Switch to Register
+                actionInput.value = 'register';
+                submitBtn.innerText = 'Criar Conta';
+                title.innerText = 'Crie sua conta gratuita';
+                toggleText.innerText = 'Já tem uma conta?';
+                toggleBtn.innerText = 'Entrar';
+            } else {
+                // Switch to Login
+                actionInput.value = 'login';
+                submitBtn.innerText = 'Entrar';
+                title.innerText = 'Acesse sua carteira inteligente';
+                toggleText.innerText = 'Não tem uma conta?';
+                toggleBtn.innerText = 'Registrar-se';
+            }
+        }
+
+        async function handleAuth(event) {
+            event.preventDefault();
+            const form = document.getElementById('authForm');
+            const formData = new FormData(form);
+            const alertBox = document.getElementById('alert-box');
+            const submitBtn = document.getElementById('submitBtn');
+
+            submitBtn.disabled = true;
+            submitBtn.innerText = 'Processando...';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/login`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                // If redirect (Flask standard behavior) or JSON success
+                if (response.redirected) {
+                    window.location.href = response.url; // Follow redirect
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Success usually redirects to index2.html, but if JSON returned:
+                    window.location.href = 'index2.html';
+                } else {
+                    // Error
+                    alertBox.innerText = data.error || 'Erro na autenticação';
+                    alertBox.className = 'alert alert-error';
+                    alertBox.style.display = 'block';
+                }
+
+            } catch (e) {
+                console.error(e);
+                alertBox.innerText = 'Erro de conexão com o servidor. Verifique se o app.py está rodando.';
+                alertBox.className = 'alert alert-error';
+                alertBox.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                // Restore button text based on mode
+                submitBtn.innerText = document.getElementById('actionInput').value === 'login' ? 'Entrar' : 'Criar Conta';
+            }
+        }
+
+        // Init Particles if library exists
+        if (typeof particlesJS !== 'undefined') {
+            particlesJS.load('particles-js', 'static/js/particles.json', function () {
+                console.log('callback - particles.js config loaded');
+            });
+        }
+    </script>
+</body>
+
+</html>

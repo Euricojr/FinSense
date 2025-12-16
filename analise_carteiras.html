@@ -295,6 +295,8 @@
             </div>
 
             <button id="theme-btn" class="theme-toggle" onclick="toggleTheme()" title="Alternar Tema">🌙</button>
+            <a href="#" class="btn-logout" onclick="logout()"
+                style="margin-left: 15px; padding: 5px 12px; border-radius: 6px; border: 1px solid rgba(255, 69, 58, 0.3); color: #ff6b6b; text-decoration: none; font-size: 14px;">Sair</a>
         </nav>
     </header>
 
@@ -831,6 +833,16 @@
             Plotly.newPlot('performance-chart', traces, layout, { responsive: true, displayModeBar: false });
         }
 
+
+        async function logout() {
+            try {
+                await fetch(`${API_BASE_URL}/logout`);
+                window.location.href = 'index2.html';
+            } catch (e) {
+                console.error("Logout failed", e);
+                window.location.href = 'index2.html';
+            }
+        }
 
         function renderResults(corrData, benchData) {
             // Retired function in favor of renderBenchmarkChart and individual calls

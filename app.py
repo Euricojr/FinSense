@@ -1,5 +1,8 @@
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, jsonify, request, send_from_directory, render_template, redirect, url_for, flash
 from flask_cors import CORS
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import generate_password_hash, check_password_hash
 import yfinance as yf
 import pandas as pd
 import numpy as np
@@ -9,14 +12,27 @@ import logging
 from bcb import sgs
 
 # --- CONFIGURATION ---
-app = Flask(__name__)
-CORS(app)  # Enable CORS for development/cross-origin if needed
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# Set template_folder to base dir to render root HTMLs
+app = Flask(__name__, template_folder=BASE_DIR, static_folder='static')
+CORS(app)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Security & DB Config
+app.secret_key = 'super_secret_key_change_this_in_production' # Needed for sessions
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(BASE_DIR, 'database.db')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db = SQLAlchemy(app)
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login' # Redirect here if not logged in
 
 # Cache for Heatmap
 CACHE_HEATMAP = {}
 CACHE_DURATION = 60  # seconds
+
 
 # --- ASSETS AND TICKERS (Merged from Backend 3) ---
 ASSETS = {
@@ -132,17 +148,128 @@ TICKER_NAMES_BASE = {
 # --- STATIC FILES ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+# --- USER MODEL ---
+class User(UserMixin, db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(150), unique=True, nullable=False)
+    password_hash = db.Column(db.String(150), nullable=False)
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+class Transaction(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    ticker = db.Column(db.String(20), nullable=False)
+    date = db.Column(db.String(10), nullable=False) # YYYY-MM-DD
+    qty = db.Column(db.Float, nullable=False)
+    price = db.Column(db.Float, nullable=False)
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+# --- ROUTES ---
+
 @app.route('/')
 def home():
-    return send_from_directory(BASE_DIR, 'index2.html')
+    # Pass current_user to template
+    return render_template('index2.html', user=current_user)
 
 @app.route('/portfolio')
+@login_required
 def portfolio():
-    return send_from_directory(BASE_DIR, 'portfolio.html')
+    return render_template('portfolio.html', user=current_user)
 
 @app.route('/analise')
+@login_required
 def analise():
-    return send_from_directory(BASE_DIR, 'analise_carteiras.html')
+    return render_template('analise_carteiras.html', user=current_user)
+
+# --- AUTH ROUTES ---
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        action = request.form.get('action') # 'login' or 'register'
+
+        if action == 'register':
+            if User.query.filter_by(username=username).first():
+                flash('Usuário já existe!', 'error')
+            else:
+                new_user = User(username=username)
+                new_user.set_password(password)
+                db.session.add(new_user)
+                db.session.commit()
+                login_user(new_user)
+                return redirect(url_for('home'))
+
+        else: # Login
+            user = User.query.filter_by(username=username).first()
+            if user and user.check_password(password):
+                login_user(user)
+                return redirect(url_for('home'))
+            else:
+                flash('Credenciais inválidas.', 'error')
+    
+    return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    logout_user()
+    if request.is_json or request.headers.get('Accept') == 'application/json':
+        return jsonify({"message": "Logged out"})
+    return redirect(url_for('login'))
+
+@app.route('/api/me')
+def api_me():
+    if current_user.is_authenticated:
+        return jsonify({"authenticated": True, "username": current_user.username})
+    return jsonify({"authenticated": False}), 401
+
+@app.route('/api/transactions', methods=['GET', 'POST', 'DELETE'])
+@login_required
+def manage_transactions():
+    if request.method == 'GET':
+        txs = Transaction.query.filter_by(user_id=current_user.id).all()
+        return jsonify([{
+            'id': t.id,
+            'ticker': t.ticker,
+            'date': t.date,
+            'qty': t.qty,
+            'price': t.price,
+            'total': t.qty * t.price
+        } for t in txs])
+
+    if request.method == 'POST':
+        data = request.json
+        try:
+            new_tx = Transaction(
+                user_id=current_user.id,
+                ticker=data['ticker'],
+                date=data['date'],
+                qty=float(data['qty']),
+                price=float(data['price'])
+            )
+            db.session.add(new_tx)
+            db.session.commit()
+            return jsonify({'message': 'Transaction added', 'id': new_tx.id})
+        except Exception as e:
+             return jsonify({'error': str(e)}), 400
+             
+@app.route('/api/transactions/<int:id>', methods=['DELETE'])
+@login_required
+def delete_transaction(id):
+    tx = Transaction.query.filter_by(id=id, user_id=current_user.id).first()
+    if tx:
+        db.session.delete(tx)
+        db.session.commit()
+        return jsonify({'message': 'Deleted'})
+    return jsonify({'error': 'Not found'}), 404
 
 @app.route('/<path:filename>')
 def serve_static(filename):
@@ -212,6 +339,8 @@ def pegar_dados():
             "close": df['Close'].tolist(),
             "ma": df[ma_col].tolist(),
             "rsi": df['RSI'].tolist(),
+            "macd": df['MACD_Line'].tolist(),
+            "signal": df['Signal_Line'].tolist(),
             "macd_hist": df['MACD_Hist'].tolist(),
             "stoch_k": df['Slow_K'].tolist(),
             "stoch_d": df['Slow_D'].tolist(),
@@ -339,69 +468,7 @@ def list_assets():
                 seen.add(t)
     return jsonify(flat)
 
-@app.route('/api/calculate_portfolio', methods=['POST'])
-def calculate_portfolio():
-    try:
-        data = request.get_json()
-        transactions = data.get('transactions', [])
-        if not transactions: return jsonify({"error": "No transactions"}), 400
 
-        tickers = list(set([t['ticker'] for t in transactions]))
-        live_data = yf.download(tickers, period="2d", progress=False)['Close']
-        
-        current_prices = {}
-        for t in tickers:
-            try:
-                if isinstance(live_data, pd.DataFrame) and t in live_data.columns:
-                    current_prices[t] = float(live_data[t].dropna().iloc[-1])
-                elif isinstance(live_data, pd.Series): # One ticker
-                    current_prices[t] = float(live_data.dropna().iloc[-1])
-                else: current_prices[t] = 0.0
-            except: current_prices[t] = 0.0
-
-        total_invested = 0.0
-        current_val = 0.0
-        holdings_map = {}
-
-        for tx in transactions:
-            t = tx['ticker']
-            qty = float(tx['qty'])
-            price = float(tx['price'])
-            
-            total_invested += qty * price
-            
-            if t not in holdings_map: holdings_map[t] = {'ticker': t, 'qty': 0, 'invested': 0.0, 'current_value': 0.0}
-            holdings_map[t]['qty'] += qty
-            holdings_map[t]['invested'] += qty * price
-
-        holdings = []
-        for t, h in holdings_map.items():
-            cur_p = current_prices.get(t, 0.0)
-            h['current_price'] = cur_p
-            h['current_value'] = h['qty'] * cur_p
-            h['profit'] = h['current_value'] - h['invested']
-            h['profit_pct'] = (h['profit']/h['invested']*100) if h['invested'] else 0
-            
-            # Category calc
-            cat = 'Outros'
-            for c, l in ASSETS.items():
-                if t in l: 
-                    cat = c; break
-            h['category'] = cat
-            
-            current_val += h['current_value']
-            holdings.append(h)
-
-        return jsonify({
-            "total_invested": total_invested,
-            "current_value": current_val,
-            "profit_loss": current_val - total_invested,
-            "profit_loss_pct": ((current_val - total_invested)/total_invested*100) if total_invested else 0,
-            "holdings": holdings
-        })
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
 
 @app.route('/api/portfolio/correlation', methods=['POST'])
 def portfolio_correlation():
@@ -469,6 +536,285 @@ def portfolio_benchmark():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/api/calculate_portfolio', methods=['POST'])
+def calculate_portfolio_endpoint():
+    try:
+        transactions = request.get_json().get('transactions', [])
+        if not transactions:
+            return jsonify({"error": "No transactions provided"}), 400
+
+        # 1. Fetch current prices
+        tickers = list(set([t['ticker'] for t in transactions]))
+        
+        # Download 1d data just to get latest price
+        # Using period='5d' to be safe against holidays/weekends
+        data = yf.download(tickers, period="5d", progress=False, threads=True)
+        
+        # Extract latest close prices
+        latest_prices = {}
+        if len(tickers) == 1:
+            ticker = tickers[0]
+            try:
+                # Handle MultiIndex (Price, Ticker) or Single Index
+                if isinstance(data, pd.DataFrame):
+                    # Check for 'Close'
+                    if 'Close' in data.columns:
+                        close_data = data['Close']
+                        # If MultiIndex (Time, Ticker) -> accessing 'Close' returns DataFrame if many tickers, 
+                        # or Series if one. But if just one ticker request, it might be just Series.
+                        
+                        last_val = close_data.iloc[-1]
+                        
+                        # If Series (value per ticker? or just value?)
+                        if isinstance(last_val, pd.Series):
+                            # It has ticker index
+                            # Try to find the ticker in the series
+                            if ticker in last_val.index:
+                                latest_prices[ticker] = float(last_val[ticker])
+                            else:
+                                # Just take the first value if it's the only one
+                                latest_prices[ticker] = float(last_val.iloc[0])
+                        else:
+                            # Scalar
+                            latest_prices[ticker] = float(last_val)
+                    else:
+                         # Fallback to column name directly
+                        if ticker in data.columns:
+                            latest_prices[ticker] = float(data[ticker].dropna().iloc[-1])
+                        else:
+                            latest_prices[ticker] = 0.0
+                else:
+                    latest_prices[ticker] = 0.0
+                
+                
+            except Exception as e:
+                logger.error(f"Error extracting price for {ticker}: {e}")
+                latest_prices[ticker] = 0.0
+        else:
+            # multiple tickers
+            closes = data['Close'] if 'Close' in data else data
+            for ticker in tickers:
+                try:
+                    price = 0.0
+                    if isinstance(closes, pd.DataFrame) and ticker in closes.columns:
+                         price = float(closes[ticker].dropna().iloc[-1])
+                    elif isinstance(closes, pd.Series):
+                         # Should not happen for multiple tickers unless yf quirk
+                         price = float(closes.iloc[-1])
+                    
+                    latest_prices[ticker] = price
+                except Exception as e:
+                     logger.error(f"Error extracting price for {ticker}: {e}")
+                     latest_prices[ticker] = 0.0
+
+        # 2. Calculate Portfolio
+        total_invested = 0.0
+        current_value = 0.0
+        holdings = []
+
+        # Group by ticker to handle multiple transactions of same asset
+        holdings_map = {}
+
+        for t in transactions:
+            ticker = t['ticker']
+            qty = float(t['qty'])
+            buy_price = float(t['price'])
+            
+            invested = qty * buy_price
+            
+            curr_price = latest_prices.get(ticker, buy_price) 
+            if curr_price == 0.0: curr_price = buy_price
+            
+            curr_val = qty * curr_price
+            
+            total_invested += invested
+            current_value += curr_val
+            
+            if ticker not in holdings_map:
+                holdings_map[ticker] = {'ticker': ticker, 'current_value': 0.0, 'invested': 0.0}
+            
+            holdings_map[ticker]['current_value'] += curr_val
+            holdings_map[ticker]['invested'] += invested
+
+        holdings = list(holdings_map.values())
+        
+        # Calculate Allocation by Category
+        category_totals = {}
+        total_val_check = 0.0
+        
+        # Define ASSETS map locally or use existing global if present (assuming ASSETS global exists in app.py)
+        # If not, use simple heuristics or empty map. 
+        # Using the one from app.py line 21-62 viewed earlier.
+        
+        for h in holdings:
+            sym = h['ticker']
+            cat = 'Outros'
+            # Find category in global ASSETS
+            for c, lst in ASSETS.items():
+                if sym in lst:
+                    cat = c
+                    break
+            
+            friendly_cat = {
+                'br': 'Ações Brasil',
+                'us': 'Ações EUA',
+                'cripto': 'Cripto',
+                'indices': 'Índices'
+            }.get(cat, 'Outros')
+            
+            h['category'] = friendly_cat 
+            
+            if friendly_cat not in category_totals:
+                category_totals[friendly_cat] = 0.0
+            category_totals[friendly_cat] += h['current_value']
+            total_val_check += h['current_value']
+            
+        allocation_by_category = []
+        if total_val_check > 0:
+            for cat, val in category_totals.items():
+                allocation_by_category.append({
+                    "category": cat,
+                    "value": val,
+                    "percentage": (val / total_val_check) * 100
+                })
+        
+        allocation_by_category.sort(key=lambda x: x['percentage'], reverse=True)
+
+        profit_loss = current_value - total_invested
+        profit_loss_pct = (profit_loss / total_invested * 100) if total_invested > 0 else 0.0
+
+        return jsonify({
+            "total_invested": total_invested,
+            "current_value": current_value,
+            "profit_loss": profit_loss,
+            "profit_loss_pct": profit_loss_pct,
+            "holdings": holdings,
+            "allocation_by_category": allocation_by_category,
+            "prices": latest_prices
+        })
+
+    except Exception as e:
+        logger.error(f"Error calculating portfolio: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/portfolio/evolution', methods=['POST'])
+def portfolio_evolution():
+    try:
+        data = request.get_json()
+        transactions = data.get('tickers', []) 
+        benchmark = data.get('benchmark', '^BVSP')
+        if not transactions:
+            return jsonify({"error": "No transactions"}), 400
+            
+        return calculate_portfolio_history(transactions, benchmark)
+    except Exception as e:
+        logger.error(f"Error in evolution: {e}")
+        return jsonify({"error": str(e)}), 500
+
+def calculate_portfolio_history(transactions, benchmark_ticker='^BVSP'):
+    # Helper to calculate history
+    df_tx = pd.DataFrame(transactions)
+    df_tx['date'] = pd.to_datetime(df_tx['date'])
+    df_tx['qty'] = df_tx['qty'].astype(float)
+    df_tx['price'] = df_tx['price'].astype(float)
+    
+    start_date = df_tx['date'].min()
+    end_date = pd.Timestamp.now()
+    
+    unique_tickers = df_tx['ticker'].unique().tolist()
+    is_cdi = (benchmark_ticker == 'CDI')
+    download_tickers = unique_tickers + ([benchmark_ticker] if not is_cdi else [])
+    
+    # Download history
+    try:
+        data = yf.download(download_tickers, start=start_date, end=end_date, progress=False, threads=True)
+        market_data = data['Close'] if 'Close' in data else data
+    except Exception as e:
+        return jsonify({"error": "Failed to download market data"}), 500
+    
+    # Handle single ticker
+    if len(download_tickers) == 1:
+        # If market_data is Series, convert to DataFrame
+        if isinstance(market_data, pd.Series):
+             market_data = pd.DataFrame({download_tickers[0]: market_data})
+        # If it's a DataFrame but columns are MultiIndex or something, normalize
+        if isinstance(market_data, pd.DataFrame) and download_tickers[0] not in market_data.columns:
+             # Try to fix columns if possible, but yf usually returns nice DF for single now
+             market_data.columns = [download_tickers[0]]
+             
+    market_data = market_data.fillna(method='ffill').fillna(method='bfill')
+    all_days = market_data.index
+    
+    portfolio_series = pd.Series(0.0, index=all_days)
+    invested_series = pd.Series(0.0, index=all_days)
+    
+    for _, tx in df_tx.iterrows():
+        try:
+             mask = all_days >= tx['date']
+             invested_amount = tx['qty'] * tx['price']
+             invested_series.loc[mask] += invested_amount
+             
+             if tx['ticker'] in market_data.columns:
+                 prices = market_data.loc[mask, tx['ticker']]
+                 value_contribution = prices * tx['qty']
+                 # Ensure indexes line up
+                 value_contribution = value_contribution.reindex(portfolio_series.loc[mask].index, fill_value=0)
+                 portfolio_series.loc[mask] += value_contribution
+        except Exception as e:
+            logger.error(f"Error processing tx {tx}: {e}")
+            continue
+
+    bench_series = pd.Series(0.0, index=all_days)
+    
+    if is_cdi:
+        try:
+            start_str = start_date.strftime('%Y-%m-%d')
+            # 12 is CDI daily rate
+            cdi_daily = sgs.get({'CDI': 12}, start=start_str)
+            if cdi_daily is not None and not cdi_daily.empty:
+                cdi_daily['factor'] = 1 + (cdi_daily['CDI'] / 100)
+                cdi_aligned = cdi_daily['factor'].reindex(all_days, fill_value=1.0)
+                cdi_accum = cdi_aligned.cumprod()
+                
+                bench_qty_held = pd.Series(0.0, index=all_days)
+                for _, tx in df_tx.iterrows():
+                    mask = all_days >= tx['date']
+                    idx = all_days.get_indexer([tx['date']], method='pad')[0]
+                    if idx != -1:
+                        index_val = cdi_accum.iloc[idx]
+                        if index_val == 0: index_val = 1.0
+                        units = (tx['qty'] * tx['price']) / index_val
+                        bench_qty_held.loc[mask] += units
+                
+                bench_series = bench_qty_held * cdi_accum
+        except Exception as e:
+            logger.error(f"CDI Error: {e}")
+    
+    elif benchmark_ticker in market_data.columns:
+        bench_prices = market_data[benchmark_ticker]
+        bench_qty_held = pd.Series(0.0, index=all_days)
+        for _, tx in df_tx.iterrows():
+             mask = all_days >= tx['date']
+             try:
+                 idx = market_data.index.get_indexer([tx['date']], method='pad')[0]
+                 if idx != -1:
+                     price_at_buy = bench_prices.iloc[idx]
+                     if price_at_buy > 0:
+                        units = (tx['qty'] * tx['price']) / price_at_buy
+                        bench_qty_held.loc[mask] += units
+             except: pass
+        bench_series = bench_qty_held * bench_prices
+
+    return jsonify({
+        "dates": all_days.strftime('%Y-%m-%d').tolist(),
+        "portfolio": portfolio_series.fillna(0).tolist(),
+        "invested": invested_series.fillna(0).tolist(),
+        "benchmark": bench_series.fillna(0).tolist(),
+        "benchmark_symbol": benchmark_ticker
+    })
+
 if __name__ == '__main__':
-    print("Starting Unified FinSense App on Port 5000...")
+    with app.app_context():
+        db.create_all() # Create tables if not exists
+    print("Starting Unified FinSense App with Auth on Port 5000...")
     app.run(host='0.0.0.0', port=5000, debug=True)
