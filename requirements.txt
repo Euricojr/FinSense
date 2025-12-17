@@ -1,0 +1,10 @@
+Flask
+Flask-Cors
+Flask-Login
+Flask-SQLAlchemy
+yfinance
+pandas
+numpy
+python-bcb
+gunicorn
+werkzeug
