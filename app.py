@@ -470,35 +470,7 @@ def list_assets():
 
 
 
-@app.route('/api/portfolio/correlation', methods=['POST'])
-def portfolio_correlation():
-    try:
-        data = request.get_json()
-        tickers = data.get('tickers', [])
-        start = data.get('start_date')
-        end = data.get('end_date')
 
-        if len(tickers) < 2: return jsonify({"error": "Need 2+ tickers"}), 400
-
-        df = yf.download(tickers, start=start, end=end, progress=False)['Close']
-        df = df.dropna()
-        returns = df.pct_change().dropna()
-        corr_matrix = returns.corr()
-
-        # Summary
-        mask = np.ones(corr_matrix.shape, dtype=bool)
-        np.fill_diagonal(mask, 0)
-        avg_corr = np.nanmean(np.abs(corr_matrix.values[mask])) if len(tickers) > 1 else 0
-
-        return jsonify({
-            "tickers": corr_matrix.columns.tolist(),
-            "z": corr_matrix.values.tolist(),
-            "avg_correlation": avg_corr,
-            "summary": f"Correlação Média de {avg_corr:.2f}"
-        })
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
 
 @app.route('/api/portfolio/benchmark', methods=['POST'])
 def portfolio_benchmark():
@@ -703,20 +675,40 @@ def portfolio_evolution():
         data = request.get_json()
         transactions = data.get('tickers', []) 
         benchmark = data.get('benchmark', '^BVSP')
+        filter_type = data.get('filter', 'all') # 'all', 'br', 'us', 'cripto'
+
         if not transactions:
             return jsonify({"error": "No transactions"}), 400
             
-        return calculate_portfolio_history(transactions, benchmark)
+        # Filter Logic
+        filtered_tx = []
+        if filter_type == 'all':
+            filtered_tx = transactions
+        else:
+            target_list = ASSETS.get(filter_type, [])
+            filtered_tx = [t for t in transactions if t['ticker'] in target_list]
+        
+        # If filter results in empty list (e.g. asking for 'cripto' but user has none)
+        if not filtered_tx and transactions: 
+            return jsonify({
+                "dates": [], 
+                "portfolio": [], 
+                "invested": [],
+                "benchmark": [], 
+                "benchmark_symbol": benchmark
+            })
+
+        return calculate_portfolio_history(filtered_tx, benchmark)
     except Exception as e:
         logger.error(f"Error in evolution: {e}")
         return jsonify({"error": str(e)}), 500
 
 def calculate_portfolio_history(transactions, benchmark_ticker='^BVSP'):
-    # Helper to calculate history
     df_tx = pd.DataFrame(transactions)
     df_tx['date'] = pd.to_datetime(df_tx['date'])
     df_tx['qty'] = df_tx['qty'].astype(float)
     df_tx['price'] = df_tx['price'].astype(float)
+    df_tx['flow'] = df_tx['qty'] * df_tx['price'] # Positive = Buy (Inflow of Asset Value, Outflow of Cash)
     
     start_date = df_tx['date'].min()
     end_date = pd.Timestamp.now()
@@ -725,7 +717,6 @@ def calculate_portfolio_history(transactions, benchmark_ticker='^BVSP'):
     is_cdi = (benchmark_ticker == 'CDI')
     download_tickers = unique_tickers + ([benchmark_ticker] if not is_cdi else [])
     
-    # Download history
     try:
         data = yf.download(download_tickers, start=start_date, end=end_date, progress=False, threads=True)
         market_data = data['Close'] if 'Close' in data else data
@@ -734,84 +725,193 @@ def calculate_portfolio_history(transactions, benchmark_ticker='^BVSP'):
     
     # Handle single ticker
     if len(download_tickers) == 1:
-        # If market_data is Series, convert to DataFrame
         if isinstance(market_data, pd.Series):
              market_data = pd.DataFrame({download_tickers[0]: market_data})
-        # If it's a DataFrame but columns are MultiIndex or something, normalize
         if isinstance(market_data, pd.DataFrame) and download_tickers[0] not in market_data.columns:
-             # Try to fix columns if possible, but yf usually returns nice DF for single now
              market_data.columns = [download_tickers[0]]
              
     market_data = market_data.fillna(method='ffill').fillna(method='bfill')
     all_days = market_data.index
     
-    portfolio_series = pd.Series(0.0, index=all_days)
-    invested_series = pd.Series(0.0, index=all_days)
+    # 1. Calculate Daily Total Value (Assets owned at end of day * Price)
+    # We need to reconstruct the portfolio composition for every day
+    daily_value = pd.Series(0.0, index=all_days)
+    daily_flows = pd.Series(0.0, index=all_days)
+
+    # Pre-calculate flows per day
+    grouped_flows = df_tx.groupby(df_tx['date'].dt.normalize())['flow'].sum()
+    daily_flows = daily_flows.add(grouped_flows, fill_value=0)
+    
+    # Calculate holdings over time
+    # This is expensive in a loop, optimize by iterating over ordered transactions
+    # Create a DataFrame of holdings changes: columns=ticker, index=date
+    holdings_change = pd.DataFrame(0.0, index=all_days, columns=unique_tickers)
     
     for _, tx in df_tx.iterrows():
-        try:
-             mask = all_days >= tx['date']
-             invested_amount = tx['qty'] * tx['price']
-             invested_series.loc[mask] += invested_amount
-             
-             if tx['ticker'] in market_data.columns:
-                 prices = market_data.loc[mask, tx['ticker']]
-                 value_contribution = prices * tx['qty']
-                 # Ensure indexes line up
-                 value_contribution = value_contribution.reindex(portfolio_series.loc[mask].index, fill_value=0)
-                 portfolio_series.loc[mask] += value_contribution
-        except Exception as e:
-            logger.error(f"Error processing tx {tx}: {e}")
-            continue
+        d = tx['date'].normalize()
+        if d in holdings_change.index:
+            holdings_change.loc[d, tx['ticker']] += tx['qty']
+    
+    # Cumulative sum to get current units held on each day
+    daily_units = holdings_change.cumsum()
+    
+    # Compute Daily Portfolio Value
+    for t in unique_tickers:
+        if t in market_data.columns:
+            # Units held * Price on that day
+            daily_val_asset = daily_units[t] * market_data[t]
+            daily_value += daily_val_asset.fillna(0)
 
+    # 2. Calculate Daily Returns (Quota System)
+    # Formula: Ret_t = (EndVal_t - Flow_t) / EndVal_{t-1} - 1
+    
+    quota_series = [1.0] # Start at 1.0 (100%)
+    dates = [all_days[0]]
+    
+    # We need to iterate carefully.
+    # On Day 0: Value is just Flow. Return is 0.
+    
+    stats_df = pd.DataFrame({
+        'end_value': daily_value,
+        'flow': daily_flows
+    })
+    
+    # Shift end_value to get prev_value
+    # But strictly: Ret = (V_t - Flow_t) / V_{t-1}
+    
+    daily_pct_change = pd.Series(0.0, index=all_days)
+    
+    prev_val = 0.0
+    
+    # Efficient Iteration
+    # First day with value:
+    first_idx = np.argmax(stats_df['end_value'] > 0)
+    
+    # Initialize calculated series
+    quota = pd.Series(0.0, index=all_days)
+    
+    # This loop calculates the quota based on daily variations, effectively stripping out inflows
+    # Logic: If I have 100, deposit 100, I have 200. Return is 0%.
+    # If I have 100, it grows to 110, deposit 90, I have 200. Return is 10%.
+    
+    current_quota = 100.0
+    quota.iloc[:first_idx] = 100.0
+    
+    prev_total = 0.0
+    
+    for i in range(len(stats_df)):
+        if i < first_idx: 
+            prev_total = stats_df['end_value'].iloc[i]
+            continue
+            
+        today_total = stats_df['end_value'].iloc[i]
+        today_flow = stats_df['flow'].iloc[i]
+        
+        if prev_total > 0:
+            # Adjust today's total by removing the cash that entered today
+            adjusted_today = today_total - today_flow
+            daily_ret = (adjusted_today / prev_total) - 1
+        else:
+            daily_ret = 0.0
+            
+        current_quota = current_quota * (1 + daily_ret)
+        quota.iloc[i] = current_quota
+        prev_total = today_total
+
+    # 3. Benchmark Normalization (to % starting at 0)
     bench_series = pd.Series(0.0, index=all_days)
     
     if is_cdi:
         try:
-            start_str = start_date.strftime('%Y-%m-%d')
-            # 12 is CDI daily rate
-            cdi_daily = sgs.get({'CDI': 12}, start=start_str)
-            if cdi_daily is not None and not cdi_daily.empty:
-                cdi_daily['factor'] = 1 + (cdi_daily['CDI'] / 100)
-                cdi_aligned = cdi_daily['factor'].reindex(all_days, fill_value=1.0)
-                cdi_accum = cdi_aligned.cumprod()
-                
-                bench_qty_held = pd.Series(0.0, index=all_days)
-                for _, tx in df_tx.iterrows():
-                    mask = all_days >= tx['date']
-                    idx = all_days.get_indexer([tx['date']], method='pad')[0]
-                    if idx != -1:
-                        index_val = cdi_accum.iloc[idx]
-                        if index_val == 0: index_val = 1.0
-                        units = (tx['qty'] * tx['price']) / index_val
-                        bench_qty_held.loc[mask] += units
-                
-                bench_series = bench_qty_held * cdi_accum
-        except Exception as e:
-            logger.error(f"CDI Error: {e}")
-    
+             start_str = start_date.strftime('%Y-%m-%d')
+             cdi_daily = sgs.get({'CDI': 12}, start=start_str)
+             if cdi_daily is not None:
+                 cdi_daily['factor'] = 1 + (cdi_daily['CDI'] / 100)
+                 cdi_aligned = cdi_daily['factor'].reindex(all_days, fill_value=1.0)
+                 # Cumulative Product
+                 bench_cum = cdi_aligned.cumprod()
+                 # Normalize to start at 100
+                 bench_series = (bench_cum / bench_cum.iloc[0]) * 100
+        except: pass
     elif benchmark_ticker in market_data.columns:
-        bench_prices = market_data[benchmark_ticker]
-        bench_qty_held = pd.Series(0.0, index=all_days)
-        for _, tx in df_tx.iterrows():
-             mask = all_days >= tx['date']
-             try:
-                 idx = market_data.index.get_indexer([tx['date']], method='pad')[0]
-                 if idx != -1:
-                     price_at_buy = bench_prices.iloc[idx]
-                     if price_at_buy > 0:
-                        units = (tx['qty'] * tx['price']) / price_at_buy
-                        bench_qty_held.loc[mask] += units
-             except: pass
-        bench_series = bench_qty_held * bench_prices
+        b_prices = market_data[benchmark_ticker]
+        valid_start = b_prices.first_valid_index()
+        if valid_start:
+             base_price = b_prices.loc[valid_start]
+             bench_series = (b_prices / base_price) * 100
+        else:
+             bench_series = b_prices # Fallback
 
+    # Shift to Percentage Change (0 basis) for Chart
+    # i.e., 100 -> 0%, 110 -> 10%
+    quota_final = quota - 100
+    bench_final = bench_series - 100
+    
     return jsonify({
         "dates": all_days.strftime('%Y-%m-%d').tolist(),
-        "portfolio": portfolio_series.fillna(0).tolist(),
-        "invested": invested_series.fillna(0).tolist(),
-        "benchmark": bench_series.fillna(0).tolist(),
+        "portfolio": quota_final.fillna(0).tolist(),
+        "invested": [], # No longer plotted
+        "benchmark": bench_final.fillna(0).tolist(),
         "benchmark_symbol": benchmark_ticker
     })
+
+
+
+@app.route('/api/portfolio/correlation', methods=['POST'])
+def portfolio_correlation():
+    try:
+        data = request.get_json()
+        tickers = data.get('tickers', [])
+        start_date = data.get('start_date')
+        end_date = data.get('end_date')
+
+        if not tickers or len(tickers) < 2:
+            return jsonify({"error": "Need at least 2 tickers"}), 400
+            
+        logger.info(f"Correlation Request: {tickers} from {start_date} to {end_date}")
+        
+        # Download Data
+        prices = yf.download(tickers, start=start_date, end=end_date, progress=False, threads=True)['Close']
+        prices = prices.fillna(method='ffill').fillna(method='bfill')
+        
+        # Calculate Correlation (Based on Price as requested)
+        corr_matrix = prices.corr()
+        
+        # Calculate Average Absolute Correlation (upper triangle)
+        mask = np.triu(np.ones_like(corr_matrix, dtype=bool), k=1)
+        # Using ABSOLUTE correlation as requested ("Média de Correlação Absoluta")
+        avg_corr = np.abs(corr_matrix.where(mask).stack()).mean()
+        
+        if pd.isna(avg_corr): avg_corr = 0.0
+        
+        # Determine Class and Text based on the screenshot provided
+        classification = ""
+        meaning = ""
+        
+        if avg_corr > 0.7:
+            classification = "ALTA"
+            meaning = "Isso indica que seus ativos tendem a se mover na mesma direção, o que reduz os benefícios da diversificação. Em momentos de crise, é provável que a maioria sofra quedas simultâneas, aumentando o risco sistêmico da carteira."
+        elif avg_corr > 0.4:
+            classification = "MODERADA"
+            meaning = "Isso indica que existe algum nível de diversificação, mas os ativos ainda podem sofrer influências de mercado similares. É um ponto de equilíbrio, mas vale considerar adicionar ativos descorrelacionados para maior proteção."
+        else:
+            classification = "BAIXA OU DESCORRELACIONADA"
+            meaning = "Isso significa que os ativos comportam-se de maneira independente ou até inversa. Na gestão de carteiras, esta é uma configuração favorável para mitigar o risco não-sistêmico (idiossincrático). Seus ativos oferecem proteção real uns aos outros, estabilizando a curva de capital da carteira no longo prazo."
+
+        summary = (
+            f"O Coeficiente de Correlação de Pearson Médio de {avg_corr:.2f} desta carteira indica uma correlação {classification}. "
+            f"{meaning}"
+        )
+
+        return jsonify({
+            "correlation_matrix": corr_matrix.reset_index().to_dict(orient='records'),
+            "avg_correlation": float(avg_corr),
+            "summary": summary
+        })
+
+    except Exception as e:
+        logger.error(f"Error in correlation: {e}")
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     with app.app_context():

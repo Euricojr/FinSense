@@ -680,7 +680,7 @@
                         class="form-control"></div>
                 <div class="form-group"><label>Quantidade</label><input type="number" id="qtyInput" class="form-control"
                         placeholder="0"></div>
-                <div class="form-group"><label>Preço Unitário (R$)</label><input type="number" id="priceInput"
+                <div class="form-group"><label>Preço Unitário</label><input type="number" id="priceInput"
                         class="form-control" placeholder="0.00" step="0.01"></div><button class="btn-add"
                     onclick="addTransaction()">Adicionar</button><button class="btn-calc"
                     onclick="calculatePortfolio()">Calcular Rentabilidade</button>
@@ -721,14 +721,23 @@
             </div>
             <div class="form-panel" style="margin-top: 20px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <h3 style="margin: 0;">Evolução Patrimonial</h3><select id="benchmarkSelector" class="form-control"
-                        style="width: auto; padding: 8px 12px; margin: 0;"
-                        onchange="updateBenchmarkChart(transactions)">
-                        <option value="^BVSP">Ibovespa</option>
-                        <option value="CDI">CDI</option>
-                        <option value="^GSPC">S&P 500</option>
-                        <option value="BTC-USD">Bitcoin</option>
-                    </select>
+                    <h3 style="margin: 0;">Evolução Patrimonial</h3>
+                    <div style="display: flex; gap: 10px;">
+                        <select id="chartFilter" class="form-control" style="width: auto; padding: 8px 12px; margin: 0;"
+                            onchange="updateBenchmarkChart(transactions)">
+                            <option value="br">Brasil</option>
+                            <option value="us">EUA</option>
+                            <option value="cripto">Cripto</option>
+                        </select>
+                        <select id="benchmarkSelector" class="form-control"
+                            style="width: auto; padding: 8px 12px; margin: 0;"
+                            onchange="updateBenchmarkChart(transactions)">
+                            <option value="^BVSP">Ibovespa</option>
+                            <option value="CDI">CDI</option>
+                            <option value="^GSPC">S&P 500</option>
+                            <option value="BTC-USD">Bitcoin</option>
+                        </select>
+                    </div>
                 </div>
                 <div id="performanceChart" style="width:100%; height:400px;"></div>
             </div>
@@ -1180,6 +1189,7 @@
         async function updateBenchmarkChart(transactions) {
             try {
                 const benchmark = document.getElementById('benchmarkSelector').value;
+                const filter = document.getElementById('chartFilter').value;
 
                 const response = await fetch(`${API_BASE_URL}/api/portfolio/evolution`, {
                     method: 'POST',
@@ -1189,7 +1199,9 @@
 
                     ,
                     body: JSON.stringify({
-                        tickers: transactions, benchmark: benchmark
+                        tickers: transactions,
+                        benchmark: benchmark,
+                        filter: filter
                     })
                 });
 
@@ -1207,15 +1219,9 @@
         function renderPerformanceChart(data) {
             const dates = data.dates;
             const portfolio = data.portfolio;
-            const invested = data.invested;
-            const benchmark = data.benchmark; // Simulated benchmark portfolio
-
-            // We will plot "Total Value" vs "Total Invested" vs "Benchmark Equivalent"
-            // Or better: Percentage Return.
-            // Let's stick to Total Value for clarity as Kinvo does "Saldo Bruto vs Valor Aplicado"
+            const benchmark = data.benchmark;
 
             const tracePortfolio = {
-
                 x: dates,
                 y: portfolio,
                 type: 'scatter',
@@ -1223,33 +1229,13 @@
                 name: 'Minha Carteira',
                 line: {
                     color: '#1f6feb', width: 3
-                }
-
-                ,
-                fill: 'tozeroy',
-                fillcolor: 'rgba(31, 111, 235, 0.1)'
-            }
-
-                ;
-
-            const traceInvested = {
-
-                x: dates,
-                y: invested,
-                type: 'scatter',
-                mode: 'lines',
-                name: 'Valor Aplicado',
-                line: {
-                    color: '#8b949e', width: 2, dash: 'dot'
-                }
-            }
-
-                ;
+                },
+                hovertemplate: '%{y:.2f}%<extra></extra>'
+            };
 
             const benchmarkName = data.benchmark_symbol === 'CDI' ? 'CDI' : data.benchmark_symbol;
 
             const traceBenchmark = {
-
                 x: dates,
                 y: benchmark,
                 type: 'scatter',
@@ -1257,101 +1243,72 @@
                 name: benchmarkName,
                 line: {
                     color: '#f0883e', width: 2
-                }
-            }
-
-                ;
+                },
+                hovertemplate: '%{y:.2f}%<extra></extra>'
+            };
 
             const layout = {
                 title: {
-
-                    text: 'Evolução Patrimonial',
+                    text: 'Rentabilidade Acumulada (%)',
                     font: {
                         color: '#e6edf3', size: 18
                     }
-                }
-
-                ,
+                },
                 height: 400,
                 paper_bgcolor: 'rgba(0,0,0,0)',
                 plot_bgcolor: 'rgba(0,0,0,0)',
                 font: {
                     family: 'Manrope, sans-serif', color: '#e6edf3'
-                }
-
-                ,
+                },
                 xaxis: {
-
                     showgrid: false,
                     color: '#8b949e',
                     rangeselector: {
                         buttons: [{
                             count: 1, label: '1M', step: 'month', stepmode: 'backward'
-                        }
-
-                            ,
+                        },
                         {
                             count: 3, label: '3M', step: 'month', stepmode: 'backward'
-                        }
-
-                            ,
+                        },
                         {
                             count: 6, label: '6M', step: 'month', stepmode: 'backward'
-                        }
-
-                            ,
+                        },
                         {
                             count: 1, label: 'YTD', step: 'year', stepmode: 'todate'
-                        }
-
-                            ,
+                        },
                         {
                             count: 1, label: '1Y', step: 'year', stepmode: 'backward'
-                        }
-
-                            ,
+                        },
                         {
                             step: 'all', label: 'Tudo'
                         }
-
                         ],
                         font: {
                             color: '#e6edf3'
-                        }
-
-                        ,
+                        },
                         bgcolor: '#161b22',
                         activecolor: '#1f6feb',
                         bordercolor: '#30363d'
                     }
-                }
-
-                ,
+                },
                 yaxis: {
                     showgrid: true, gridcolor: '#30363d', color: '#8b949e',
-                    tickprefix: 'R$ '
-                }
-
-                ,
+                    ticksuffix: '%'
+                },
                 hovermode: 'x unified',
                 legend: {
                     orientation: 'h', y: -0.2
-                }
-
-                ,
+                },
                 hoverlabel: {
-
                     bgcolor: '#161b22',
                     bordercolor: '#30363d',
                     font: {
                         color: '#e6edf3'
                     }
                 }
-            }
+            };
 
-                ;
-
-            Plotly.newPlot('performanceChart', [traceInvested, traceBenchmark, tracePortfolio], layout, {
+            Plotly.newPlot('performanceChart', [traceBenchmark, tracePortfolio], layout, {
                 displayModeBar: false, responsive: true
             });
         }
