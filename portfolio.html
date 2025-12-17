@@ -272,6 +272,7 @@
             padding: 25px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             position: relative;
+            text-align: center;
             /* Keep for optional accents if desired */
         }
 
@@ -736,6 +737,28 @@
     <script>
         let allAssets = [];
 
+        function getCurrency(ticker) {
+            // Find asset in allAssets
+            const asset = allAssets.find(a => a.symbol === ticker);
+            if (!asset) {
+                // Heuristic fallback if asset not found yet
+                if (ticker.endsWith('.SA')) return { code: 'BRL', symbol: 'R$ ' };
+                return { code: 'USD', symbol: 'US$ ' };
+            }
+
+            // Based on category
+            if (asset.category === 'br') return { code: 'BRL', symbol: 'R$ ' };
+            if (asset.category === 'cripto' || asset.category === 'us') return { code: 'USD', symbol: 'US$ ' };
+
+            // Indices mixed, default to point/usd for now
+            if (ticker === '^BVSP') return { code: 'BRL', symbol: 'pts ' };
+            return { code: 'USD', symbol: 'US$ ' };
+        }
+
+        function formatVal(val, currencyObj) {
+            return currencyObj.symbol + val.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
         // Load available tickers on mount
         // Load available tickers on mount
         // Explicitly point to Backend 3 on Port 5001 (matches analise_carteiras.html)
@@ -934,8 +957,9 @@
 
             transactions.forEach(t => {
                 const tr = document.createElement('tr');
+                const curr = getCurrency(t.ticker);
 
-                tr.innerHTML = `<td><span class="ticker-badge">${t.ticker}</span></td> <td>${formatDate(t.date)}</td> <td class="val-col">${t.qty}</td> <td class="val-col">R$ ${t.price.toFixed(2)}</td> <td class="val-col">R$ ${t.total.toFixed(2)}</td> <td style="text-align: center;"><button class="delete-btn" onclick="removeTransaction(${t.id})" title="Remover">🗑️</button></td>`;
+                tr.innerHTML = `<td><span class="ticker-badge">${t.ticker}</span></td> <td>${formatDate(t.date)}</td> <td class="val-col">${t.qty}</td> <td class="val-col">${curr.symbol}${t.price.toFixed(2)}</td> <td class="val-col">${curr.symbol}${(t.qty * t.price).toFixed(2)}</td> <td style="text-align: center;"><button class="delete-btn" onclick="removeTransaction(${t.id})" title="Remover">🗑️</button></td>`;
                 tbody.appendChild(tr);
             });
         }
@@ -995,19 +1019,66 @@
         }
 
         function updateStats(data) {
-            document.getElementById('totalInvested').innerText = formatCurrency(data.total_invested);
-            document.getElementById('currentValue').innerText = formatCurrency(data.current_value);
+            // We ignore backend totals (data.total_invested) because they mix currencies
+            // We recalculate standard totals here based on transactions + current prices (data.prices)
+
+            let investedBRL = 0;
+            let investedUSD = 0;
+            let currentBRL = 0;
+            let currentUSD = 0;
+
+            // Re-iterate holdings to separate by currency
+            data.holdings.forEach(h => {
+                const curr = getCurrency(h.ticker);
+                if (curr.code === 'BRL') {
+                    investedBRL += h.invested;
+                    currentBRL += h.current_value;
+                } else {
+                    investedUSD += h.invested;
+                    currentUSD += h.current_value;
+                }
+            });
+
+            // Format Helper
+            const fmt = (val, sym) => sym + val.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            const invEl = document.getElementById('totalInvested');
+            invEl.innerHTML = '';
+            if (investedBRL > 0) invEl.innerHTML += `<div>${fmt(investedBRL, 'R$ ')}</div>`;
+            if (investedUSD > 0) invEl.innerHTML += `<div>${fmt(investedUSD, 'US$ ')}</div>`;
+            if (investedBRL === 0 && investedUSD === 0) invEl.innerHTML = 'R$ 0,00';
+
+            const currEl = document.getElementById('currentValue');
+            currEl.innerHTML = '';
+            if (currentBRL > 0) currEl.innerHTML += `<div>${fmt(currentBRL, 'R$ ')}</div>`;
+            if (currentUSD > 0) currEl.innerHTML += `<div>${fmt(currentUSD, 'US$ ')}</div>`;
+            if (currentBRL === 0 && currentUSD === 0) currEl.innerHTML = 'R$ 0,00';
+
 
             const profitEl = document.getElementById('totalProfit');
-            const profitVal = data.profit_loss;
-            const profitPct = data.profit_loss_pct;
+            profitEl.innerHTML = '';
 
-            profitEl.innerText = `${formatCurrency(profitVal)} (${profitPct.toFixed(2)}%)`;
-            profitEl.className = 'stat-value ' + (profitVal >= 0 ? 'profit' : 'loss');
+            // Render BRL Profit
+            if (investedBRL > 0) {
+                const profitBRL = currentBRL - investedBRL;
+                const pctBRL = (profitBRL / investedBRL) * 100;
+                const colorClass = profitBRL >= 0 ? 'profit' : 'loss';
+                profitEl.innerHTML += `<div class="${colorClass}" style="font-size: 0.9em;">${fmt(profitBRL, 'R$ ')} (${pctBRL.toFixed(2)}%)</div>`;
+            }
+
+            // Render USD Profit
+            if (investedUSD > 0) {
+                const profitUSD = currentUSD - investedUSD;
+                const pctUSD = (profitUSD / investedUSD) * 100;
+                const colorClass = profitUSD >= 0 ? 'profit' : 'loss';
+                profitEl.innerHTML += `<div class="${colorClass}" style="font-size: 0.9em;">${fmt(profitUSD, 'US$ ')} (${pctUSD.toFixed(2)}%)</div>`;
+            }
+            if (investedBRL === 0 && investedUSD === 0) profitEl.innerHTML = 'R$ 0,00 (0.00%)';
+
 
             // Render Charts
             renderAllocationChart(data.holdings, data.allocation_by_category);
-            updateBenchmarkChart(transactions); // Trigger benchmark calc
+            updateBenchmarkChart(transactions);
         }
 
         function renderAllocationChart(holdings, categories) {
@@ -1091,7 +1162,9 @@
                         </div>
                         <div style="text-align: right;">
                             <div style="font-weight: 700; color: var(--text-main);">${cat.percentage.toFixed(1)}%</div>
-                            <div style="font-size: 12px; color: var(--text-muted);">${formatCurrency(cat.value)}</div>
+                            <div style="font-size: 12px; color: var(--text-muted);">
+                                ${cat.category.includes('Brasil') ? 'R$ ' : 'US$ '}${cat.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            </div>
                         </div>
                     </div>`;
                 });
