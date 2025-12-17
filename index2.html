@@ -102,7 +102,7 @@
         nav a {
             color: rgba(255, 255, 255, 0.8);
             text-decoration: none;
-            margin-left: 30px;
+            margin-left: 20px;
             font-weight: 500;
             transition: color 0.2s;
             font-size: 16px;
@@ -187,15 +187,34 @@
             border: none;
             color: rgba(255, 255, 255, 0.8);
             font-family: inherit;
-            font-size: 14px;
+            font-size: 16px;
             font-weight: 500;
-            margin-left: 30px;
+            margin-left: 0;
             cursor: pointer;
             padding: 10px 0;
         }
 
         .nav-btn-drop:hover {
             color: white;
+        }
+
+        .btn-logout {
+            margin-left: 10px;
+            padding: 6px 16px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .btn-logout:hover {
+            background-color: rgba(220, 53, 69, 0.15);
+            border-color: #ff5f56;
+            color: #ff5f56;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
 
 
@@ -957,14 +976,14 @@
     <header>
         <div class="logo">FinSense</div>
         <nav style="display: flex; align-items: center;">
-            <a href="index2.html" style="font-size: 16px;">Início</a>
+            <a href="index2.html" style="font-size: 16px; margin-left: 0;">Início</a>
 
             <!-- Protected Links: Visible but intercepted if not logged in -->
-            <a href="#dashboard" style="font-size: 16px; margin-left: 20px;">Plataforma</a>
-            <a href="#mercado" style="font-size: 16px; margin-left: 20px;">Mercado</a>
+            <a href="#dashboard" style="font-size: 16px;">Plataforma</a>
+            <a href="#mercado" style="font-size: 16px;">Mercado</a>
 
             <div class="dropdown" style="margin-left: 20px;">
-                <button class="nav-btn-drop" style="color: white; font-weight: 700; font-size: 16px;">Análise ▼</button>
+                <button class="nav-btn-drop">Análise ▼</button>
                 <div class="dropdown-content">
                     <a href="analise_carteiras.html" class="protected-link">Correlação & Risco</a>
                     <a href="portfolio.html" class="protected-link">Gerenciar Portfólio</a>
@@ -972,14 +991,13 @@
             </div>
 
             <!-- Auth Section: Shows User Profile OR Login Button -->
-            <div id="nav-auth" style="display: none; align-items: center; margin-left: auto;">
-                <div style="margin-left: 15px; font-size: 14px; color: var(--text-muted);">Olá, <strong
+            <div id="nav-auth" style="display: none; align-items: center; margin-left: 20px;">
+                <div style="margin-left: 15px; font-size: 14px; color: rgba(255, 255, 255, 0.9);">Olá, <strong
                         id="username-display">User</strong></div>
-                <a href="#" id="btn-logout" class="btn-logout" onclick="logout()"
-                    style="margin-left: 10px; padding: 5px 12px; border-radius: 6px; border: 1px solid rgba(255, 69, 58, 0.3); color: #ff6b6b; text-decoration: none; font-size: 14px;">Sair</a>
+                <a href="#" id="btn-logout" class="btn-logout" onclick="logout()">Sair</a>
             </div>
 
-            <div id="nav-public" style="display: flex; align-items: center; margin-left: auto;">
+            <div id="nav-public" style="display: flex; align-items: center; margin-left: 20px;">
                 <a href="login.html" class="cta-button"
                     style="padding: 8px 16px; font-size: 14px; margin-left: 15px;">Entrar / Registrar</a>
             </div>
