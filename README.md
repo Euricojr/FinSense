@@ -42,6 +42,10 @@ Visão geral do mercado financeiro em tempo real.
 - **Heatmap**: Mapa de calor visual para identificar rapidamente setores em alta ou baixa.
 
 <p align="center">
+  <img src="assets/dashboard_full.png" alt="Dashboard Full" width="95%" style="margin-bottom: 10px;" />
+</p>
+
+<p align="center">
   <img src="assets/market_movers.png" alt="Market Movers" width="45%" style="margin-right: 10px;" />
   <img src="assets/heatmap.png" alt="Heatmap" width="45%" />
 </p>
