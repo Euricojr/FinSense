@@ -1,6 +1,19 @@
 # FinSense 📈
 
-> **Acesse o projeto aqui:** [https://finsense-5xn5.onrender.com](https://finsense-5xn5.onrender.com)
+> **Access the project here / Acesse o projeto aqui:** [https://finsense-5xn5.onrender.com](https://finsense-5xn5.onrender.com)
+
+---
+
+## 🇺🇸 English Summary
+
+**FinSense** is a unified platform for tracking and analyzing financial assets (Brazilian Stocks, US Stocks, and Cryptocurrencies). It helps you manage your portfolio and stay updated with the global market.
+
+### Key Features:
+- **Market Dashboard**: Real-time overview of global indices (S&P 500, Ibovespa, Bitcoin), top market movers, and a sector heatmap.
+- **Portfolio Manager**: Track your investments, view historical evolution (Invested vs. Current Value vs. Benchmark), and analyze asset allocation.
+- **Risk & Correlation**: Advanced tools to verify portfolio diversification and asset correlation.
+
+![Dashboard Preview](assets/dashboard.png)
 
 ---
 
@@ -28,6 +41,11 @@ Visão geral do mercado financeiro em tempo real.
 - **Market Movers**: Lista das maiores altas e baixas do dia.
 - **Heatmap**: Mapa de calor visual para identificar rapidamente setores em alta ou baixa.
 
+<p align="center">
+  <img src="assets/market_movers.png" alt="Market Movers" width="45%" style="margin-right: 10px;" />
+  <img src="assets/heatmap.png" alt="Heatmap" width="45%" />
+</p>
+
 ### 2. Gerenciador de Portfólio (`Minha Carteira`)
 Ferramenta para controle pessoal de investimentos.
 - **Registro**: Adicione suas compras de ativos com data e preço.
@@ -37,10 +55,18 @@ Ferramenta para controle pessoal de investimentos.
   - 🟠 **Benchmark**: Comparativo (ex: "E se eu tivesse comprado Ibovespa/CDI?").
 - **Alocação**: Gráfico de pizza mostrando a divisão da carteira (Ações BR, EUA, Cripto).
 
+<p align="center">
+  <img src="assets/portfolio_dashboard.png" alt="Portfolio Dashboard" width="95%" />
+</p>
+
 ### 3. Análise de Correlação & Risco
 Ferramenta avançada para entender a diversificação.
 - **Matriz de Correlação**: Calcula como seus ativos se comportam uns em relação aos outros.
 - Ajuda a identificar se sua carteira está diversificada ou se todos os ativos sobem/caem juntos.
+
+<p align="center">
+  <img src="assets/portfolio_analysis.png" alt="Portfolio Analysis" width="95%" />
+</p>
 
 ---
 
