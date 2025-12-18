@@ -1490,7 +1490,7 @@
             try {
                 const categoria = document.getElementById('heatmap-category').value;
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+                const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout for Render Free Tier
 
                 const response = await fetch(`${API_BASE_URL}/api/heatmap?type=${categoria}`, { signal: controller.signal });
                 clearTimeout(timeoutId);
