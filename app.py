@@ -704,100 +704,159 @@ def portfolio_evolution():
         return jsonify({"error": str(e)}), 500
 
 def calculate_portfolio_history(transactions, benchmark_ticker='^BVSP'):
+    # 1. Prepare Data
     df_tx = pd.DataFrame(transactions)
     df_tx['date'] = pd.to_datetime(df_tx['date'])
     df_tx['qty'] = df_tx['qty'].astype(float)
     df_tx['price'] = df_tx['price'].astype(float)
-    df_tx['flow'] = df_tx['qty'] * df_tx['price'] # Positive = Buy (Inflow of Asset Value, Outflow of Cash)
     
     start_date = df_tx['date'].min()
     end_date = pd.Timestamp.now()
     
+    # 2. Download Data (Portfolio Tickers + Benchmark)
     unique_tickers = df_tx['ticker'].unique().tolist()
+    
+    # Handle CDI special case
     is_cdi = (benchmark_ticker == 'CDI')
+    # If CDI, we don't download it from Yahoo
     download_tickers = unique_tickers + ([benchmark_ticker] if not is_cdi else [])
     
-    try:
-        data = yf.download(download_tickers, start=start_date, end=end_date, progress=False, threads=True)
-        market_data = data['Close'] if 'Close' in data else data
-    except Exception as e:
-        return jsonify({"error": "Failed to download market data"}), 500
+    all_tickers = download_tickers
     
-    # Handle single ticker
-    if len(download_tickers) == 1:
-        if isinstance(market_data, pd.Series):
-             market_data = pd.DataFrame({download_tickers[0]: market_data})
-        if isinstance(market_data, pd.DataFrame) and download_tickers[0] not in market_data.columns:
-             market_data.columns = [download_tickers[0]]
-             
+    # Download history
+    # Crypto trades 24/7, Stocks Mon-Fri. yfinance handles this but alignment is needed.
+    # We'll use '1d' interval.
+    
+    try:
+        market_data = yf.download(all_tickers, start=start_date, end=end_date, progress=False, threads=True)['Close']
+    except Exception as e:
+         # Fallback empty
+         return jsonify({"error": "Data download failed"}), 500
+    
+    # Handle single ticker case in yfinance (returns Series instead of DataFrame)
+    if len(all_tickers) == 1:
+        market_data = pd.DataFrame({all_tickers[0]: market_data})
+    
+    # Fill NAs (forward fill first, then backward fill for very start)
     market_data = market_data.fillna(method='ffill').fillna(method='bfill')
+    
+    # 3. Calculate Daily Portfolio Value
+    # Create an index of all days
     all_days = market_data.index
     
-    # 1. Calculate Daily Total Value (Assets owned at end of day * Price)
-    # We need to reconstruct the portfolio composition for every day
-    daily_value = pd.Series(0.0, index=all_days)
-    daily_flows = pd.Series(0.0, index=all_days)
-
-    # Pre-calculate flows per day
-    grouped_flows = df_tx.groupby(df_tx['date'].dt.normalize())['flow'].sum()
-    daily_flows = daily_flows.add(grouped_flows, fill_value=0)
+    # Initial Benchmark Value (normalized)
+    bench_start_val = 100.0 # Base 100
     
-    # Calculate holdings over time
-    # This is expensive in a loop, optimize by iterating over ordered transactions
-    # Create a DataFrame of holdings changes: columns=ticker, index=date
-    holdings_change = pd.DataFrame(0.0, index=all_days, columns=unique_tickers)
+    # Initialize series with 0
+    portfolio_series = pd.Series(0.0, index=all_days)
+    invested_series = pd.Series(0.0, index=all_days)
     
     for _, tx in df_tx.iterrows():
-        d = tx['date'].normalize()
-        if d in holdings_change.index:
-            holdings_change.loc[d, tx['ticker']] += tx['qty']
+        # Mask for days after transaction
+        mask = all_days >= tx['date']
+        
+        # Contribution to invested amount (Cash Flow)
+        invested_amount = tx['qty'] * tx['price']
+        invested_series.loc[mask] += invested_amount
+        
+        # Contribution to current value (qty * price_of_day)
+        # If ticker not in market_data (e.g. IPO later), handle gracefully
+        if tx['ticker'] in market_data.columns:
+            prices = market_data.loc[mask, tx['ticker']]
+            value_contribution = prices * tx['qty']
+            portfolio_series.loc[mask] += value_contribution
     
-    # Cumulative sum to get current units held on each day
-    daily_units = holdings_change.cumsum()
+    # 4. Calculate Benchmark Scale
+    bench_series = pd.Series(0.0, index=all_days)
     
-    # Compute Daily Portfolio Value
-    for t in unique_tickers:
-        if t in market_data.columns:
-            # Units held * Price on that day
-            daily_val_asset = daily_units[t] * market_data[t]
-            daily_value += daily_val_asset.fillna(0)
-
-    # 2. Calculate Daily Returns (Quota System)
-    # Formula: Ret_t = (EndVal_t - Flow_t) / EndVal_{t-1} - 1
+    # To calculate "Benchmark Equivalent Portfolio":
+    # Identify each cashflow. Buy 'InvestedAmount' worth of Benchmark at that day's price.
+    # Track "Qty of Benchmark held".
     
-    quota_series = [1.0] # Start at 1.0 (100%)
-    dates = [all_days[0]]
+    bench_qty_held = pd.Series(0.0, index=all_days)
     
-    # We need to iterate carefully.
-    # On Day 0: Value is just Flow. Return is 0.
+    if benchmark_ticker in market_data.columns:
+        bench_prices = market_data[benchmark_ticker]
+        
+        for _, tx in df_tx.iterrows():
+            mask = all_days >= tx['date']
+            
+            # Price of benchmark at transaction date
+            # Find closest date if exact match missing
+            try:
+                # get price at tx date or nearest before
+                idx = market_data.index.get_indexer([tx['date']], method='pad')[0]
+                if idx == -1: idx = 0 # fallback
+                price_at_buy = bench_prices.iloc[idx]
+                
+                investment = tx['qty'] * tx['price']
+                bench_units_bought = investment / price_at_buy
+                
+                # Add this qty to all subsequent days
+                bench_qty_held.loc[mask] += bench_units_bought
+            except:
+                pass # skip if date issues
+        
+        # Now Calculate Value of Bench Portfolio
+        bench_series = bench_qty_held * bench_prices
+        
+    elif is_cdi:
+        try:
+            # Fetch Real CDI Data using python-bcb
+            # Code 12 = Taxa de juros - CDI (% a.d.)
+            start_str = start_date.strftime('%Y-%m-%d')
+            cdi_daily = sgs.get({'CDI': 12}, start=start_str)
+            
+            # The API returns % (e.g., 0.05). We need factor (1 + 0.05/100)
+            cdi_daily['factor'] = 1 + (cdi_daily['CDI'] / 100)
+            
+            # Reindex to all_days (business days + weekends from yfinance range)
+            # Fill missing with factor 1.0 (no growth on weekends)
+            cdi_aligned = cdi_daily['factor'].reindex(all_days, fill_value=1.0)
+            
+            # Calculate cumulative product
+            cdi_accum = cdi_aligned.cumprod()
+            
+            # Now we have an index (e.g. 1.0, 1.0004...). 
+            # We use this "price" to buy units.
+            
+            bench_qty_held = pd.Series(0.0, index=all_days)
+            
+            for _, tx in df_tx.iterrows():
+                mask = all_days >= tx['date']
+                try:
+                    # get index val at tx date
+                    idx = all_days.get_indexer([tx['date']], method='pad')[0]
+                    if idx == -1: idx = 0
+                    index_val_at_buy = cdi_accum.iloc[idx]
+                    
+                    if index_val_at_buy == 0: index_val_at_buy = 1.0
+                    
+                    investment = tx['qty'] * tx['price']
+                    units_bought = investment / index_val_at_buy
+                    
+                    bench_qty_held.loc[mask] += units_bought
+                except:
+                    pass
+            
+            bench_series = bench_qty_held * cdi_accum
+            
+        except Exception as e:
+            logger.error(f"Error fetching CDI from BCB: {e}")
+            # Fallback to zeros or flat line
+            bench_series = pd.Series(0.0, index=all_days)
     
-    stats_df = pd.DataFrame({
-        'end_value': daily_value,
-        'flow': daily_flows
-    })
+    # 5. Format for JSON
     
-    # Shift end_value to get prev_value
-    # But strictly: Ret = (V_t - Flow_t) / V_{t-1}
+    result = {
+        "dates": all_days.strftime('%Y-%m-%d').tolist(),
+        "portfolio": portfolio_series.fillna(0).tolist(),
+        "invested": invested_series.fillna(0).tolist(),
+        "benchmark": bench_series.fillna(0).tolist(),
+        "benchmark_symbol": benchmark_ticker
+    }
     
-    daily_pct_change = pd.Series(0.0, index=all_days)
-    
-    prev_val = 0.0
-    
-    # Efficient Iteration
-    # First day with value:
-    first_idx = np.argmax(stats_df['end_value'] > 0)
-    
-    # Initialize calculated series
-    quota = pd.Series(0.0, index=all_days)
-    
-    # This loop calculates the quota based on daily variations, effectively stripping out inflows
-    # Logic: If I have 100, deposit 100, I have 200. Return is 0%.
-    # If I have 100, it grows to 110, deposit 90, I have 200. Return is 10%.
-    
-    current_quota = 100.0
-    quota.iloc[:first_idx] = 100.0
-    
-    prev_total = 0.0
+    return jsonify(result)
     
     for i in range(len(stats_df)):
         if i < first_idx: 

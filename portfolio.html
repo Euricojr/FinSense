@@ -1219,7 +1219,20 @@
         function renderPerformanceChart(data) {
             const dates = data.dates;
             const portfolio = data.portfolio;
+            const invested = data.invested; // Now available from backend
             const benchmark = data.benchmark;
+
+            const traceInvested = {
+                x: dates,
+                y: invested,
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Total Investido',
+                line: {
+                    color: '#238636', width: 2, dash: 'dot'
+                },
+                hovertemplate: 'R$ %{y:,.2f}<extra></extra>'
+            };
 
             const tracePortfolio = {
                 x: dates,
@@ -1230,10 +1243,10 @@
                 line: {
                     color: '#1f6feb', width: 3
                 },
-                hovertemplate: '%{y:.2f}%<extra></extra>'
+                hovertemplate: 'R$ %{y:,.2f}<extra></extra>'
             };
 
-            const benchmarkName = data.benchmark_symbol === 'CDI' ? 'CDI' : data.benchmark_symbol;
+            const benchmarkName = data.benchmark_symbol === 'CDI' ? 'CDI (Equivalente)' : (data.benchmark_symbol + ' (Equivalente)');
 
             const traceBenchmark = {
                 x: dates,
@@ -1244,12 +1257,12 @@
                 line: {
                     color: '#f0883e', width: 2
                 },
-                hovertemplate: '%{y:.2f}%<extra></extra>'
+                hovertemplate: 'R$ %{y:,.2f}<extra></extra>'
             };
 
             const layout = {
                 title: {
-                    text: 'Rentabilidade Acumulada (%)',
+                    text: 'Evolução Patrimonial (R$)',
                     font: {
                         color: '#e6edf3', size: 18
                     }
@@ -1293,11 +1306,11 @@
                 },
                 yaxis: {
                     showgrid: true, gridcolor: '#30363d', color: '#8b949e',
-                    ticksuffix: '%'
+                    tickprefix: 'R$ '
                 },
                 hovermode: 'x unified',
                 legend: {
-                    orientation: 'h', y: -0.2
+                    orientation: 'h', y: -0.2, font: { color: '#e6edf3' }
                 },
                 hoverlabel: {
                     bgcolor: '#161b22',
@@ -1308,7 +1321,7 @@
                 }
             };
 
-            Plotly.newPlot('performanceChart', [traceBenchmark, tracePortfolio], layout, {
+            Plotly.newPlot('performanceChart', [traceInvested, traceBenchmark, tracePortfolio], layout, {
                 displayModeBar: false, responsive: true
             });
         }
