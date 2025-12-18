@@ -1,4 +1,8 @@
-# FinSense 📈
+<p align="center">
+  <img src="assets/logo.png" alt="FinSense Logo" width="800" />
+</p>
+
+
 
 > **Access the project here / Acesse o projeto aqui:** [https://finsense-5xn5.onrender.com](https://finsense-5xn5.onrender.com)
 
