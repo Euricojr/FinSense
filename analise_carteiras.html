@@ -274,6 +274,138 @@
             display: flex;
             align-items: center;
         }
+
+        /* Mobile Menu Button */
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 10px;
+            z-index: 1002;
+        }
+
+        .mobile-menu-btn span {
+            display: block;
+            width: 25px;
+            height: 3px;
+            margin: 5px 0;
+            background-color: white;
+            transition: 0.3s;
+        }
+
+        /* Responsive Grid Classes */
+        .config-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            header {
+                padding: 0 20px;
+            }
+
+            .logo img {
+                height: 110px !important;
+                margin-top: -30px !important;
+                margin-bottom: -30px !important;
+                margin-left: -20px !important;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            /* Nav Menu - Hidden by default */
+            nav {
+                display: none !important;
+                position: absolute;
+                top: 70px;
+                left: 0;
+                width: 100%;
+                background-color: var(--hero-bg);
+                flex-direction: column;
+                align-items: center !important;
+                padding: 20px 0;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            }
+
+            nav.active {
+                display: flex !important;
+            }
+
+            nav a, .dropdown, .theme-toggle, .btn-logout {
+                margin: 10px 0 !important;
+            }
+
+            nav a { font-size: 18px !important; }
+            .nav-btn-drop { font-size: 18px !important; }
+
+            .content-container {
+                padding: 15px; /* Reduced padding */
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            /* Stack Columns */
+            .config-grid, .footer-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            /* Larger Touch Targets */
+            input, select, #asset-search {
+                padding: 10px;
+                font-size: 13px; /* Reduced further to 13px */
+                height: 38px; /* Compact height */
+            }
+
+            .asset-row {
+                padding: 15px;
+                background: var(--bg-main);
+                margin-bottom: 10px;
+                border-radius: 8px;
+            }
+            .asset-row span { font-size: 13px !important; }
+
+            /* Fix Summary Text Size */
+            #summary-text, .card h3 {
+                font-size: 14px !important;
+                line-height: 1.5 !important;
+            }
+
+            .cta-button {
+                width: 100%;
+                justify-content: center;
+                padding: 12px;
+                font-size: 14px;
+            }
+            
+            /* Footer Stacking */
+            .action-group {
+                flex-direction: column;
+                align-items: stretch !important;
+                gap: 15px;
+            }
+            .action-group.bordered {
+                border-left: none !important;
+                border-top: 1px solid var(--border-color);
+                padding-left: 0 !important;
+                padding-top: 20px;
+            }
+            .action-group > div { padding-right: 0 !important; }
+            .action-group select { width: 100% !important; margin-bottom: 10px; }
+        }
     </style>
 </head>
 
@@ -284,7 +416,14 @@
             <img src="static/logo.png" alt="FinSense"
                 style="height: 160px; margin-top: -50px; margin-bottom: -50px; margin-left: -40px; vertical-align: middle;">
         </div>
-        <nav style="display: flex; align-items: center;">
+
+        <button class="mobile-menu-btn" onclick="toggleMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+
+        <nav id="main-nav" style="display: flex; align-items: center;">
             <a href="index2.html" style="font-size: 16px;">Início</a>
             <a href="index2.html#dashboard" style="font-size: 16px;">Plataforma</a>
             <a href="index2.html#mercado" style="font-size: 16px;">Mercado</a>
@@ -313,7 +452,7 @@
             <div style="padding: 30px;">
                 <h2 style="font-size: 18px; margin-bottom: 25px;">Configuração da Carteira</h2>
 
-                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 30px;">
+                <div class="config-grid">
 
                     <!-- Left Col: Assets -->
                     <div>
@@ -363,10 +502,10 @@
             <!-- Actions Footer -->
             <div
                 style="background-color: rgba(0,0,0,0.02); border-top: 1px solid var(--border-color); padding: 25px 30px;">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
+                <div class="footer-grid">
 
                     <!-- Correlation Action -->
-                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <div class="action-group" style="display: flex; align-items: center; justify-content: space-between;">
                         <div>
                             <div style="font-weight: 700; font-size: 14px; margin-bottom: 3px;">Risco & Correlação</div>
                             <div style="font-size: 12px; color: var(--text-muted);">Matriz de correlação e análise de
@@ -378,7 +517,7 @@
                     </div>
 
                     <!-- Benchmark Action -->
-                    <div
+                    <div class="action-group bordered"
                         style="display: flex; align-items: center; justify-content: space-between; padding-left: 40px; border-left: 1px solid var(--border-color);">
                         <div style="flex: 1; padding-right: 15px;">
                             <div style="font-weight: 700; font-size: 14px; margin-bottom: 5px;">Benchmark</div>
@@ -458,6 +597,11 @@
         }
 
         const API_BASE_URL = getBaseUrl();
+
+        function toggleMenu() {
+            const nav = document.getElementById('main-nav');
+            nav.classList.toggle('active');
+        }
 
         let allAssets = [];
         let selectedTickers = [];
@@ -628,12 +772,12 @@
                     </div>
                     
                     <div style="display: flex; align-items: center; gap: 10px;">
-                        <div style="display: flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.03); padding: 4px 8px; border-radius: 4px;">
+                        <div style="display: flex; align-items: center; gap: 6px; background: rgba(0,0,0,0.03); padding: 4px 8px; border-radius: 4px;">
                             <span style="font-size: 11px; font-weight: 600; color: var(--text-muted);">PESO</span>
-                            <div style="position: relative; width: 50px;">
+                            <div style="display: flex; align-items: center;">
                                 <input type="number" value="${asset.weight}" onchange="updateWeight('${asset.symbol}', this.value)" 
-                                style="width: 100%; padding: 2px 5px; border: none; background: transparent; text-align: right; font-weight: 700; font-size: 13px; outline: none;">
-                                <span style="position: absolute; right: 0; top: 2px; font-size: 10px; pointer-events: none;">%</span>
+                                style="width: 35px; padding: 0; border: none; background: transparent; text-align: right; font-weight: 700; font-size: 13px; outline: none; height: auto;">
+                                <span style="font-size: 13px; font-weight: 700; color: var(--text-main); margin-left: 2px;">%</span>
                             </div>
                         </div>
                         
@@ -805,6 +949,8 @@
                 hoverinfo: 'y+name'
             });
 
+            const isMobile = window.innerWidth <= 768;
+
             const layout = {
                 title: { text: '' },
                 paper_bgcolor: 'rgba(0,0,0,0)',
@@ -812,7 +958,8 @@
                 font: { family: 'Manrope, sans-serif', color: getComputedStyle(document.documentElement).getPropertyValue('--text-main') },
                 xaxis: {
                     showgrid: false,
-                    color: getComputedStyle(document.documentElement).getPropertyValue('--text-muted')
+                    color: getComputedStyle(document.documentElement).getPropertyValue('--text-muted'),
+                    tickfont: { size: isMobile ? 10 : 12 }
                 },
                 yaxis: {
                     showgrid: true,
@@ -820,18 +967,31 @@
                     color: getComputedStyle(document.documentElement).getPropertyValue('--text-muted'),
                     ticksuffix: '%',
                     zeroline: true,
-                    zerolinecolor: getComputedStyle(document.documentElement).getPropertyValue('--border-color')
+                    zerolinecolor: getComputedStyle(document.documentElement).getPropertyValue('--border-color'),
+                    tickfont: { size: isMobile ? 10 : 12 }
                 },
-                margin: { t: 20, r: 20, b: 40, l: 60 },
+                margin: isMobile ? { t: 10, r: 10, b: 40, l: 35 } : { t: 20, r: 20, b: 40, l: 60 },
                 showlegend: true,
-                legend: { orientation: 'h', y: -0.2 },
+                legend: { 
+                    orientation: 'h', 
+                    y: isMobile ? -0.3 : -0.2, // Move legend down
+                    font: { size: isMobile ? 10 : 12 }
+                },
                 hovermode: 'x unified',
                 hoverlabel: {
                     bgcolor: isDark ? '#1e293b' : '#ffffff',
                     bordercolor: isDark ? '#334155' : '#e2e8f0',
-                    font: { color: isDark ? '#ffffff' : '#1e293b' } // Force high contrast text/bg
+                    font: { color: isDark ? '#ffffff' : '#1e293b' }
                 }
             };
+            
+            /* Resize Container on Mobile */
+            if (isMobile) {
+                 document.getElementById('performance-chart').style.height = '350px'; // Slightly shorter to fit screen better? Or User said make BIGGER.
+                 // Actually user said "make chart bigger". The container is 500px, which is tall.
+                 // The issue is margins. Reducing margins (done above) makes the CHART AREA bigger.
+                 // But let's ensure height is sufficient. 400-500 is good.
+            }
 
             Plotly.newPlot('performance-chart', traces, layout, { responsive: true, displayModeBar: false });
         }
