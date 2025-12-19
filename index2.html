@@ -99,6 +99,11 @@
             color: white;
         }
 
+        nav {
+            display: flex;
+            align-items: center;
+        }
+
         nav a {
             color: rgba(255, 255, 255, 0.8);
             text-decoration: none;
@@ -537,36 +542,38 @@
         }
 
         .chart-title {
-            font-size: 24px;
+            font-size: 18px; /* Reduced from 24px */
             font-weight: 700;
             color: var(--text-main);
+            letter-spacing: -0.5px;
         }
 
         .price-display {
-            font-size: 24px;
-            font-weight: 400;
+            font-size: 18px; /* Reduced from 24px */
+            font-weight: 500;
             color: var(--accent-primary);
         }
 
         .controls {
             display: flex;
-            gap: 15px;
+            gap: 20px;
             align-items: flex-end;
+            margin-left: auto; /* Push to right */
         }
 
         .control-group {
             display: flex;
             flex-direction: column;
-            gap: 5px;
-            align-items: center;
+            gap: 6px; /* Slightly more gap */
+            align-items: flex-start; /* Align labels to start */
         }
 
         .control-label {
-            font-size: 11px;
-            font-weight: 600;
+            font-size: 10px;
+            font-weight: 700;
             color: var(--text-muted);
             text-transform: uppercase;
-            text-align: center;
+            letter-spacing: 0.5px;
         }
 
         select,
@@ -574,14 +581,33 @@
             background-color: var(--bg-panel);
             color: var(--text-main);
             border: 1px solid var(--border-color);
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-family: inherit;
+            padding: 6px 12px; /* Increased padding */
+            border-radius: 8px; /* Softer corners */
+            font-family: 'Manrope', sans-serif; /* Explicit font */
             font-size: 13px;
+            font-weight: 500;
             outline: none;
             cursor: pointer;
-            height: 32px;
-            text-align: center;
+            height: 36px; /* Taller touch target */
+            text-align: left; /* Align text left for natural read */
+            appearance: none; /* Remove default arrow for custom styling if needed, keeping simple for now */
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            background-size: 14px;
+            padding-right: 30px; /* Space for arrow */
+            transition: all 0.2s;
+        }
+
+        select:hover,
+        input:hover {
+            border-color: var(--accent-primary);
+            background-color: var(--bg-main);
+        }
+        
+        select:focus {
+            box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.1);
+            border-color: var(--accent-primary);
         }
 
         select:hover,
@@ -589,19 +615,69 @@
             border-color: #bbb;
         }
 
-        /* --- Sidebar (Right) --- */
-        .sidebar {
-            flex: none;
-            width: 320px;
-            display: flex;
-            flex-direction: column;
-            background-color: var(--bg-panel);
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        /* --- Sidebar REMOVED --- */
+        /* Search Bar Styles */
+        .search-container {
+            position: relative;
+            width: 300px;
+            margin-right: 20px;
+        }
+
+        #asset-search {
+            background-color: var(--bg-main);
+            color: var(--text-main);
             border: 1px solid var(--border-color);
-            overflow: hidden;
-            height: 100%;
-            /* Fill container */
+            padding: 8px 15px;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 14px;
+            width: 100%;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        #asset-search:focus {
+            border-color: var(--accent-primary);
+        }
+
+        #suggestions {
+            position: absolute;
+            top: 105%;
+            left: 0;
+            width: 100%;
+            background: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            list-style: none;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+            z-index: 1001;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            padding: 0;
+            margin: 0;
+        }
+        
+        #suggestions li {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 13px;
+            color: var(--text-main);
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        #suggestions li:hover {
+            background-color: var(--bg-main);
+        }
+
+        @media (max-width: 768px) {
+            .search-container {
+                width: 100%;
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
         }
 
         .sidebar-header {
@@ -968,6 +1044,269 @@
         .change-negative {
             color: #d32f2f;
         }
+        /* --- Mobile Responsive Styles --- */
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 10px;
+            z-index: 1002;
+        }
+        
+        .mobile-menu-btn span {
+            display: block;
+            width: 25px;
+            height: 3px;
+            margin: 5px 0;
+            background-color: white;
+            transition: 0.3s;
+        }
+
+        @media (max-width: 768px) {
+            /* Header adjustments */
+            header {
+                height: 70px; /* Fixed small height */
+                padding: 0 20px;
+                flex-direction: row; /* Horizontal layout */
+                justify-content: space-between;
+                align-items: center;
+                background-color: var(--hero-bg);
+            }
+
+            .logo img {
+                height: 110px !important; 
+                margin-top: -30px !important;
+                margin-bottom: -30px !important;
+                margin-left: -20px !important;
+            }
+            
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            nav {
+                display: none; /* Hidden by default */
+                position: absolute;
+                top: 70px;
+                left: 0;
+                width: 100%;
+                background-color: var(--hero-bg);
+                flex-direction: column;
+                align-items: center;
+                padding: 20px 0;
+                box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+                z-index: 999;
+                border-top: 1px solid rgba(255,255,255,0.1);
+            }
+            
+            nav.active {
+                display: flex;
+            }
+
+            nav a, .nav-btn-drop {
+                margin: 10px 0;
+                font-size: 16px; /* Slightly smaller for minimalism */
+                display: block;
+                width: 100%;
+                text-align: center;
+            }
+
+            /* Fix dropdown inside menu */
+            .dropdown {
+                margin-left: 0 !important;
+                width: 100%;
+                text-align: center;
+            }
+            
+            .dropdown-content {
+                position: static; /* Stack inside the menu */
+                background: transparent;
+                box-shadow: none;
+                border: none;
+                padding-left: 0;
+                display: block; /* Always show sub-links for simplicity or make clickable */
+                text-align: center;
+            }
+            
+            .dropdown-content a {
+                padding: 10px;
+                color: var(--text-muted);
+                font-size: 14px;
+            }
+
+            #nav-auth, #nav-public {
+                margin-left: 0 !important;
+                margin-top: 20px;
+                flex-direction: column;
+                width: 100% !important;
+                display: flex !important;
+                justify-content: center;
+            }
+
+            .cta-button {
+                padding: 12px 40px;
+                font-size: 15px;
+                width: 80%;
+                margin: 10px auto;
+                display: block;
+                text-align: center;
+            }
+            
+             /* Hero adjustments */
+            .hero {
+                height: auto;
+                min-height: 100vh;
+                padding: 120px 20px 60px 20px;
+            }
+
+            .hero h1 {
+                font-size: 28px; /* Reduced from 32px */
+            }
+
+            .hero p {
+                font-size: 14px; /* Reduced from 16px */
+                margin-bottom: 30px;
+            }
+
+            .theme-toggle {
+                margin: 20px 0 0 0;
+                font-size: 24px;
+            }
+            
+            /* Specific fix for the nav-public link container margin */
+            #nav-public a {
+                margin-left: 0 !important;
+            }
+            
+            /* --- Mobile Chart Header Centering --- */
+            .chart-header {
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                gap: 20px;
+                text-align: center;
+            }
+            
+            .chart-title-group {
+                display: flex; /* Ensure flex is active */
+                flex-direction: column; /* Stack vertically for perfect centering */
+                justify-content: center;
+                align-items: center;
+                width: 100%;
+                text-align: center;
+                gap: 5px; /* Space between Ticker and Price */
+                margin-bottom: 5px;
+            }
+            
+            .search-container {
+                width: 100%;
+                margin: 0;
+            }
+            
+            .controls {
+                display: flex; /* Ensure flex is active */
+                margin-left: 0; 
+                justify-content: center;
+                align-items: center;
+                width: 100%;
+                gap: 15px; /* Adjust gap */
+                flex-wrap: wrap; 
+            }
+            
+            .control-group {
+                align-items: center; 
+                display: flex;
+                flex-direction: column;
+            }
+            
+            .control-label {
+                text-align: center;
+                width: 100%; /* Ensure label takes full width of group */
+            }
+
+            /* Dashboard adjustments */
+            #dashboard {
+                height: auto !important;
+                overflow: visible !important;
+                display: block !important;
+            }
+
+            .main-container {
+                flex-direction: column;
+                height: auto !important;
+                padding: 10px;
+            }
+
+            .chart-section {
+                height: 600px; /* Fixed height for chart on mobile */
+                flex: none;
+                width: 100%;
+                margin-bottom: 20px;
+            }
+            
+            /* Removed conflicting duplicate styles for chart-header and controls */
+            
+            .control-group {
+                flex: 1;
+                min-width: 80px;
+            }
+
+            /* Sidebar adjustments */
+            .sidebar {
+                width: 100%;
+                height: 500px; /* Fixed height for list on mobile */
+                flex: none;
+            }
+            
+            .asset-list {
+                max-height: 400px;
+            }
+
+            /* Destaques (Movers) adjustments */
+            #destaques {
+                padding: 20px;
+                margin-top: 0;
+            }
+
+            .destaques-grid {
+                grid-template-columns: 1fr; /* Stack columns */
+            }
+            
+            .destaques-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .destaques-header select {
+                width: 100% !important;
+            }
+
+            /* Market Heatmap adjustments */
+            #mercado {
+                padding-top: 20px;
+                padding-bottom: 40px;
+            }
+            
+            .heatmap-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .heatmap-header select {
+                width: 100% !important;
+            }
+
+            #heatmap-plot {
+                height: 400px !important;
+            }
+            
+            .multiselect-container {
+                 width: 100%;
+            }
+        }
     </style>
 </head>
 
@@ -978,18 +1317,26 @@
             <img src="static/logo.png" alt="FinSense"
                 style="height: 160px; margin-top: -50px; margin-bottom: -50px; margin-left: -40px; vertical-align: middle;">
         </div>
-        <nav style="display: flex; align-items: center;">
+
+        <!-- Mobile Menu Button -->
+        <button class="mobile-menu-btn" onclick="toggleMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+
+        <nav id="main-nav">
             <a href="index2.html" style="font-size: 16px; margin-left: 0;">Início</a>
 
             <!-- Protected Links: Visible but intercepted if not logged in -->
-            <a href="#dashboard" style="font-size: 16px;">Plataforma</a>
-            <a href="#mercado" style="font-size: 16px;">Mercado</a>
+            <a href="#dashboard" style="font-size: 16px;" onclick="closeMenu()">Plataforma</a>
+            <a href="#mercado" style="font-size: 16px;" onclick="closeMenu()">Mercado</a>
 
             <div class="dropdown" style="margin-left: 20px;">
                 <button class="nav-btn-drop">Análise ▼</button>
                 <div class="dropdown-content">
-                    <a href="analise_carteiras.html" class="protected-link">Correlação & Risco</a>
-                    <a href="portfolio.html" class="protected-link">Gerenciar Portfólio</a>
+                    <a href="analise_carteiras.html" class="protected-link" onclick="closeMenu()">Correlação & Risco</a>
+                    <a href="portfolio.html" class="protected-link" onclick="closeMenu()">Gerenciar Portfólio</a>
                 </div>
             </div>
 
@@ -1009,6 +1356,20 @@
                 style="margin-left: 15px;">🌙</button>
         </nav>
     </header>
+
+    <script>
+        function toggleMenu() {
+            const nav = document.getElementById('main-nav');
+            nav.classList.toggle('active');
+        }
+        
+        function closeMenu() {
+            const nav = document.getElementById('main-nav');
+            if(window.innerWidth <= 768) {
+                nav.classList.remove('active');
+            }
+        }
+    </script>
 
     <!-- Hero Section -->
     <section class="hero">
@@ -1034,6 +1395,12 @@
                         <span id="titulo-ativo" class="chart-title">BTC-USD</span>
                         <span id="preco" class="price-display">---</span>
                         <div id="chart-spinner" class="spinner"></div>
+                    </div>
+                    
+                    <!-- Search Bar -->
+                    <div class="search-container">
+                        <input type="text" id="asset-search" placeholder="Buscar ativo (ex: PETR4)..." autocomplete="off">
+                        <ul id="suggestions"></ul>
                     </div>
 
                     <div class="controls">
@@ -1100,20 +1467,7 @@
                 <div id="grafico" style="width: 100%; flex: 1; min-height: 0;"></div>
             </div>
 
-            <!-- Sidebar (Right) -->
-            <div class="sidebar">
-                <div class="sidebar-header">
-                    <select id="list-category" onchange="carregarListaLateral()" class="custom-select">
-                        <option value="cripto" selected>Criptomoedas</option>
-                        <option value="br">Ações Brasil</option>
-                        <option value="us">Ações EUA</option>
-                        <option value="indices">Índices Globais</option>
-                    </select>
-                </div>
-                <div id="asset-list" class="asset-list">
-                    <div style="padding: 20px; text-align: center; color: #666;">Carregando...</div>
-                </div>
-            </div>
+            <!-- Sidebar (Right) REMOVED -->
         </div>
     </section>
 
@@ -1427,51 +1781,74 @@
             }
         });
 
-        // --- Sidebar Logic ---
-        async function carregarListaLateral() {
-            const listaDiv = document.getElementById('asset-list');
-            listaDiv.innerHTML = '<div style="padding: 20px; text-align: center; color: #666;">Atualizando...</div>';
+        // --- Search & Autocomplete Logic ---
+        let allAssets = [];
 
+        async function fetchAssets() {
             try {
-                const categoria = document.getElementById('list-category').value;
-                const response = await fetch(`${API_BASE_URL}/api/heatmap?type=${categoria}`);
-                const dados = await response.json();
-
-                listaDiv.innerHTML = '';
-
-                dados.forEach(ativo => {
-                    const item = document.createElement('div');
-                    item.className = 'asset-item';
-                    item.onclick = () => selecionarAtivo(ativo.symbol, item);
-
-                    const changeClass = ativo.change >= 0 ? 'positive' : 'negative';
-                    const changeSign = ativo.change >= 0 ? '+' : '';
-
-                    let currency = "$";
-                    if (ativo.symbol.endsWith('.SA') || ativo.symbol === 'BRL=X' || ativo.symbol === '^BVSP') {
-                        currency = "R$";
-                    }
-
-                    // Friendly Name Logic
-                    const displayName = ativo.name || ativo.symbol;
-
-                    item.innerHTML = `
-                        <div class="asset-info">
-                            <span class="asset-symbol" style="font-size: 14px;">${displayName}</span>
-                            ${ativo.name ? `<span style="font-size: 11px; color: var(--text-muted);">${ativo.symbol}</span>` : ''}
-                        </div>
-                        <div class="asset-price-info">
-                            <div class="asset-price">${currency} ${ativo.price.toFixed(2)}</div>
-                            <div class="asset-change ${changeClass}">${changeSign}${ativo.change.toFixed(2)}%</div>
-                        </div>
-                    `;
-                    listaDiv.appendChild(item);
-                });
-
+                const response = await fetch(`${API_BASE_URL}/api/assets`);
+                if (response.ok) {
+                    allAssets = await response.json();
+                }
             } catch (e) {
-                console.error("Erro lista:", e);
-                listaDiv.innerHTML = '<div style="padding: 20px; text-align: center; color: red;">Erro ao carregar lista.<br>Recarregue a página</div>';
+                console.error("Error loading assets:", e);
             }
+        }
+
+        function setupAutocomplete() {
+            const input = document.getElementById('asset-search');
+            const suggestions = document.getElementById('suggestions');
+
+            input.addEventListener('input', (e) => {
+                const query = e.target.value.toLowerCase().trim();
+
+                if (query.length < 1) {
+                    suggestions.style.display = 'none';
+                    return;
+                }
+
+                const matches = allAssets.filter(asset =>
+                    (asset.symbol && asset.symbol.toLowerCase().includes(query)) ||
+                    (asset.name && asset.name.toLowerCase().includes(query))
+                ).slice(0, 10);
+
+                renderSuggestions(matches);
+            });
+
+            // Hide on click outside
+            document.addEventListener('click', (e) => {
+                if (!input.contains(e.target) && !suggestions.contains(e.target)) {
+                    suggestions.style.display = 'none';
+                }
+            });
+        }
+
+        function renderSuggestions(matches) {
+            const suggestions = document.getElementById('suggestions');
+            suggestions.innerHTML = '';
+
+            if (matches.length === 0) {
+                suggestions.style.display = 'none';
+                return;
+            }
+
+            matches.forEach(asset => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <span><strong>${asset.symbol}</strong> - ${asset.name}</span>
+                    <span style="font-size: 11px; opacity: 0.7; text-transform: uppercase;">${asset.category}</span>
+                `;
+
+                li.onclick = () => {
+                    selecionarAtivo(asset.symbol, null);
+                    suggestions.style.display = 'none';
+                    document.getElementById('asset-search').value = '';
+                };
+
+                suggestions.appendChild(li);
+            });
+
+            suggestions.style.display = 'block';
         }
 
         function selecionarAtivo(ticker, elementoDOM) {
@@ -2076,15 +2453,25 @@
         // Inicialização
         document.addEventListener('DOMContentLoaded', () => {
             loadTheme();
-            carregarListaLateral();
+
+            // Mobile specific defaults: Set chart period to 3 Months
+            if (window.innerWidth <= 768) {
+                const periodoSelect = document.getElementById('seletor-periodo');
+                if (periodoSelect) {
+                    periodoSelect.value = '3mo';
+                }
+            }
+
+            fetchAssets();
+            setupAutocomplete();
             carregarHeatmap();
             mudouAtivo();
-            loadMarketMovers(); // New
+            loadMarketMovers();
 
             setInterval(() => mudouAtivo(), 60000);
-            setInterval(() => carregarListaLateral(), 60000);
+            // setInterval(() => carregarListaLateral(), 60000); // Removed
             setInterval(() => carregarHeatmap(), 60000);
-            setInterval(() => loadMarketMovers(), 60000); // New
+            setInterval(() => loadMarketMovers(), 60000);
         });
     </script>
 </body>
