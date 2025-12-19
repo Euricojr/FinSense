@@ -558,7 +558,7 @@
             display: flex;
             gap: 20px;
             align-items: flex-end;
-            margin-left: auto; /* Push to right */
+            /* margin-left: auto; Removed for centering search */
         }
 
         .control-group {
@@ -620,7 +620,7 @@
         .search-container {
             position: relative;
             width: 300px;
-            margin-right: 20px;
+            margin: 0 auto; /* Center the search box */
         }
 
         #asset-search {
@@ -1102,14 +1102,17 @@
             
             nav.active {
                 display: flex;
+                flex-direction: column; /* Ensure vertical stack */
+                align-items: center; /* Center items horizontally */
+                justify-content: center;
             }
 
             nav a, .nav-btn-drop {
                 margin: 10px 0;
-                font-size: 16px; /* Slightly smaller for minimalism */
+                font-size: 16px; 
                 display: block;
                 width: 100%;
-                text-align: center;
+                text-align: center; /* Enforce text centering */
             }
 
             /* Fix dropdown inside menu */
@@ -1117,16 +1120,26 @@
                 margin-left: 0 !important;
                 width: 100%;
                 text-align: center;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
             }
             
             .dropdown-content {
-                position: static; /* Stack inside the menu */
+                position: static; 
                 background: transparent;
                 box-shadow: none;
                 border: none;
                 padding-left: 0;
-                display: block; /* Always show sub-links for simplicity or make clickable */
+                display: none; /* Hide by default on mobile */
                 text-align: center;
+                width: 100%;
+                flex-direction: column;
+                gap: 5px;
+            }
+            
+            .dropdown-content.show {
+                display: flex; /* Show when toggled */
             }
             
             .dropdown-content a {
@@ -1299,6 +1312,40 @@
                 width: 100% !important;
             }
 
+            /* --- Header Logo & Hamburger Restored --- */
+            header {
+                justify-content: space-between; /* Logo Left */
+                padding: 0 20px;
+            }
+            
+            .logo img {
+                margin-left: 0 !important;
+            }
+
+            .mobile-menu-btn {
+                position: absolute; /* Keep absolute/right */
+                right: 20px;
+                top: 50%;
+                transform: translateY(-50%);
+            }
+            
+            /* Ensure Entrar button area is strictly centered */
+            #nav-public {
+                width: 100% !important;
+                justify-content: center !important;
+                margin-left: 0 !important;
+                padding: 0 !important;
+            }
+            
+            #nav-public .cta-button {
+                margin: 10px auto !important;
+            }
+
+            /* Center search placeholder/text */
+            #asset-search {
+                text-align: center;
+            }
+
             #heatmap-plot {
                 height: 400px !important;
             }
@@ -1352,7 +1399,7 @@
             <a href="#mercado" style="font-size: 16px;" onclick="closeMenu()">Mercado</a>
 
             <div class="dropdown" style="margin-left: 20px;">
-                <button class="nav-btn-drop">Análise ▼</button>
+                <button class="nav-btn-drop" onclick="this.nextElementSibling.classList.toggle('show')">Análise ▼</button>
                 <div class="dropdown-content">
                     <a href="analise_carteiras.html" class="protected-link" onclick="closeMenu()">Correlação & Risco</a>
                     <a href="portfolio.html" class="protected-link" onclick="closeMenu()">Gerenciar Portfólio</a>
