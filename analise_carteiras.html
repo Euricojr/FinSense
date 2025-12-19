@@ -349,6 +349,32 @@
             nav a { font-size: 18px !important; }
             .nav-btn-drop { font-size: 18px !important; }
 
+            .dropdown {
+                width: 100%;
+                text-align: center;
+                margin-left: 0 !important;
+            }
+
+            .dropdown-content {
+                display: none; /* Collapsible */
+                position: static;
+                background: transparent;
+                box-shadow: none;
+                border: none;
+                text-align: center;
+                width: 100%;
+            }
+
+            .dropdown-content.show {
+                display: block;
+            }
+            
+            .dropdown-content a {
+                color: var(--text-muted);
+                padding: 10px;
+                display: block;
+            }
+
             .content-container {
                 padding: 15px; /* Reduced padding */
             }
@@ -429,7 +455,7 @@
             <a href="index2.html#mercado" style="font-size: 16px;">Mercado</a>
 
             <div class="dropdown">
-                <button class="nav-btn-drop" style="color: white; font-weight: 700; font-size: 16px;">Análise ▼</button>
+                <button class="nav-btn-drop" onclick="this.nextElementSibling.classList.toggle('show')" style="color: white; font-weight: 700; font-size: 16px;">Análise ▼</button>
                 <div class="dropdown-content">
                     <a href="analise_carteiras.html">Correlação & Risco</a>
                     <a href="portfolio.html">Gerenciar Portfólio</a>

@@ -603,6 +603,25 @@
                 transform: rotate(360deg);
             }
         }
+
+        /* Chart Header (Desktop Default) */
+        .chart-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .chart-controls {
+            display: flex;
+            gap: 15px;
+        }
+
+        .chart-controls select {
+            width: 180px; /* Fixed reasonable width for desktop */
+            font-size: 14px;
+        }
+
         /* --- Mobile Responsive Styles --- */
         .mobile-menu-btn {
             display: none;
@@ -704,26 +723,26 @@
             }
 
             .stat-card {
-                padding: 6px 2px !important; /* Minimal padding */
+                padding: 10px 4px !important; /* Increased padding */
                 display: flex;
                 flex-direction: column;
                 justify-content: center;
                 align-items: center;
                 height: auto;
-                min-height: 45px; /* Ensure uniform height */
+                min-height: 60px; /* Taller card */
             }
             
             .stat-label {
-                font-size: 8px !important;
-                margin-bottom: 2px !important;
+                font-size: 10px !important; /* Readable small text */
+                margin-bottom: 4px !important;
                 text-align: center;
                 white-space: nowrap;
                 opacity: 0.8;
             }
             
             .stat-value {
-                font-size: 9px !important; /* Slightly smaller for huge numbers */
-                line-height: 1.1;
+                font-size: 12px !important; /* Larger numbers */
+                line-height: 1.2;
                 text-align: center;
                 word-break: break-word;
                 font-weight: 700;
@@ -1536,6 +1555,9 @@
                         },
                         {
                             count: 1, label: 'YTD', step: 'year', stepmode: 'todate'
+                        },
+                        {
+                            step: 'all', label: 'Tudo' // Restored per user request
                         }
                         ],
                         font: {
