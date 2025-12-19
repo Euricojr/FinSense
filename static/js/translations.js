@@ -371,7 +371,8 @@ function updateLanguage(lang) {
 // Update button flag/text if exists
     const btn = document.getElementById('lang-toggle');
     if (btn) {
-        btn.innerHTML = lang === 'pt' ? '🇺🇸' : '🇧🇷'; 
+        // Option Q style: Bold text code
+        btn.innerHTML = lang === 'pt' ? '<span style="font-weight:700; font-size:14px;">EN</span>' : '<span style="font-weight:700; font-size:14px;">PT</span>'; 
         btn.title = lang === 'pt' ? 'Switch to English' : 'Mudar para Português';
     }
 

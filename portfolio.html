@@ -164,25 +164,25 @@
 
         .theme-toggle {
             background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             color: rgba(255, 255, 255, 0.9);
             cursor: pointer;
-            font-size: 18px;
-            margin-left: 15px;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%; 
+            font-size: 16px;
+            margin-left: 12px;
+            width: 50px; /* Slim Pill Width */
+            height: 32px; /* Slim Pill Height */
+            border-radius: 16px; /* Pill Radius */
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.2s ease;
         }
 
         .theme-toggle:hover {
-            background-color: rgba(255, 255, 255, 0.15);
+            background-color: rgba(255, 255, 255, 0.1);
             border-color: rgba(255, 255, 255, 0.3);
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
         .theme-toggle:active {
@@ -940,7 +940,7 @@
                 </div>
             </div>
             <button id="theme-btn" class="theme-toggle" onclick="toggleTheme()" title="Alternar Tema">☀️</button>
-            <button id="lang-toggle" class="theme-toggle" onclick="toggleLanguage()" title="Switch Language" style="margin-right: 15px;">🇺🇸</button>
+            <button id="lang-toggle" class="theme-toggle" onclick="toggleLanguage()" title="Switch Language" style="margin-left: 10px;"><span style="font-weight:700; font-size:14px;">EN</span></button>
             <a href="#" class="btn-logout" onclick="logout()"
                 style="margin-left: 0; padding: 5px 12px; border-radius: 6px; border: 1px solid rgba(255, 69, 58, 0.3); color: #ff6b6b; text-decoration: none; font-size: 14px;" data-i18n="nav_logout">Sair</a>
         </nav>
