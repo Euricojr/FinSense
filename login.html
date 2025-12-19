@@ -160,13 +160,14 @@
 
 <body>
     <div id="particles-js"></div>
+    <button id="lang-toggle" onclick="toggleLanguage()" title="Switch Language" style="position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 8px 12px; border-radius: 20px; cursor: pointer; z-index: 1000; font-size: 16px;">🇺🇸</button>
 
     <div class="login-container">
         <div class="logo">
             <img src="static/logo.png" alt="FinSense"
                 style="height: 250px; margin-top: -80px; margin-bottom: -80px; margin-left: -15px;">
         </div>
-        <div class="subtitle">Acesse sua carteira inteligente</div>
+        <div class="subtitle" data-i18n="login_subtitle">Acesse sua carteira inteligente</div>
 
         <!-- Alert Container -->
         <div id="alert-box" class="alert" style="display: none;"></div>
@@ -176,26 +177,28 @@
             <input type="hidden" name="action" id="actionInput" value="login">
 
             <div class="form-group">
-                <label for="username">Usuário</label>
-                <input type="text" id="username" name="username" required placeholder="Digite seu usuário">
+                <label for="username" data-i18n="lbl_user">Usuário</label>
+                <input type="text" id="username" name="username" required placeholder="Digite seu usuário" data-i18n="ph_user">
             </div>
 
             <div class="form-group">
-                <label for="password">Senha</label>
-                <input type="password" id="password" name="password" required placeholder="Digite sua senha">
+                <label for="password" data-i18n="lbl_pass">Senha</label>
+                <input type="password" id="password" name="password" required placeholder="Digite sua senha" data-i18n="ph_pass">
             </div>
 
-            <button type="submit" class="btn-block" id="submitBtn">Entrar</button>
+            <button type="submit" class="btn-block" id="submitBtn" data-i18n="btn_enter">Entrar</button>
         </form>
 
         <div class="toggle-link">
-            <span id="toggleText">Não tem uma conta?</span>
-            <a onclick="toggleMode()" id="toggleBtn">Registrar-se</a>
+            <span id="toggleText" data-i18n="txt_no_account">Não tem uma conta?</span>
+            <a onclick="toggleMode()" id="toggleBtn" data-i18n="link_register">Registrar-se</a>
         </div>
     </div>
 
+    
     <!-- Particles Script -->
     <script src="static/js/particles.js"></script>
+    <script src="static/js/translations.js"></script>
     <script>
         // Use logic from index2.html to determine API URL
         function getBaseUrl() {
@@ -221,18 +224,25 @@
             if (actionInput.value === 'login') {
                 // Switch to Register
                 actionInput.value = 'register';
-                submitBtn.innerText = 'Criar Conta';
-                title.innerText = 'Crie sua conta gratuita';
-                toggleText.innerText = 'Já tem uma conta?';
-                toggleBtn.innerText = 'Entrar';
+                // submitBtn.innerText = 'Criar Conta'; // Removed: handled by i18n
+                // title.innerText = 'Crie sua conta gratuita';
+                // toggleText.innerText = 'Já tem uma conta?';
+                // toggleBtn.innerText = 'Entrar';
+                
+                submitBtn.setAttribute('data-i18n', 'btn_create');
+                title.setAttribute('data-i18n', 'login_create_title');
+                toggleText.setAttribute('data-i18n', 'txt_have_account');
+                toggleBtn.setAttribute('data-i18n', 'link_login');
             } else {
                 // Switch to Login
                 actionInput.value = 'login';
-                submitBtn.innerText = 'Entrar';
-                title.innerText = 'Acesse sua carteira inteligente';
-                toggleText.innerText = 'Não tem uma conta?';
-                toggleBtn.innerText = 'Registrar-se';
+                
+                submitBtn.setAttribute('data-i18n', 'btn_enter');
+                title.setAttribute('data-i18n', 'login_subtitle');
+                toggleText.setAttribute('data-i18n', 'txt_no_account');
+                toggleBtn.setAttribute('data-i18n', 'link_register');
             }
+            updateLanguage(currentLang);
         }
 
         async function handleAuth(event) {
@@ -243,7 +253,7 @@
             const submitBtn = document.getElementById('submitBtn');
 
             submitBtn.disabled = true;
-            submitBtn.innerText = 'Processando...';
+            submitBtn.innerText = (window.translations && window.translations[currentLang] && window.translations[currentLang].btn_processing) || 'Processando...';
 
             try {
                 const response = await fetch(`${API_BASE_URL}/login`, {
@@ -264,20 +274,21 @@
                     window.location.href = 'index2.html';
                 } else {
                     // Error
-                    alertBox.innerText = data.error || 'Erro na autenticação';
+                    alertBox.innerText = data.error || ((window.translations && window.translations[currentLang] && window.translations[currentLang].error_auth) || 'Erro na autenticação');
                     alertBox.className = 'alert alert-error';
                     alertBox.style.display = 'block';
                 }
 
             } catch (e) {
                 console.error(e);
-                alertBox.innerText = 'Erro de conexão com o servidor. Verifique se o app.py está rodando.';
+                alertBox.innerText = (window.translations && window.translations[currentLang] && window.translations[currentLang].error_connection) || 'Erro de conexão com o servidor. Verifique se o app.py está rodando.';
                 alertBox.className = 'alert alert-error';
                 alertBox.style.display = 'block';
             } finally {
                 submitBtn.disabled = false;
                 // Restore button text based on mode
-                submitBtn.innerText = document.getElementById('actionInput').value === 'login' ? 'Entrar' : 'Criar Conta';
+                // Restore button text by refreshing translations
+                updateLanguage(currentLang);
             }
         }
 

@@ -7,6 +7,7 @@
     <title>FinSense - Minha Carteira</title>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <script src="static/js/translations.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -886,7 +887,7 @@
 
 
     <div id="loadingOverlay">
-        <div class="spinner"></div><span>Calculando Rentabilidade...</span>
+        <div class="spinner"></div><span data-i18n="calc_rent_loading">Calculando Rentabilidade...</span>
     </div>
 
     <header>
@@ -902,36 +903,37 @@
         </button>
 
         <nav id="main-nav" style="display: flex; align-items: center;">
-            <a href="index2.html" style="font-size: 16px; margin-left: 0;">Início</a>
-            <a href="index2.html#dashboard" style="font-size: 16px;" onclick="closeMenu()">Plataforma</a>
-            <a href="index2.html#mercado" style="font-size: 16px;" onclick="closeMenu()">Mercado</a>
+            <a href="index2.html" style="font-size: 16px; margin-left: 0;" data-i18n="nav_home">Início</a>
+            <a href="index2.html#dashboard" style="font-size: 16px;" onclick="closeMenu()" data-i18n="nav_platform">Plataforma</a>
+            <a href="index2.html#mercado" style="font-size: 16px;" onclick="closeMenu()" data-i18n="nav_market">Mercado</a>
             <div class="dropdown">
-                <button class="nav-btn-drop" style="color: white; font-weight: 700; font-size: 16px;">Análise ▼</button>
+                <button class="nav-btn-drop" style="color: white; font-weight: 700; font-size: 16px;"><span data-i18n="nav_analysis">Análise</span> ▼</button>
                 <div class="dropdown-content">
-                    <a href="analise_carteiras.html" onclick="closeMenu()">Correlação & Risco</a>
-                    <a href="portfolio.html" onclick="closeMenu()">Gerenciar Portfólio</a>
+                    <a href="analise_carteiras.html" onclick="closeMenu()" data-i18n="nav_risk">Correlação & Risco</a>
+                    <a href="portfolio.html" onclick="closeMenu()" data-i18n="nav_portfolio">Gerenciar Portfólio</a>
                 </div>
             </div>
             <button id="theme-btn" class="theme-toggle" onclick="toggleTheme()" title="Alternar Tema">☀️</button>
+            <button id="lang-toggle" class="theme-toggle" onclick="toggleLanguage()" title="Switch Language" style="margin-right: 15px;">🇺🇸</button>
             <a href="#" class="btn-logout" onclick="logout()"
-                style="margin-left: 15px; padding: 5px 12px; border-radius: 6px; border: 1px solid rgba(255, 69, 58, 0.3); color: #ff6b6b; text-decoration: none; font-size: 14px;">Sair</a>
+                style="margin-left: 0; padding: 5px 12px; border-radius: 6px; border: 1px solid rgba(255, 69, 58, 0.3); color: #ff6b6b; text-decoration: none; font-size: 14px;" data-i18n="nav_logout">Sair</a>
         </nav>
     </header>
 
     <div class="container">
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-label">Total Investido</div>
+                <div class="stat-label" data-i18n="pf_total_invested">Total Investido</div>
                 <div class="stat-value" id="totalInvested">R$ 0,
                     00</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Valor Atual</div>
+                <div class="stat-label" data-i18n="tbl_current_price">Valor Atual</div>
                 <div class="stat-value" id="currentValue">R$ 0,
                     00</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">Lucro / Prejuízo</div>
+                <div class="stat-label" data-i18n="pf_total_profit">Lucro / Prejuízo</div>
                 <div class="stat-value" id="totalProfit">R$ 0,
                     00 (0.00%)</div>
             </div>
@@ -939,64 +941,64 @@
         <div class="content-grid">
             <!-- Input Form -->
             <div class="form-panel transaction-form">
-                <h3 style="margin-top: 0; margin-bottom: 20px;">Nova Transação</h3>
-                <div class="form-group" style="position: relative;"><label>Ativo (Ticker)</label><input type="text"
+                <h3 style="margin-top: 0; margin-bottom: 20px;" data-i18n="tx_new">Nova Transação</h3>
+                <div class="form-group" style="position: relative;"><label data-i18n="pf_ticker">Ativo (Ticker)</label><input type="text"
                         id="tickerInput" class="form-control" placeholder="Buscar ativo (ex: PETR4)..."
-                        autocomplete="off">
+                        autocomplete="off" data-i18n="search_placeholder">
                     <ul id="suggestions"></ul>
                 </div>
-                <div class="form-group"><label>Data da Compra</label><input type="date" id="dateInput"
+                <div class="form-group"><label data-i18n="lbl_date_buy">Data da Compra</label><input type="date" id="dateInput"
                         class="form-control"></div>
-                <div class="form-group"><label>Quantidade</label><input type="number" id="qtyInput" class="form-control"
+                <div class="form-group"><label data-i18n="pf_qty">Quantidade</label><input type="number" id="qtyInput" class="form-control"
                         placeholder="0"></div>
-                <div class="form-group"><label>Preço Unitário</label><input type="number" id="priceInput"
+                <div class="form-group"><label data-i18n="lbl_price_unit">Preço Unitário</label><input type="number" id="priceInput"
                         class="form-control" placeholder="0.00" step="0.01"></div><button class="btn-add"
-                    onclick="addTransaction()">Adicionar</button><button class="btn-calc"
-                    onclick="calculatePortfolio()">Calcular Rentabilidade</button>
+                    onclick="addTransaction()" data-i18n="btn_add">Adicionar</button><button class="btn-calc"
+                    onclick="calculatePortfolio()" data-i18n="btn_calc_rent">Calcular Rentabilidade</button>
             </div>
             <!-- List -->
             <div class="transactions-panel">
-                <h3 style="margin-top: 0; margin-bottom: 20px;">Histórico de Transações</h3>
+                <h3 style="margin-top: 0; margin-bottom: 20px;" data-i18n="chart_hist">Histórico de Transações</h3>
                 <table>
                     <thead>
                         <tr>
-                            <th>Ativo</th>
-                            <th>Data</th>
-                            <th class="text-right">Qtd</th>
-                            <th class="text-right">Preço Médio</th>
-                            <th class="text-right">Total</th>
-                            <th style="text-align: center;">Ações</th>
+                            <th data-i18n="tbl_asset">Ativo</th>
+                            <th data-i18n="th_date">Data</th>
+                            <th class="text-right" data-i18n="tbl_qty">Qtd</th>
+                            <th class="text-right" data-i18n="tbl_avg_price">Preço Médio</th>
+                            <th class="text-right" data-i18n="th_total">Total</th>
+                            <th style="text-align: center;" data-i18n="tbl_action">Ações</th>
                         </tr>
                     </thead>
                     <tbody id="transactionsTableBody">
                         <!-- Rows will be added here -->
                     </tbody>
                 </table>
-                <p id="emptyState" style="text-align: center; color: var(--text-muted); margin-top: 50px;">
+                <p id="emptyState" style="text-align: center; color: var(--text-muted); margin-top: 50px;" data-i18n="empty_tx">
                     Nenhuma transação adicionada. </p>
             </div>
         </div>
         <div class="charts-section" style="margin-top: 40px;">
             <div class="form-panel">
-                <h3 style="margin-top: 0; margin-bottom: 20px;">Alocação da Carteira</h3>
+                <h3 style="margin-top: 0; margin-bottom: 20px;" data-i18n="chart_alloc">Alocação da Carteira</h3>
                 <div style="display: flex; gap: 20px; flex-wrap: wrap;">
                     <div id="allocationChart" style="flex: 1; min-width: 300px; height:350px;"></div>
                     <div id="allocationLegend"
                         style="flex: 1; min-width: 250px; display: flex; flex-direction: column; justify-content: center;">
                         <!-- Allocation list will go here -->
-                        <div style="text-align: center; color: var(--text-muted);">Carregando alocação...</div>
+                        <div style="text-align: center; color: var(--text-muted);" data-i18n="alloc_loading">Carregando alocação...</div>
                     </div>
                 </div>
             </div>
             <div class="form-panel" style="margin-top: 20px;">
                 <div class="chart-header-row">
-                    <h3>Evolução Patrimonial</h3>
+                    <h3 data-i18n="chart_evol">Evolução Patrimonial</h3>
                     <div class="chart-controls">
                         <select id="chartFilter" class="form-control"
                             onchange="updateBenchmarkChart(transactions)">
-                            <option value="br">Brasil</option>
-                            <option value="us">EUA</option>
-                            <option value="cripto">Cripto</option>
+                            <option value="br" data-i18n="filter_br">Brasil</option>
+                            <option value="us" data-i18n="filter_us">EUA</option>
+                            <option value="cripto" data-i18n="filter_crypto">Cripto</option>
                         </select>
                         <select id="benchmarkSelector" class="form-control"
                             onchange="updateBenchmarkChart(transactions)">
@@ -1435,7 +1437,7 @@
                     <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 8px;">
                         <div style="display: flex; align-items: center; gap: 10px;">
                             <span style="font-size: 18px;">${icon}</span>
-                            <span style="font-weight: 600; font-size: 14px;">${cat.category}</span>
+                            <span style="font-weight: 600; font-size: 14px;">${translateCategory(cat.category)}</span>
                         </div>
                         <div style="text-align: right;">
                             <div style="font-weight: 700; color: var(--text-main);">${cat.percentage.toFixed(1)}%</div>
@@ -1452,6 +1454,16 @@
             else {
                 document.getElementById('allocationLegend').innerHTML = '';
             }
+        }
+
+        // Helper to translate backend categories
+        function translateCategory(backendName) {
+            const trans = window.translations && window.translations[window.currentLang] ? window.translations[window.currentLang] : {};
+            if (backendName.includes('Cripto')) return trans.cat_crypto || backendName;
+            if (backendName.includes('Brasil')) return trans.cat_br || backendName;
+            if (backendName.includes('EUA') || backendName.includes('USA')) return trans.cat_us || backendName;
+            if (backendName.includes('Índices') || backendName.includes('Indices')) return trans.cat_indices || backendName;
+            return backendName;
         }
 
         async function updateBenchmarkChart(transactions) {
@@ -1490,12 +1502,14 @@
             const invested = data.invested; // Now available from backend
             const benchmark = data.benchmark;
 
+            const trans = window.translations && window.translations[window.currentLang] ? window.translations[window.currentLang] : {};
+
             const traceInvested = {
                 x: dates,
                 y: invested,
                 type: 'scatter',
                 mode: 'lines',
-                name: 'Total Investido',
+                name: trans.pf_total_invested || 'Total Investido',
                 line: {
                     color: '#238636', width: 2, dash: 'dot'
                 },
@@ -1507,14 +1521,15 @@
                 y: portfolio,
                 type: 'scatter',
                 mode: 'lines',
-                name: 'Minha Carteira',
+                name: trans.my_portfolio || 'Minha Carteira',
                 line: {
                     color: '#1f6feb', width: 3
                 },
                 hovertemplate: 'R$ %{y:,.2f}<extra></extra>'
             };
 
-            const benchmarkName = data.benchmark_symbol === 'CDI' ? 'CDI (Equivalente)' : (data.benchmark_symbol + ' (Equivalente)');
+            const equivText = trans.bench_equiv || ' (Equivalente)';
+            const benchmarkName = data.benchmark_symbol === 'CDI' ? `CDI ${equivText}` : `${data.benchmark_symbol} ${equivText}`;
 
             const traceBenchmark = {
                 x: dates,
@@ -1557,7 +1572,7 @@
                             count: 1, label: 'YTD', step: 'year', stepmode: 'todate'
                         },
                         {
-                            step: 'all', label: 'Tudo' // Restored per user request
+                            step: 'all', label: trans.cat_all || 'Tudo'
                         }
                         ],
                         font: {

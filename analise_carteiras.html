@@ -450,43 +450,44 @@
         </button>
 
         <nav id="main-nav" style="display: flex; align-items: center;">
-            <a href="index2.html" style="font-size: 16px;">Início</a>
-            <a href="index2.html#dashboard" style="font-size: 16px;">Plataforma</a>
-            <a href="index2.html#mercado" style="font-size: 16px;">Mercado</a>
+            <a href="index2.html" style="font-size: 16px;" data-i18n="nav_home">Início</a>
+            <a href="index2.html#dashboard" style="font-size: 16px;" data-i18n="nav_platform">Plataforma</a>
+            <a href="index2.html#mercado" style="font-size: 16px;" data-i18n="nav_market">Mercado</a>
 
             <div class="dropdown">
-                <button class="nav-btn-drop" onclick="this.nextElementSibling.classList.toggle('show')" style="color: white; font-weight: 700; font-size: 16px;">Análise ▼</button>
+                <button class="nav-btn-drop" onclick="this.nextElementSibling.classList.toggle('show')" style="color: white; font-weight: 700; font-size: 16px;"><span data-i18n="nav_analysis">Análise</span> ▼</button>
                 <div class="dropdown-content">
-                    <a href="analise_carteiras.html">Correlação & Risco</a>
-                    <a href="portfolio.html">Gerenciar Portfólio</a>
+                    <a href="analise_carteiras.html" data-i18n="nav_risk">Correlação & Risco</a>
+                    <a href="portfolio.html" data-i18n="nav_portfolio">Gerenciar Portfólio</a>
                 </div>
             </div>
 
             <button id="theme-btn" class="theme-toggle" onclick="toggleTheme()" title="Alternar Tema">🌙</button>
+            <button id="lang-toggle" class="theme-toggle" onclick="toggleLanguage()" title="Switch Language" style="margin-right: 15px;">🇺🇸</button>
             <a href="#" class="btn-logout" onclick="logout()"
-                style="margin-left: 15px; padding: 5px 12px; border-radius: 6px; border: 1px solid rgba(255, 69, 58, 0.3); color: #ff6b6b; text-decoration: none; font-size: 14px;">Sair</a>
+                style="margin-left: 0; padding: 5px 12px; border-radius: 6px; border: 1px solid rgba(255, 69, 58, 0.3); color: #ff6b6b; text-decoration: none; font-size: 14px;" data-i18n="nav_logout">Sair</a>
         </nav>
     </header>
 
     <div class="content-container">
-        <h1>Análise de Carteiras</h1>
-        <p style="margin-bottom: 30px;">Analise a correlação entre os ativos da sua carteira para entender melhor a
+        <h1 data-i18n="analysis_title">Análise de Carteiras</h1>
+        <p style="margin-bottom: 30px;" data-i18n="analysis_subtitle">Analise a correlação entre os ativos da sua carteira para entender melhor a
             diversificação e o risco.</p>
 
         <!-- Input & Configuration Config -->
         <div class="card" style="padding: 0; overflow: hidden;">
             <div style="padding: 30px;">
-                <h2 style="font-size: 18px; margin-bottom: 25px;">Configuração da Carteira</h2>
+                <h2 style="font-size: 18px; margin-bottom: 25px;" data-i18n="config_title">Configuração da Carteira</h2>
 
                 <div class="config-grid">
 
                     <!-- Left Col: Assets -->
                     <div>
-                        <div class="section-title">1. Seleção de Ativos</div>
+                        <div class="section-title" data-i18n="sel_assets">1. Seleção de Ativos</div>
 
                         <div style="position: relative; margin-bottom: 15px;">
                             <input type="text" id="asset-search" placeholder="Buscar ativo (ex: PETR4)..."
-                                autocomplete="off">
+                                autocomplete="off" data-i18n="search_placeholder">
                             <ul id="suggestions" style="
                                 position: absolute; top: 105%; left: 0; width: 100%; 
                                 background: var(--bg-panel); border: 1px solid var(--border-color); 
@@ -500,7 +501,7 @@
                             style="border: 1px solid var(--border-color); border-radius: 6px; overflow: hidden; min-height: 50px;">
                             <!-- Empty State -->
                             <div id="empty-assets"
-                                style="padding: 20px; text-align: center; color: var(--text-muted); font-size: 13px;">
+                                style="padding: 20px; text-align: center; color: var(--text-muted); font-size: 13px;" data-i18n="no_assets">
                                 Nenhum ativo selecionado.
                             </div>
                         </div>
@@ -508,16 +509,16 @@
 
                     <!-- Right Col: Period & Dates -->
                     <div>
-                        <div class="section-title">2. Período da Análise</div>
+                        <div class="section-title" data-i18n="sel_period">2. Período da Análise</div>
                         <div style="display: flex; flex-direction: column; gap: 15px;">
                             <div>
                                 <label
-                                    style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; color: var(--text-muted);">Início</label>
+                                    style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; color: var(--text-muted);" data-i18n="date_start">Início</label>
                                 <input type="date" id="start-date">
                             </div>
                             <div>
                                 <label
-                                    style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; color: var(--text-muted);">Fim</label>
+                                    style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; color: var(--text-muted);" data-i18n="date_end">Fim</label>
                                 <input type="date" id="end-date">
                             </div>
                         </div>
@@ -533,11 +534,11 @@
                     <!-- Correlation Action -->
                     <div class="action-group" style="display: flex; align-items: center; justify-content: space-between;">
                         <div>
-                            <div style="font-weight: 700; font-size: 14px; margin-bottom: 3px;">Risco & Correlação</div>
-                            <div style="font-size: 12px; color: var(--text-muted);">Matriz de correlação e análise de
+                            <div style="font-weight: 700; font-size: 14px; margin-bottom: 3px;" data-i18n="risk_corr_title">Risco & Correlação</div>
+                            <div style="font-size: 12px; color: var(--text-muted);" data-i18n="risk_corr_desc">Matriz de correlação e análise de
                                 diversificação.</div>
                         </div>
-                        <button onclick="runCorrelationAnalysis()" class="cta-button secondary">
+                        <button onclick="runCorrelationAnalysis()" class="cta-button secondary" data-i18n="btn_analyze">
                             Analisar
                         </button>
                     </div>
@@ -546,7 +547,7 @@
                     <div class="action-group bordered"
                         style="display: flex; align-items: center; justify-content: space-between; padding-left: 40px; border-left: 1px solid var(--border-color);">
                         <div style="flex: 1; padding-right: 15px;">
-                            <div style="font-weight: 700; font-size: 14px; margin-bottom: 5px;">Benchmark</div>
+                            <div style="font-weight: 700; font-size: 14px; margin-bottom: 5px;" data-i18n="benchmark_title">Benchmark</div>
                             <select id="benchmark-select" style="padding: 6px 10px; font-size: 13px;">
                                 <option value="^BVSP">Ibovespa</option>
                                 <option value="^GSPC">S&P 500</option>
@@ -554,7 +555,7 @@
                                 <option value="BTC-USD">Bitcoin</option>
                             </select>
                         </div>
-                        <button onclick="runBenchmarkAnalysis()" class="cta-button">
+                        <button onclick="runBenchmarkAnalysis()" class="cta-button" data-i18n="btn_compare">
                             Comparar
                         </button>
                     </div>
@@ -572,21 +573,21 @@
             <!-- Correlation Summary Card -->
             <div id="correlation-card" class="card"
                 style="border-left: 5px solid var(--accent-primary); display: none;">
-                <h3 style="margin-bottom: 10px;">Resumo da Correlação</h3>
+                <h3 style="margin-bottom: 10px;" data-i18n="res_corr_summary">Resumo da Correlação</h3>
                 <div id="summary-text"
                     style="font-size: 16px; font-weight: 500; text-align: justify; line-height: 1.6;"></div>
                 <div style="margin-top: 10px; font-size: 14px; color: var(--text-muted);">
-                    Média de Correlação Absoluta: <span id="avg-corr-val"
+                    <span data-i18n="res_avg_corr">Média de Correlação Absoluta:</span> <span id="avg-corr-val"
                         style="font-weight: 700; color: var(--text-main);"></span>
                 </div>
             </div>
 
             <!-- Performance Section -->
             <div id="benchmark-card" class="card" style="margin-top: 20px; display: none;">
-                <h3 style="margin-bottom: 20px; font-size: 16px;">Comparação de Rentabilidade: Carteira vs Benchmark
+                <h3 style="margin-bottom: 20px; font-size: 16px;" data-i18n="res_perf_comp">Comparação de Rentabilidade: Carteira vs Benchmark
                 </h3>
                 <div id="performance-chart" style="width: 100%; height: 500px;"></div>
-                <div style="margin-top: 10px; font-size: 12px; color: var(--text-muted); text-align: center;">* A curva
+                <div style="margin-top: 10px; font-size: 12px; color: var(--text-muted); text-align: center;" data-i18n="res_note">* A curva
                     'Minha Carteira' é calculada com base nos pesos definidos acima.</div>
 
                 <!-- New Summary Area -->
@@ -601,7 +602,7 @@
             <div
                 style="border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid var(--accent-primary); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite;">
             </div>
-            <span style="color: white; margin-top: 15px; font-weight: 600; font-size: 18px;">Processando Dados...</span>
+            <span style="color: white; margin-top: 15px; font-weight: 600; font-size: 18px;" data-i18n="processing">Processando Dados...</span>
         </div>
 
     </div>
@@ -609,6 +610,7 @@
     <!-- Script Plotly -->
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
     <script src="https://cdn.plot.ly/plotly-locale-pt-br-latest.js"></script>
+    <script src="static/js/translations.js"></script>
 
     <script>
 
@@ -842,19 +844,21 @@
             resultsArea.style.display = 'block';
             errorDiv.style.display = 'none';
 
+            const trans = window.translations && window.translations[currentLang] ? window.translations[currentLang] : {};
+
             if (selectedTickers.length < 2 && mode === 'correlation') {
-                errorDiv.innerText = "Insira pelo menos 2 ativos para calcular correlação.";
+                errorDiv.innerText = trans.error_min_assets_corr || "Insira pelo menos 2 ativos para calcular correlação.";
                 errorDiv.style.display = 'block';
                 return;
             }
             if (selectedTickers.length < 1 && mode === 'benchmark') {
-                errorDiv.innerText = "Insira pelo menos 1 ativo para o benchmark.";
+                errorDiv.innerText = trans.error_min_assets_bench || "Insira pelo menos 1 ativo para o benchmark.";
                 errorDiv.style.display = 'block';
                 return;
             }
 
             if (!startDate || !endDate) {
-                errorDiv.innerText = "Por favor, selecione as datas.";
+                errorDiv.innerText = trans.error_select_dates || "Por favor, selecione as datas.";
                 errorDiv.style.display = 'block';
                 return;
             }
@@ -875,7 +879,9 @@
                     if (!response.ok) throw new Error(data.error);
 
                     document.getElementById('correlation-card').style.display = 'block';
-                    document.getElementById('summary-text').innerText = data.summary;
+                    document.getElementById('correlation-card').style.display = 'block';
+                    renderCorrelationText(data.avg_correlation);
+                    // document.getElementById('summary-text').innerText = data.summary; // Use local generation
                     document.getElementById('avg-corr-val').innerText = data.avg_correlation.toFixed(2);
                     lastAnalysisData = { ...lastAnalysisData, corr: data };
                 }
@@ -902,11 +908,36 @@
                 }
 
             } catch (e) {
-                errorDiv.innerText = `Erro: ${e.message}`;
+                const trans = window.translations && window.translations[currentLang] ? window.translations[currentLang] : {};
+                const errPrefix = trans.error_prefix || "Erro: ";
+                errorDiv.innerText = `${errPrefix}${e.message}`;
                 errorDiv.style.display = 'block';
             } finally {
                 loading.style.display = 'none';
             }
+        }
+
+        function renderCorrelationText(avg_corr) {
+            const trans = window.translations && window.translations[currentLang] ? window.translations[currentLang] : {};
+            let classification = "";
+            let meaning = "";
+
+            if (avg_corr > 0.7) {
+                classification = trans.corr_high || "ALTA";
+                meaning = trans.corr_desc_high || "Isso indica que seus ativos tendem a se mover na mesma direção, o que aumenta o risco sistêmico da carteira. Em momentos de queda do mercado, é provável que a maioria dos seus ativos desvalorize simultaneamente.";
+            } else if (avg_corr > 0.4) {
+                classification = trans.corr_mod || "MODERADA";
+                meaning = trans.corr_desc_mod || "Isso indica que existe algum nível de diversificação, mas seus ativos ainda podem ser influenciados por movimentos gerais do mercado.";
+            } else {
+                classification = trans.corr_low || "BAIXA OU DESCORRELACIONADA";
+                meaning = trans.corr_desc_low || "Isso significa que os ativos comportam-se de maneira independente ou até oposta, proporcionando uma excelente proteção contra riscos de mercado.";
+            }
+
+            const intro1 = trans.corr_intro_1 || "O Coeficiente de Correlação de Pearson Médio de";
+            const intro2 = trans.corr_intro_2 || "desta carteira indica uma correlação";
+
+            const summary = `${intro1} ${avg_corr.toFixed(2)} ${intro2} ${classification}. ${meaning}`;
+            document.getElementById('summary-text').innerText = summary;
         }
 
         function renderBenchmarkChart(benchData) {
@@ -932,8 +963,18 @@
             const diff = finalPort - finalBench;
 
             // Update Summary Text
+            // Update Summary Text
             const summaryDiv = document.getElementById('benchmark-summary');
-            const winner = finalPort > finalBench ? 'Sua Carteira superou o Benchmark!' : 'O Benchmark superou sua Carteira.';
+            
+            const trans = window.translations && window.translations[currentLang] ? window.translations[currentLang] : {};
+            const txtWin = trans.bench_win || 'Sua Carteira superou o Benchmark!';
+            const txtLoss = trans.bench_loss || 'O Benchmark superou sua Carteira.';
+            const txtSum1 = trans.bench_summary_1 || 'No período analisado, sua carteira rendeu';
+            const txtSum2 = trans.bench_summary_2 || 'enquanto o';
+            const txtSum3 = trans.bench_summary_3 || 'rendeu';
+            const txtDiff = trans.bench_diff || 'Uma diferença de';
+
+            const winner = finalPort > finalBench ? txtWin : txtLoss;
             const color = finalPort > finalBench ? 'var(--success-green)' : 'var(--danger-red)';
             const diffText = Math.abs(diff).toFixed(2) + '%';
 
@@ -941,8 +982,8 @@
                 <div style="margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.03); border-radius: 8px; border-left: 4px solid ${color};">
                     <h4 style="margin-bottom: 5px; color: var(--text-main); font-size: 16px;">${winner}</h4>
                     <p style="margin: 0; font-size: 14px; color: var(--text-muted);">
-                        No período analisado, sua carteira rendeu <strong>${finalPort.toFixed(2)}%</strong>, enquanto o <strong>${benchName}</strong> rendeu <strong>${finalBench.toFixed(2)}%</strong>.
-                        Uma diferença de <strong style="color: ${color}">${diff > 0 ? '+' : '-'}${diffText}</strong>.
+                        ${txtSum1} <strong>${finalPort.toFixed(2)}%</strong>, ${txtSum2} <strong>${benchName}</strong> ${txtSum3} <strong>${finalBench.toFixed(2)}%</strong>.
+                        ${txtDiff} <strong style="color: ${color}">${diff > 0 ? '+' : '-'}${diffText}</strong>.
                     </p>
                 </div>
             `;
@@ -959,7 +1000,7 @@
                 y: portfolio,
                 type: 'scatter',
                 mode: 'lines',
-                name: 'Minha Carteira',
+                name: trans.my_portfolio || 'Minha Carteira',
                 line: { width: 3, color: portColor, shape: 'spline' },
                 fill: 'tozeroy',
                 fillcolor: isDark ? 'rgba(77, 163, 255, 0.1)' : 'rgba(0, 86, 179, 0.1)'
@@ -1061,7 +1102,18 @@
             if (btn) btn.innerText = saved === 'dark' ? '☀️' : '🌙';
         }
 
-        document.addEventListener('DOMContentLoaded', loadTheme);
+        document.addEventListener('DOMContentLoaded', () => {
+             loadTheme();
+        });
+
+        window.addEventListener('languageChanged', (e) => {
+            if (lastAnalysisData.corr) {
+                renderCorrelationText(lastAnalysisData.corr.avg_correlation);
+            }
+            if (lastAnalysisData.bench) {
+                renderBenchmarkChart(lastAnalysisData.bench);
+            }
+        });
     </script>
 </body>
 
