@@ -328,6 +328,18 @@ def pegar_dados():
         df['Slow_K'] = df['Fast_K'].rolling(window=3).mean()
         df['Slow_D'] = df['Slow_K'].rolling(window=3).mean()
 
+        # ATR (Average True Range)
+        # TR = Max(High - Low, |High - PrevClose|, |Low - PrevClose|)
+        # Since we downloaded auto_adjust=False, we use Close. But if split/div happened... yf.download usually handles.
+        # Let's use High/Low/Close directly.
+        prev_close = df['Close'].shift(1)
+        tr1 = df['High'] - df['Low']
+        tr2 = (df['High'] - prev_close).abs()
+        tr3 = (df['Low'] - prev_close).abs()
+        
+        df['TR'] = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
+        df['ATR'] = df['TR'].rolling(window=14).mean()
+
         df.dropna(inplace=True)
         
         return jsonify({
@@ -344,6 +356,7 @@ def pegar_dados():
             "macd_hist": df['MACD_Hist'].tolist(),
             "stoch_k": df['Slow_K'].tolist(),
             "stoch_d": df['Slow_D'].tolist(),
+            "atr": df['ATR'].tolist(),
             "volume": df['Volume'].fillna(0).tolist(),
             "preco_atual": f"{df['Close'].iloc[-1]:.2f}"
         })

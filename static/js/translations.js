@@ -342,7 +342,10 @@ const translations = {
         tf_15m: "15 Min",
         tf_30m: "30 Min",
         tf_1h: "1 Hour",
-        tf_1w: "1 Week"
+        tf_1w: "1 Week",
+        
+        // Indicators
+        controls_atr: "ATR"
     }
 };
 

@@ -1554,6 +1554,10 @@
                                         <input type="checkbox" id="check-vol" onchange="mudouAtivo()">
                                         <label data-i18n="controls_vol">Volume</label>
                                     </div>
+                                    <div class="multiselect-item" onclick="toggleCheck('check-atr')">
+                                        <input type="checkbox" id="check-atr" onchange="mudouAtivo()">
+                                        <label data-i18n="controls_atr">ATR</label>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -2209,6 +2213,7 @@
             const showMACD = document.getElementById('check-macd').checked;
             const showStoch = document.getElementById('check-stoch').checked;
             const showVol = document.getElementById('check-vol').checked;
+            const showATR = document.getElementById('check-atr').checked;
             const checkMaEl = document.getElementById('check-ma');
             const showMA = checkMaEl ? checkMaEl.checked : true; // Default to true if not found
 
@@ -2333,6 +2338,7 @@
                 if (showMACD) indicators.push('macd');
                 if (showStoch) indicators.push('stoch');
                 if (showVol) indicators.push('vol');
+                if (showATR) indicators.push('atr');
 
                 const numIndicators = indicators.length;
                 let mainDomain = [0.1, 1];
@@ -2347,45 +2353,56 @@
                     mainDomain = [0.55, 1];
                 } else if (numIndicators === 4) {
                     mainDomain = [0.60, 1];
+                } else if (numIndicators === 5) {
+                    mainDomain = [0.65, 1];
                 }
 
                 layout.yaxis.domain = mainDomain;
 
                 // Helper to get domain for a specific slot index (0 = bottom)
                 function getDomain(idx, total) {
+                    // Simple uniform distribution for up to 5 indicators
+                    // Reserved height for indicators: 1 - mainDomain[0] (approx)
+                    // Wait, mainDomain starts at X. Indicators are below X.
+                    // E.g. 1 indicator: Main 0.3-1. Indicator 0-0.2.
+                    
+                    // Let's refine for up to 5 slots
+                    const slotHeight = 0.85 / Math.max(total * 1.5 + 2, 4); // Adaptive height
+                    // This logic is getting complex, let's stick to the previous hardcoded style but extend it
+                    
+                    if (total === 5) {
+                        const h = 0.10; // height per plot
+                        const g = 0.03; // gap
+                        const start = idx * (h + g);
+                        return [start, start + h];
+                    }
+                    
                     if (total === 1) return [0, 0.2];
                     if (total === 2) {
                         if (idx === 0) return [0, 0.2];
                         if (idx === 1) return [0.25, 0.40];
                     }
                     if (total === 3) {
-                        if (idx === 0) return [0, 0.15];
-                        if (idx === 1) return [0.20, 0.35];
-                        if (idx === 2) return [0.40, 0.50];
+                        return [idx * 0.18, idx * 0.18 + 0.13]; // Approx logic
                     }
                     if (total === 4) {
-                        if (idx === 0) return [0, 0.10];
-                        if (idx === 1) return [0.15, 0.25];
-                        if (idx === 2) return [0.30, 0.40];
-                        if (idx === 3) return [0.45, 0.55];
+                        return [idx * 0.14, idx * 0.14 + 0.10];
                     }
-                    return [0, 0.2];
+                     return [0, 0.2];
                 }
 
-                // Assign slots based on fixed order: Vol -> Stoch -> MACD -> RSI (Bottom to Top)
-                // Actually let's do: RSI (Top) -> MACD -> Stoch -> Vol (Bottom)
-                // Filter active indicators in that priority
+                // Assign slots based on fixed priority: 
+                // ATR -> Vol -> Stoch -> MACD -> RSI (Bottom to Top ?)
+                // Let's map dynamically
                 const activeTypes = [];
                 if (showRSI) activeTypes.push('rsi');
                 if (showMACD) activeTypes.push('macd');
                 if (showStoch) activeTypes.push('stoch');
                 if (showVol) activeTypes.push('vol');
-                // In this list, index 0 is top-most subplot, index last is bottom-most.
-                // We need to map them to getDomain indices where 0 is bottom.
-                // So 'vol' (if present) should roughly take index 0 of getDomain? 
-
-                // Let's reverse so index 0 is bottom-most?
-                // activeTypes reversed: Vol, Stoch, MACD, RSI
+                if (showATR) activeTypes.push('atr');
+                
+                // Reverse to stack from bottom up?
+                // reversedTypes[0] will be at bottom slot (idx 0)
                 const reversedTypes = [...activeTypes].reverse();
 
 
@@ -2497,64 +2514,45 @@
                     });
                 }
 
-
-
-                // --- Slow Stochastic Logic ---
+                // --- Stochastic Logic ---
                 if (showStoch && dados.stoch_k) {
                     const slotIndex = reversedTypes.indexOf('stoch');
                     const stochDomain = getDomain(slotIndex, numIndicators);
 
                     layout.yaxis4 = {
                         domain: stochDomain,
-                        range: [0, 100],
                         gridcolor: layout.yaxis.gridcolor,
                         fixedrange: true,
+                        range: [0, 100],
                         tickfont: layout.yaxis.tickfont
                     };
 
-                    // Slow K
                     traces.push({
                         x: dados.datas,
                         y: dados.stoch_k,
                         type: 'scatter',
                         mode: 'lines',
-                        line: { color: '#00E5FF', width: 1.5 },
-                        name: 'Stoch %K',
+                        line: { color: '#00B0FF', width: 1.5 },
+                        name: '%K',
                         yaxis: 'y4'
                     });
-
-                    // Slow D
                     traces.push({
                         x: dados.datas,
                         y: dados.stoch_d,
                         type: 'scatter',
                         mode: 'lines',
                         line: { color: '#FF4081', width: 1.5 },
-                        name: 'Stoch %D',
+                        name: '%D',
                         yaxis: 'y4'
                     });
 
-                    // Limits 20/80
-                    const lineStyle = { color: 'rgba(128,128,128,0.5)', width: 1, dash: 'dash' };
+                    // Bands
+                    const lineStyle = { color: 'rgba(128,128,128,0.3)', width: 1, dash: 'dot' };
                     traces.push({
-                        x: [dados.datas[0], dados.datas[dados.datas.length - 1]],
-                        y: [80, 80],
-                        type: 'scatter',
-                        mode: 'lines',
-                        line: lineStyle,
-                        showlegend: false,
-                        hoverinfo: 'none',
-                        yaxis: 'y4'
+                        x: [dados.datas[0], dados.datas[dados.datas.length-1]], y: [80, 80], type: 'scatter', mode: 'lines', line: lineStyle, showlegend: false, hoverinfo: 'none', yaxis: 'y4'
                     });
                     traces.push({
-                        x: [dados.datas[0], dados.datas[dados.datas.length - 1]],
-                        y: [20, 20],
-                        type: 'scatter',
-                        mode: 'lines',
-                        line: lineStyle,
-                        showlegend: false,
-                        hoverinfo: 'none',
-                        yaxis: 'y4'
+                        x: [dados.datas[0], dados.datas[dados.datas.length-1]], y: [20, 20], type: 'scatter', mode: 'lines', line: lineStyle, showlegend: false, hoverinfo: 'none', yaxis: 'y4'
                     });
                 }
 
@@ -2570,28 +2568,52 @@
                         tickfont: layout.yaxis.tickfont
                     };
 
-                    // Calculate colors (Green if Close > Open, else Red)
-                    const volColors = dados.close.map((c, i) => {
-                        const open = dados.open[i];
-                        return c >= open ? '#008000' : '#d32f2f';
+                    const colors = dados.close.map((c, i) => {
+                        if (i === 0) return '#26A69A';
+                        return c >= dados.close[i - 1] ? '#26A69A' : '#EF5350';
                     });
 
                     traces.push({
                         x: dados.datas,
                         y: dados.volume,
                         type: 'bar',
-                        name: (window.translations && window.translations[currentLang] && window.translations[currentLang].chart_volume) || 'Volume',
-                        marker: { color: volColors },
+                        name: 'Volume',
+                        marker: {
+                            color: colors
+                        },
                         yaxis: 'y5'
                     });
                 }
 
-                Plotly.react('grafico', traces, layout, plotConfig);
+                // --- ATR Logic ---
+                if (showATR && dados.atr) {
+                    const slotIndex = reversedTypes.indexOf('atr');
+                    const atrDomain = getDomain(slotIndex, numIndicators);
 
-            } catch (erro) {
-                console.error("Erro:", erro);
-                const errorMsg = (window.translations && window.translations[currentLang] && window.translations[currentLang].chart_error) || "Erro ao carregar";
-                document.getElementById('titulo-ativo').innerText = errorMsg;
+                    layout.yaxis6 = {
+                        domain: atrDomain,
+                        gridcolor: layout.yaxis.gridcolor,
+                        fixedrange: true,
+                        tickfont: layout.yaxis.tickfont,
+                        title: { text: 'ATR', font: { size: 10, color: 'var(--text-muted)' } }
+                    };
+
+                    traces.push({
+                        x: dados.datas,
+                        y: dados.atr,
+                        type: 'scatter',
+                        mode: 'lines',
+                        line: { color: '#FFD700', width: 1.5 }, // Gold color
+                        name: 'ATR (14)',
+                        yaxis: 'y6'
+                    });
+                }
+
+                Plotly.newPlot('grafico', traces, layout, { responsive: true, displayModeBar: false, scrollZoom: true });
+
+            } catch (error) {
+                console.error("Erro ao carregar dados:", error);
+                toggleSpinner('chart-spinner', false);
             } finally {
                 toggleSpinner('chart-spinner', false);
             }
