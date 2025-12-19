@@ -1307,6 +1307,25 @@
                  width: 100%;
             }
         }
+
+        
+        /* Sidebar Restored Styles */
+        .sidebar {
+            width: 250px;
+            background-color: var(--bg-panel);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border-radius: 12px;
+            margin-right: 10px; /* Gap between sidebar and chart */
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none; /* Hide on mobile for now or stack */
+            }
+        }
     </style>
 </head>
 
@@ -1387,6 +1406,16 @@
         </div>
 
         <div class="main-container">
+
+            <!-- Sidebar Restored -->
+            <div class="sidebar">
+                <div class="sidebar-header" style="padding: 15px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-weight: 700; font-size: 14px;">Ativos</span>
+                </div>
+                <ul id="lista-ativos-lateral" class="asset-list">
+                    <!-- JS Populated -->
+                </ul>
+            </div>
 
             <!-- Chart Section (Left) -->
             <div class="chart-section">
@@ -1789,10 +1818,42 @@
                 const response = await fetch(`${API_BASE_URL}/api/assets`);
                 if (response.ok) {
                     allAssets = await response.json();
+                    renderSidebarList(allAssets); // Populate sidebar
                 }
             } catch (e) {
                 console.error("Error loading assets:", e);
             }
+        }
+        
+        function renderSidebarList(assets) {
+            const list = document.getElementById('lista-ativos-lateral');
+            if (!list) return;
+            list.innerHTML = '';
+            
+            assets.forEach(asset => {
+                const li = document.createElement('li');
+                li.className = 'asset-item';
+                li.onclick = () => selecionarAtivo(asset.symbol, li);
+                if (asset.symbol === document.getElementById('ativo-atual').value) {
+                    li.classList.add('active');
+                }
+                
+                const isPositive = asset.change >= 0;
+                const changeClass = isPositive ? 'positive' : 'negative';
+                const sign = isPositive ? '+' : '';
+                
+                li.innerHTML = `
+                    <div class="asset-info">
+                        <span class="asset-symbol">${asset.symbol}</span>
+                        <span class="asset-name">${asset.name || asset.symbol}</span>
+                    </div>
+                    <div class="asset-price-info">
+                        <div class="asset-price">$${asset.price.toFixed(2)}</div>
+                        <div class="asset-change ${changeClass}">${sign}${asset.change.toFixed(2)}%</div>
+                    </div>
+                `;
+                list.appendChild(li);
+            });
         }
 
         function setupAutocomplete() {
