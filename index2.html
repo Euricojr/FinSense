@@ -1313,12 +1313,12 @@
         .sidebar {
             width: 250px;
             background-color: var(--bg-panel);
-            border-right: 1px solid var(--border-color);
+            border: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
             overflow: hidden;
             border-radius: 12px;
-            margin-right: 10px; /* Gap between sidebar and chart */
+            /* margin removed, using gap */
         }
         
         @media (max-width: 768px) {
@@ -1407,16 +1407,6 @@
 
         <div class="main-container">
 
-            <!-- Sidebar Restored -->
-            <div class="sidebar">
-                <div class="sidebar-header" style="padding: 15px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-weight: 700; font-size: 14px;">Ativos</span>
-                </div>
-                <ul id="lista-ativos-lateral" class="asset-list">
-                    <!-- JS Populated -->
-                </ul>
-            </div>
-
             <!-- Chart Section (Left) -->
             <div class="chart-section">
                 <div class="chart-header">
@@ -1494,6 +1484,26 @@
                 </div>
 
                 <div id="grafico" style="width: 100%; flex: 1; min-height: 0;"></div>
+            </div>
+
+            <!-- Sidebar Restored (Right) -->
+            <div class="sidebar">
+                <div class="sidebar-header" style="padding: 15px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                    <!-- Removed title "Ativos" to make room for full width select or keep it small? 
+                         Image shows "Criptomoedas" taking up space. Let's use the custom-select style. 
+                         User image shows basically just the dropdown in the header or below title?
+                         Let's put the select inside. -->
+                     <select id="sidebar-category" onchange="filterSidebar()" class="custom-select" style="width: 100%; padding: 8px;">
+                        <option value="cripto" selected>Criptomoedas</option>
+                        <option value="br">Ações Brasil</option>
+                        <option value="us">Ações EUA</option>
+                        <option value="indices">Índices</option>
+                        <option value="all">Todos</option>
+                    </select>
+                </div>
+                <ul id="lista-ativos-lateral" class="asset-list">
+                    <!-- JS Populated -->
+                </ul>
             </div>
 
             <!-- Sidebar (Right) REMOVED -->
@@ -1818,10 +1828,48 @@
                 const response = await fetch(`${API_BASE_URL}/api/assets`);
                 if (response.ok) {
                     allAssets = await response.json();
-                    renderSidebarList(allAssets); // Populate sidebar
+                    filterSidebar(); // Initial render with default filter
                 }
             } catch (e) {
                 console.error("Error loading assets:", e);
+            }
+        }
+
+        async function filterSidebar() {
+            const categoryObj = document.getElementById('sidebar-category');
+            if(!categoryObj) return;
+
+            const category = categoryObj.value;
+            const list = document.getElementById('lista-ativos-lateral'); // To show loading
+
+            if (category === 'all') {
+                // 'All' is too heavy to fetch live prices for everything at once in this architecture
+                // Show static list (prices will be '---')
+                renderSidebarList(allAssets);
+                return;
+            }
+
+            // Show loading in sidebar
+            if (list) list.innerHTML = '<li style="padding:20px; text-align:center; color:var(--text-muted);">Carregando preços...</li>';
+
+            try {
+                // Use heatmap endpoint which returns [{symbol, name, price, change, ...}]
+                const response = await fetch(`${API_BASE_URL}/api/heatmap?type=${category}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    renderSidebarList(data);
+                } else {
+                    // Fallback to static if error
+                    console.error("Error fetching live sidebar data");
+                    // Filter static list as fallback
+                    const filtered = allAssets.filter(asset => (asset.category || '') === category);
+                    renderSidebarList(filtered); 
+                }
+            } catch (e) {
+                console.error("Fetch error:", e);
+                // Fallback
+                const filtered = allAssets.filter(asset => (asset.category || '') === category);
+                renderSidebarList(filtered);
             }
         }
         
@@ -1838,9 +1886,16 @@
                     li.classList.add('active');
                 }
                 
-                const isPositive = asset.change >= 0;
+                // Hax: price might be missing from /api/assets
+                const price = asset.price !== undefined ? asset.price : 0;
+                const change = asset.change !== undefined ? asset.change : 0;
+                
+                const isPositive = change >= 0;
                 const changeClass = isPositive ? 'positive' : 'negative';
                 const sign = isPositive ? '+' : '';
+                
+                const priceStr = asset.price !== undefined ? `$${price.toFixed(2)}` : '---';
+                const changeStr = asset.change !== undefined ? `${sign}${change.toFixed(2)}%` : '---';
                 
                 li.innerHTML = `
                     <div class="asset-info">
@@ -1848,8 +1903,8 @@
                         <span class="asset-name">${asset.name || asset.symbol}</span>
                     </div>
                     <div class="asset-price-info">
-                        <div class="asset-price">$${asset.price.toFixed(2)}</div>
-                        <div class="asset-change ${changeClass}">${sign}${asset.change.toFixed(2)}%</div>
+                        <div class="asset-price">${priceStr}</div>
+                        <div class="asset-change ${changeClass}">${changeStr}</div>
                     </div>
                 `;
                 list.appendChild(li);
@@ -2120,7 +2175,9 @@
                     xaxis: {
                         ...getPlotLayout().xaxis,
                         type: 'date',
-                        rangeslider: { visible: false }
+                        rangeslider: { visible: false },
+                        anchor: 'free',
+                        position: 0
                     }
                 };
 
