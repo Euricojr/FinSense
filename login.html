@@ -35,8 +35,10 @@
         }
 
         /* Particles container to mimic index2.html */
-        #particles-js {
+        #hero-particles {
             position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
             z-index: -1;
@@ -159,7 +161,7 @@
 </head>
 
 <body>
-    <div id="particles-js"></div>
+    <canvas id="hero-particles"></canvas>
     <button id="lang-toggle" onclick="toggleLanguage()" title="Switch Language" style="position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 8px 12px; border-radius: 20px; cursor: pointer; z-index: 1000; font-size: 16px;">🇺🇸</button>
 
     <div class="login-container">
@@ -292,12 +294,7 @@
             }
         }
 
-        // Init Particles if library exists
-        if (typeof particlesJS !== 'undefined') {
-            particlesJS.load('particles-js', 'static/js/particles.json', function () {
-                console.log('callback - particles.js config loaded');
-            });
-        }
+
     </script>
 </body>
 
