@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinSense - Simulação de Monte Carlo</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-locale-pt-br-latest.js"></script>
+    <script src="static/js/translations.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Light Mode (Default) */
+            --bg-main: #f0f2f5;
+            --bg-panel: #f8f9fa;
+            --text-main: #1a1a1a;
+            --text-muted: #666666;
+            --accent-primary: #0056b3;
+            --accent-hover: #004494;
+            --border-color: #e0e0e0;
+            --success-green: #008000;
+            --danger-red: #d32f2f;
+            --hero-bg: #0a192f;
+        }
+
+        [data-theme="dark"] {
+            /* Dark Mode */
+            --bg-main: #0b1221;
+            --bg-panel: #112240;
+            --text-main: #e6f1ff;
+            --text-muted: #8892b0;
+            --accent-primary: #4da3ff;
+            --accent-hover: #2d89ef;
+            --border-color: #233554;
+            --success-green: #64ffda;
+            --danger-red: #ff5f56;
+            --hero-bg: #020c1b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-family: 'Manrope', sans-serif;
+            overflow-x: hidden;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* --- Header --- */
+        header {
+            background-color: #020c1b;
+            padding: 0 40px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo { font-weight: 700; font-size: 22px; color: white; }
+        
+        nav { display: flex; align-items: center; }
+        nav a { 
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            margin-left: 20px;
+            font-weight: 500;
+            font-size: 16px;
+            transition: color 0.2s;
+        }
+        nav a:hover { color: white; }
+        
+        /* Dropdown */
+        .dropdown { position: relative; display: inline-block; }
+        .nav-btn-drop {
+            background: none; border: none;
+            color: rgba(255, 255, 255, 0.8);
+            font-family: inherit; font-size: 16px; font-weight: 500;
+            margin-left: 20px; cursor: pointer; padding: 10px 0;
+        }
+        .nav-btn-drop:hover { color: white; }
+        .dropdown-content {
+            display: none; position: absolute;
+            background-color: var(--bg-panel);
+            min-width: 160px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            z-index: 1001; border-radius: 8px;
+            overflow: hidden; border: 1px solid var(--border-color);
+            top: 100%;
+        }
+        .dropdown-content.show { display: block; }
+        .dropdown-content a {
+            color: var(--text-main);
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block; margin-left: 0; font-size: 14px;
+        }
+        .dropdown-content a:hover { background-color: var(--bg-main); color: var(--accent-primary); }
+
+        /* Theme Toggle */
+        .theme-toggle {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: rgba(255, 255, 255, 0.9);
+            cursor: pointer;
+            font-size: 16px; margin-left: 12px;
+            width: 50px; height: 32px; border-radius: 16px;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s ease;
+        }
+        .theme-toggle:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        /* Buttons */
+        .cta-button {
+            background-color: var(--accent-primary);
+            color: white; padding: 8px 16px; border-radius: 6px;
+            text-decoration: none; font-weight: 600; font-size: 14px;
+            border: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+        }
+        .cta-button:hover { background-color: var(--accent-hover); transform: translateY(-1px); }
+        
+        .btn-logout {
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none; font-size: 15px; font-weight: 500;
+            padding: 8px 16px; border-radius: 6px;
+            border: 1px solid rgba(255, 69, 58, 0.3); color: #ff6b6b;
+        }
+        .btn-logout:hover { background: rgba(255, 95, 86, 0.1); }
+        
+        /* Mobile Menu Btn */
+        .mobile-menu-btn { display: none; background: none; border: none; cursor: pointer; padding: 10px; }
+        .mobile-menu-btn span { display: block; width: 25px; height: 3px; margin: 5px 0; background-color: white; }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn { display: block; }
+            nav { display: none; }
+            nav.active {
+                display: flex; position: absolute; top: 70px; left: 0; width: 100%;
+                background-color: #020c1b; flex-direction: column; padding: 20px 0;
+            }
+            nav.active a, nav.active .dropdown { margin: 10px 0; }
+        }
+
+        /* --- Layout --- */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        h1 { font-size: 28px; margin-bottom: 30px; font-weight: 700; }
+
+        .control-panel {
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 30px;
+            display: flex;
+            gap: 30px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .input-group { display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 200px; }
+        .input-group label { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+        
+        input[type="text"] {
+            background: var(--bg-main);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 12px;
+            border-radius: 6px;
+            font-family: inherit;
+        }
+        
+        /* Range Sliders */
+        input[type=range] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: var(--accent-primary);
+            cursor: pointer;
+            margin-top: -6px;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: var(--border-color);
+            border-radius: 2px;
+        }
+        .range-val { font-size: 14px; color: var(--accent-primary); font-weight: 600; margin-top: 5px; }
+
+        button.btn-sim {
+            background-color: var(--accent-primary);
+            color: #0a192f;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 6px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            height: 45px;
+        }
+        button.btn-sim:hover { background-color: var(--accent-hover); transform: translateY(-2px); }
+
+        /* --- Metrics Grid --- */
+        /* --- Metrics Grid --- */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 1024px) {
+            .metrics-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+        }
+
+        .metric-card {
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .metric-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 10px; }
+        .metric-value { font-size: 24px; color: var(--text-main); font-weight: 700; }
+        .metric-sub { font-size: 12px; color: var(--text-muted); margin-top: 5px; }
+        
+        .val-opt { color: var(--success-green); }
+        .val-pess { color: var(--danger-red); }
+
+        /* --- Chart --- */
+        .chart-container {
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            height: 500px;
+            position: relative;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(17, 34, 64, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            border-radius: 12px;
+            flex-direction: column;
+            color: var(--accent-primary);
+        }
+        .spinner {
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top: 3px solid var(--accent-primary);
+            border-radius: 50%;
+            width: 40px; height: 40px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* --- Info Section --- */
+        .info-section {
+            margin-top: 30px;
+            color: var(--text-muted);
+            font-size: 14px;
+            line-height: 1.6;
+            background: rgba(255,255,255,0.02);
+            padding: 20px;
+            border-radius: 8px;
+        }
+        /* Search Suggestions */
+        .input-group { position: relative; } /* Ensure absolute positioning works relative to this */
+        
+        #suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            list-style: none;
+            max-height: 250px;
+            overflow-y: auto;
+            display: none;
+            z-index: 1001;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            margin-top: 5px;
+        }
+        
+        #suggestions li {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 13px;
+            color: var(--text-main);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        #suggestions li:last-child { border-bottom: none; }
+        
+        #suggestions li:hover {
+            background-color: var(--bg-main);
+            color: var(--accent-primary);
+        }
+
+        #suggestions li strong { color: var(--text-main); }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">
+            <img src="static/logo.png" alt="FinSense"
+                style="height: 160px; margin-top: -50px; margin-bottom: -50px; margin-left: -40px; vertical-align: middle;">
+        </div>
+
+        <button class="mobile-menu-btn" onclick="toggleMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+
+        <nav id="main-nav" style="display: flex; align-items: center;">
+            <a href="index2.html" style="font-size: 16px; margin-left: 0;">Início</a>
+            <a href="index2.html#dashboard" style="font-size: 16px;">Plataforma</a>
+            <a href="index2.html#mercado" style="font-size: 16px;">Mercado</a>
+
+            <div class="dropdown" style="margin-left: 20px;">
+                <button class="nav-btn-drop" onclick="this.nextElementSibling.classList.toggle('show')">Análise ▼</button>
+                <div class="dropdown-content">
+                    <a href="analise_carteiras.html" class="protected-link">Correlação & Risco</a>
+                    <a href="simulacao.html" class="protected-link">Simulações</a>
+                    <a href="portfolio.html" class="protected-link">Gerenciar Portfólio</a>
+                </div>
+            </div>
+
+            <button id="theme-btn" class="theme-toggle" onclick="toggleTheme()" title="Alternar Tema">☀️</button>
+            <button id="lang-toggle" class="theme-toggle" onclick="toggleLanguage()" title="Switch Language" style="margin-left: 10px;"><span style="font-weight:700; font-size:14px;">EN</span></button>
+
+            <!-- Auth Section -->
+            <div id="nav-auth" style="display: none; align-items: center; margin-left: 20px;">
+                 <div style="margin-left: 15px; font-size: 14px; color: rgba(255, 255, 255, 0.9);">Olá, <strong id="username-display">User</strong></div>
+                 <a href="#" class="btn-logout" onclick="logout()" style="margin-left: 15px;">Sair</a>
+            </div>
+            
+            <div id="nav-public" style="display: flex; align-items: center; margin-left: 20px;">
+                 <a href="login.html" class="cta-button" style="padding: 8px 16px; font-size: 14px; margin-left: 15px;">Entrar / Registrar</a>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container">
+        <h1 data-i18n="sim_title">Simulação de Monte Carlo</h1>
+
+        <div class="control-panel">
+            <div class="input-group">
+                <label data-i18n="sim_ticker">Ativo (Ticker)</label>
+                <input type="text" id="tickerInput" placeholder="Buscar ativos (ex: PETR4)..." autocomplete="off" data-i18n="search_placeholder">
+                <ul id="suggestions"></ul>
+                <div id="search-status" style="display:none; font-size:12px; color:var(--text-muted); margin-top:4px;"></div>
+            </div>
+            
+            <div class="input-group">
+                <label><span data-i18n="sim_horizon">Horizonte (Dias)</span>: <span id="daysVal" class="range-val">30</span></label>
+                <input type="range" id="daysInput" min="7" max="180" value="30" oninput="document.getElementById('daysVal').innerText = this.value">
+            </div>
+
+            <div class="input-group">
+                <label><span data-i18n="sim_sims">Simulações</span>: <span id="simsVal" class="range-val">1000</span></label>
+                <input type="range" id="simsInput" min="100" max="2000" step="100" value="1000" oninput="document.getElementById('simsVal').innerText = this.value">
+            </div>
+
+            <button class="btn-sim" onclick="runSimulation()" data-i18n="sim_exec">Executar Simulação</button>
+        </div>
+
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-label" data-i18n="sim_current">Preço Atual</div>
+                <div class="metric-value" id="currPrice">---</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label" data-i18n="sim_mean">Média Projetada</div>
+                <div class="metric-value" id="meanPrice">---</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label" data-i18n="sim_opt">Otimista (95%)</div>
+                <div class="metric-value val-opt" id="optPrice">---</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label" data-i18n="sim_pess">Pessimista (5%)</div>
+                <div class="metric-value val-pess" id="pessPrice">---</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label" data-i18n="sim_win">Prob. Lucro</div>
+                <div class="metric-value" id="winProb">---</div>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <div class="loading-overlay" id="loader">
+                <div class="spinner"></div>
+                <div>Processando Simulações...</div>
+            </div>
+            <div id="chartDiv" style="width:100%; height:100%;"></div>
+        </div>
+
+        <div class="info-section" data-i18n="sim_desc">
+            <strong>Como interpretar:</strong> O gráfico mostra até 50 caminhos possíveis para o preço do ativo baseados em sua volatilidade histórica e tendência (drift). 
+            A linha <strong>Azul Forte</strong> representa a média de todas as simulações. 
+            Cenários Otimistas e Pessimistas representam os extremos estatísticos (intervalo de confiança de 90%).
+            <br><br>
+            <em>Nota: Simulações não garantem resultados futuros. Use apenas como ferramenta de análise de risco.</em>
+        </div>
+    </div>
+
+    <script>
+        // --- API Base URL Logic ---
+        function getBaseUrl() {
+            const hostname = window.location.hostname;
+            const port = window.location.port;
+            if ((hostname === '127.0.0.1' || hostname === 'localhost') && port !== '5000') {
+                return 'http://127.0.0.1:5000';
+            }
+            return '';
+        }
+        const API_BASE_URL = getBaseUrl();
+
+        // --- Header Functions ---
+        function toggleMenu() {
+            const nav = document.getElementById('main-nav');
+            nav.classList.toggle('active');
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const current = html.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+            document.getElementById('theme-btn').innerText = next === 'dark' ? '☀️' : '🌙';
+            
+            // Redraw chart if data exists
+            if (typeof lastSimulationData !== 'undefined' && lastSimulationData) {
+                updateUI(lastSimulationData);
+            }
+        }
+
+
+
+        async function logout() {
+            try {
+                await fetch(`${API_BASE_URL}/logout`);
+                window.location.href = 'index2.html';
+            } catch (e) {
+                window.location.href = 'index2.html';
+            }
+        }
+
+        // --- Auth Check & UI Update ---
+        async function checkAuth() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/me`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.authenticated) {
+                         // Update UI for logged in user
+                         document.getElementById('nav-public').style.display = 'none';
+                         document.getElementById('nav-auth').style.display = 'flex';
+                         document.getElementById('username-display').textContent = data.username;
+                    } else {
+                        window.location.href = 'index2.html'; // Redirect if not logged in
+                    }
+                } else {
+                    window.location.href = 'index2.html';
+                }
+            } catch (e) {
+                console.error("Auth check failed", e);
+                window.location.href = 'index2.html';
+            }
+        }
+        
+        // Init
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        document.getElementById('theme-btn').innerText = savedTheme === 'dark' ? '☀️' : '🌙';
+        
+        checkAuth();
+
+        // --- Search Logic ---
+        let allAssets = [];
+
+        async function fetchAssets() {
+            const inputGroup = document.querySelector('.input-group');
+            // Create status element
+            let statusEl = document.getElementById('search-status');
+            if (!statusEl) {
+                statusEl = document.createElement('div');
+                statusEl.id = 'search-status';
+                statusEl.style.fontSize = '12px';
+                statusEl.style.color = 'var(--text-muted)';
+                statusEl.style.marginTop = '4px';
+                inputGroup.appendChild(statusEl);
+            }
+
+            statusEl.textContent = 'Carregando lista de ativos...';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/assets`);
+                if (response.ok) {
+                    allAssets = await response.json();
+                    statusEl.textContent = ''; // Clear processing text
+                    statusEl.style.display = 'none';
+                    console.log(`Loaded ${allAssets.length} assets`);
+                } else {
+                    statusEl.textContent = 'Erro ao carregar ativos.';
+                    statusEl.style.color = 'var(--visual-red)';
+                }
+            } catch (e) {
+                console.error("Error loading assets:", e);
+                statusEl.textContent = 'Erro de conexão.';
+                statusEl.style.color = '#ff5f56';
+            }
+        }
+
+        function setupAutocomplete() {
+            const input = document.getElementById('tickerInput');
+            const suggestions = document.getElementById('suggestions');
+
+            input.addEventListener('input', (e) => {
+                const query = e.target.value.toLowerCase().trim();
+
+                if (query.length < 1) {
+                    suggestions.style.display = 'none';
+                    return;
+                }
+
+                // Ensure assets are loaded
+                if (allAssets.length === 0) {
+                     // Try fetching again if empty?
+                     // Or just wait.
+                     return;
+                }
+
+                const matches = allAssets.filter(asset =>
+                    (asset.symbol && asset.symbol.toLowerCase().includes(query)) ||
+                    (asset.name && asset.name.toLowerCase().includes(query))
+                ).slice(0, 10);
+
+                renderSuggestions(matches);
+            });
+            
+            // Close on click outside
+            document.addEventListener('click', (e) => {
+                if (!input.contains(e.target) && !suggestions.contains(e.target)) {
+                    suggestions.style.display = 'none';
+                }
+            });
+            
+            // Focus open
+            input.addEventListener('focus', () => {
+                 if (input.value.trim().length > 0 && allAssets.length > 0) {
+                     input.dispatchEvent(new Event('input'));
+                 }
+            });
+        }
+
+        function renderSuggestions(matches) {
+            const suggestions = document.getElementById('suggestions');
+            suggestions.innerHTML = '';
+
+            if (matches.length === 0) {
+                suggestions.style.display = 'none';
+                return;
+            }
+
+            matches.forEach(asset => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <span><strong>${asset.symbol}</strong> - ${asset.name}</span>
+                    <span style="font-size: 11px; opacity: 0.7; text-transform: uppercase;">${asset.category}</span>
+                `;
+
+                li.onclick = () => {
+                    document.getElementById('tickerInput').value = asset.symbol;
+                    suggestions.style.display = 'none';
+                };
+
+                suggestions.appendChild(li);
+            });
+
+            suggestions.style.display = 'block';
+        }
+
+        // Init Search
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchAssets();
+            setupAutocomplete();
+        });
+
+        async function runSimulation() {
+            const ticker = document.getElementById('tickerInput').value.toUpperCase();
+            const days = document.getElementById('daysInput').value;
+            const simulations = document.getElementById('simsInput').value;
+            const loader = document.getElementById('loader');
+
+            if(!ticker) return alert("Digite um ticker válido");
+
+            loader.style.display = 'flex';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/simulacao/montecarlo`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ ticker, days, simulations })
+                });
+
+                const data = await response.json();
+                
+                if(data.error) {
+                    alert('Erro: ' + data.error);
+                    return;
+                }
+
+                updateUI(data);
+
+            } catch (e) {
+                console.error(e);
+                alert("Erro ao conectar com o servidor.");
+            } finally {
+                loader.style.display = 'none';
+            }
+        }
+
+        let lastSimulationData = null;
+
+        function updateUI(data) {
+            lastSimulationData = data; // Save for theme toggling
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const gridColor = isDark ? '#233554' : '#e0e0e0';
+            const textColor = isDark ? '#8892b0' : '#666666';
+
+            // Metrics
+            document.getElementById('currPrice').innerText = formatCurrency(data.current_price);
+            document.getElementById('meanPrice').innerText = formatCurrency(data.metrics.mean_final);
+            document.getElementById('optPrice').innerText = formatCurrency(data.metrics.p95);
+            document.getElementById('pessPrice').innerText = formatCurrency(data.metrics.p05);
+            document.getElementById('winProb').innerText = data.metrics.win_prob.toFixed(1) + "%";
+
+            // Chart
+            const traces = [];
+
+            // Add Confidence Interval (Cone) - Filled Area
+            // We use 'tonexty' fill. So first trace (lower) is just line (invisible), second trace (upper) fills down to it.
+            if(data.p05_path && data.p95_path) {
+                // Lower Bound (Transparent Line)
+                traces.push({
+                    x: data.dates,
+                    y: data.p05_path,
+                    mode: 'lines',
+                    line: { width: 0 },
+                    showlegend: false,
+                    hoverinfo: 'none'
+                });
+
+                // Upper Bound (Fill to Lower)
+                traces.push({
+                    x: data.dates,
+                    y: data.p95_path,
+                    fill: 'tonexty',
+                    fillcolor: 'rgba(77, 163, 255, 0.1)', // Light blue tint
+                    mode: 'lines',
+                    line: { width: 0 },
+                    name: 'Intervalo 95%',
+                    showlegend: true,
+                    hoverinfo: 'skip'
+                });
+            }
+
+            // Add Simulations (Faint Lines) - Reduce count or opacity if needed
+            // Currently looks fine as 'cloud' behind the mean
+            data.plot_paths.forEach(path => {
+                traces.push({
+                    x: data.dates,
+                    y: path,
+                    type: 'scatter',
+                    mode: 'lines',
+                    line: { color: 'rgba(77, 163, 255, 0.05)', width: 1 },
+                    showlegend: false,
+                    hoverinfo: 'none'
+                });
+            });
+
+            // Add Mean Path (Bold Green)
+            traces.push({
+                x: data.dates,
+                y: data.mean_path,
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Projeção Média',
+                line: { color: isDark ? '#64ffda' : '#008000', width: 3 },
+                showlegend: true
+            });
+
+            // Add Start Line (Dashed)
+            traces.push({
+                x: [data.dates[0], data.dates[data.dates.length-1]],
+                y: [data.current_price, data.current_price],
+                type: 'scatter',
+                mode: 'lines',
+                name: 'Preço Inicial',
+                line: { color: textColor, width: 1, dash: 'dash' }
+            });
+
+            const layout = {
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                title: false,
+                xaxis: { 
+                    showgrid: false, 
+                    color: textColor,
+                    zeroline: false
+                },
+                yaxis: { 
+                    showgrid: true, 
+                    gridcolor: gridColor, 
+                    color: textColor,
+                    zeroline: false
+                },
+                margin: { t: 20, l: 40, r: 20, b: 40 },
+                showlegend: true,
+                legend: { x: 0, y: 1, font: { color: textColor } }
+            };
+
+            Plotly.newPlot('chartDiv', traces, layout, {responsive: true, displayModeBar: false});
+        }
+
+        function formatCurrency(val) {
+            return val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); // Or USD dynamic
+        }
+
+        // Init with default
+        // runSimulation(); // Auto-run optional
+    </script>
+</body>
+</html>

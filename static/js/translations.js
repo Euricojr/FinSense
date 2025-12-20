@@ -169,7 +169,25 @@ const translations = {
         tf_15m: "15 Min",
         tf_30m: "30 Min",
         tf_1h: "1 Hora",
-        tf_1w: "1 Sem"
+        tf_1w: "1 Sem",
+        
+        // Indicators
+        controls_atr: "ATR",
+
+        // Simulation
+        sim_title: "Simulação de Monte Carlo",
+        sim_ticker: "Ativo (Ticker)",
+        sim_horizon: "Horizonte (Dias)",
+        sim_sims: "Simulações",
+        sim_exec: "Executar Simulação",
+        sim_current: "Preço Atual",
+        sim_mean: "Média Projetada",
+        sim_opt: "Otimista (95%)",
+        sim_pess: "Pessimista (5%)",
+        sim_win: "Prob. Lucro",
+        sim_desc: "<strong>Como interpretar:</strong> O gráfico mostra até 50 caminhos possíveis para o preço do ativo baseados em sua volatilidade histórica e tendência (drift). <br>A linha <strong>Azul Forte</strong> representa a média de todas as simulações. <br>Cenários Otimistas e Pessimistas representam os extremos estatísticos (intervalo de confiança de 90%).<br><br><em>Nota: Simulações não garantem resultados futuros. Use apenas como ferramenta de análise de risco.</em>",
+        sim_loading: "Processando Simulações...",
+        sim_error: "Erro na simulação"
     },
     en: {
         // Nav
@@ -345,7 +363,22 @@ const translations = {
         tf_1w: "1 Week",
         
         // Indicators
-        controls_atr: "ATR"
+        controls_atr: "ATR",
+
+        // Simulation
+        sim_title: "Monte Carlo Simulation",
+        sim_ticker: "Asset (Ticker)",
+        sim_horizon: "Horizon (Days)",
+        sim_sims: "Simulations",
+        sim_exec: "Run Simulation",
+        sim_current: "Current Price",
+        sim_mean: "Projected Mean",
+        sim_opt: "Optimistic (95%)",
+        sim_pess: "Pessimistic (5%)",
+        sim_win: "Win Prob.",
+        sim_desc: "<strong>How to interpret:</strong> The chart shows up to 50 possible paths for the asset price based on its historical volatility and drift. <br>The <strong>Strong Blue</strong> line represents the average of all simulations. <br>Optimistic and Pessimistic scenarios represent statistical extremes (90% confidence interval).<br><br><em>Note: Simulations do not guarantee future results. Use only as a risk analysis tool.</em>",
+        sim_loading: "Processing Simulations...",
+        sim_error: "Simulation Error"
     }
 };
 
@@ -366,7 +399,7 @@ function updateLanguage(lang) {
             if (el.tagName.toUpperCase() === 'INPUT' && el.hasAttribute('placeholder')) {
                 el.placeholder = translations[lang][key];
             } else {
-                el.textContent = translations[lang][key];
+                el.innerHTML = translations[lang][key];
             }
         }
     });
@@ -392,3 +425,7 @@ function toggleLanguage() {
 document.addEventListener('DOMContentLoaded', () => {
     updateLanguage(currentLang);
 });
+
+// Explicitly export to window to ensure availability
+window.updateLanguage = updateLanguage;
+window.toggleLanguage = toggleLanguage;
