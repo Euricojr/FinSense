@@ -329,6 +329,41 @@
             align-items: center;
         }
         
+        /* Params Container */
+        .params-container {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 768px) {
+            .params-container {
+                flex-direction: column;
+                gap: 15px;
+            }
+            .chart-container {
+                height: 350px;
+                padding: 10px;
+            }
+            .metric-value {
+                font-size: 20px;
+            }
+            table.sim-results th, table.sim-results td {
+                padding: 8px 5px;
+                font-size: 12px;
+                white-space: nowrap; /* Prevent wrapping for better horizontal scroll */
+            }
+            .btn-sm-view {
+                padding: 4px 6px;
+                font-size: 11px;
+            }
+            .container {
+                padding: 20px 15px;
+            }
+            h1 { font-size: 22px; margin-bottom: 20px; }
+        }
+        
         /* Tags */
         .tags-container {
             display: flex;
@@ -466,7 +501,7 @@
             </div>
             
             <!-- Params -->
-            <div style="display: flex; gap: 20px; width: 100%;">
+            <div class="params-container">
                 <div class="input-group">
                     <label><span data-i18n="sim_horizon">Horizonte (Dias)</span>: <span id="daysVal" class="range-val">30</span></label>
                     <input type="range" id="daysInput" min="7" max="180" value="30" oninput="document.getElementById('daysVal').innerText = this.value">
