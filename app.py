@@ -996,124 +996,129 @@ def portfolio_correlation():
 
 
 @app.route('/api/simulacao/montecarlo', methods=['POST'])
+@app.route('/api/simulacao/montecarlo', methods=['POST'])
 def monte_carlo_simulation():
     try:
         data = request.get_json()
-        ticker = data.get('ticker', 'PETR4.SA')
+        
+        # Support both 'ticker' (single) and 'tickers' (list)
+        tickers_input = data.get('tickers', [])
+        if not tickers_input:
+            single = data.get('ticker')
+            if single: tickers_input = [single]
+            
+        if not tickers_input:
+            return jsonify({"error": "No ticker provided"}), 400
+            
         days = int(data.get('days', 30))
         simulations = int(data.get('simulations', 1000))
         
-        # Limit constraints for performance
+        # Constraints
         if simulations > 5000: simulations = 5000
         if days > 365: days = 365
 
-        # 1. Get History (1 Year to calculate metrics)
+        # 1. Get History (Batch Download)
         end_date = pd.Timestamp.now()
         start_date = end_date - pd.Timedelta(days=365)
         
-        df = yf.download(ticker, start=start_date, end=end_date, progress=False, threads=True)
+        # yf.download might return Complex MultiIndex if multiple tickers
+        df = yf.download(tickers_input, start=start_date, end=end_date, progress=False, threads=True)
         
-        # Handle different yf structures
-        if isinstance(df.columns, pd.MultiIndex):
-             try:
-                 df = df.xs(ticker, axis=1, level=1)
-             except:
-                 try:
-                     df.columns = df.columns.get_level_values(0)
-                 except: pass
-
-        if 'Close' not in df.columns:
-             # Just in case it returned a Series or different structure
-             if isinstance(df, pd.Series):
-                 prices = df
-             else:
-                 # Try first column
-                 prices = df.iloc[:, 0]
+        # Extract Close prices
+        closes = None
+        if 'Close' in df.columns:
+            closes = df['Close']
         else:
-            prices = df['Close']
+             # If just one ticker and flat structure
+            closes = df
             
-        prices = prices.dropna()
-        if len(prices) < 30:
-            return jsonify({"error": "Insufficient historical data"}), 400
+        results = []
+        
+        for ticker in tickers_input:
+            try:
+                # Extract specific series
+                prices = None
+                if isinstance(closes, pd.DataFrame) and ticker in closes.columns:
+                    prices = closes[ticker]
+                elif isinstance(closes, pd.Series) and closes.name == ticker:
+                     prices = closes
+                elif len(tickers_input) == 1:
+                     # Fallback if structure is simple
+                     if isinstance(closes, pd.DataFrame): prices = closes.iloc[:, 0]
+                     else: prices = closes
+                
+                if prices is None:
+                     results.append({"ticker": ticker, "error": "Data not found"})
+                     continue
+                     
+                prices = prices.dropna()
+                if len(prices) < 30:
+                    results.append({"ticker": ticker, "error": "Insufficient history"})
+                    continue
 
-        # 2. Calculate Drift and Volatility
-        log_returns = np.log(1 + prices.pct_change())
-        u = log_returns.mean()
-        var = log_returns.var()
-        drift = u - (0.5 * var)
-        stdev = log_returns.std()
-        
-        # 3. Run Simulation (Vectorized)
-        # daily_returns = exp(drift + stdev * Z)
-        
-        # Generate random values Z
-        Z = np.random.standard_normal((days, simulations))
-        
-        # Calculate daily returns for all paths
-        daily_returns = np.exp(drift + stdev * Z)
-        
-        # Create price paths
-        S0 = prices.iloc[-1]
-        price_paths = np.zeros_like(daily_returns)
-        price_paths[0] = S0 * daily_returns[0]
-        
-        for t in range(1, days):
-            price_paths[t] = price_paths[t-1] * daily_returns[t]
-            
-        # Add S0 to the beginning
-        price_paths = np.vstack([np.full(simulations, S0), price_paths]) # Shape: (days+1, simulations)
-        
-        # 4. Prepare Data for Frontend
-        # We can't send 1000 lines separately if it's too heavy, but 1000x30 is 30k points, manageable.
-        # Format:
-        # {
-        #   dates: [d1, d2...],
-        #   paths: [[p1_t0, p1_t1...], [p2_t0...]] -> Transpose of price_paths
-        #   summary: { mean: ..., p95: ..., p05: ... }
-        # }
-        
-        # Project Dates
+                # 2. Calculate Drift and Volatility (Same algorithm)
+                log_returns = np.log(1 + prices.pct_change())
+                u = log_returns.mean()
+                var = log_returns.var()
+                drift = u - (0.5 * var)
+                stdev = log_returns.std()
+                
+                # 3. Reference Price
+                S0 = float(prices.iloc[-1])
+                
+                # 4. Run Simulation
+                Z = np.random.standard_normal((days, simulations))
+                daily_returns = np.exp(drift + stdev * Z)
+                
+                price_paths = np.zeros_like(daily_returns)
+                price_paths[0] = S0 * daily_returns[0]
+                for t in range(1, days):
+                    price_paths[t] = price_paths[t-1] * daily_returns[t]
+                    
+                price_paths = np.vstack([np.full(simulations, S0), price_paths]) # Shape: (days+1, simulations)
+                
+                # 5. Metrics
+                final_prices = price_paths[-1]
+                mean_price = np.mean(final_prices)
+                p95 = np.percentile(final_prices, 95)
+                p05 = np.percentile(final_prices, 5)
+                wins = np.sum(final_prices > S0)
+                win_prob = (wins / simulations) * 100
+                
+                # 6. Paths for Plotting
+                indices_to_plot = np.random.choice(simulations, size=min(50, simulations), replace=False)
+                plot_paths = price_paths[:, indices_to_plot].T.tolist()
+                
+                p95_path = np.percentile(price_paths, 95, axis=1).tolist()
+                p05_path = np.percentile(price_paths, 5, axis=1).tolist()
+                mean_path = np.mean(price_paths, axis=1).tolist()
+                
+                results.append({
+                    "ticker": ticker,
+                    "current_price": S0,
+                    "plot_paths": plot_paths,
+                    "mean_path": mean_path,
+                    "p95_path": p95_path,
+                    "p05_path": p05_path,
+                    "metrics": {
+                        "mean_final": mean_price,
+                        "p95": p95,
+                        "p05": p05,
+                        "win_prob": win_prob
+                    }
+                })
+                
+            except Exception as e:
+                logger.error(f"Error simulating {ticker}: {e}")
+                results.append({"ticker": ticker, "error": str(e)})
+
+        # Prepare dates once
         future_dates = [end_date + pd.Timedelta(days=i) for i in range(days + 1)]
         future_dates_str = [d.strftime('%Y-%m-%d') for d in future_dates]
-        
-        # Calculate Summary Metrics on FINAL prices
-        final_prices = price_paths[-1]
-        mean_price = np.mean(final_prices)
-        p95 = np.percentile(final_prices, 95)
-        p05 = np.percentile(final_prices, 5)
-        
-        # Win Probability (Price > S0)
-        wins = np.sum(final_prices > S0)
-        win_prob = (wins / simulations) * 100
-        
-        # Optimization: Don't send ALL paths if too many. 
-        # Send a sample of 50-100 paths for visualization + The Mean Path + Percentile Paths
-        
-        # Let's send 50 random paths for visual "cloud"
-        indices_to_plot = np.random.choice(simulations, size=min(50, simulations), replace=False)
-        plot_paths = price_paths[:, indices_to_plot].T.tolist() # List of lists (each inner list is a time series)
-        
-        # Calculate Percentile Paths (Confidence Cone)
-        p95_path = np.percentile(price_paths, 95, axis=1).tolist()
-        p05_path = np.percentile(price_paths, 5, axis=1).tolist()
-        
-        # Also calculate Mean Path
-        mean_path = np.mean(price_paths, axis=1).tolist()
-        
+
         return jsonify({
-            "ticker": ticker,
-            "current_price": S0,
             "dates": future_dates_str,
-            "plot_paths": plot_paths,
-            "mean_path": mean_path,
-            "p95_path": p95_path,
-            "p05_path": p05_path,
-            "metrics": {
-                "mean_final": mean_price,
-                "p95": p95,
-                "p05": p05,
-                "win_prob": win_prob
-            }
+            "results": results
         })
 
     except Exception as e:

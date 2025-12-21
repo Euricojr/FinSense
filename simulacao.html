@@ -324,6 +324,74 @@
             align-items: center;
         }
         
+        /* Tags */
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .tag {
+            background-color: rgba(77, 163, 255, 0.15);
+            color: var(--accent-primary);
+            border: 1px solid rgba(77, 163, 255, 0.3);
+            padding: 5px 12px;
+            border-radius: 16px;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .tag span { cursor: pointer; font-size: 14px; opacity: 0.7; }
+        .tag span:hover { opacity: 1; color: var(--danger-red); }
+
+        /* Results Table */
+        .results-table-container {
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            display: none; /* Hidden initially */
+            overflow-x: auto;
+        }
+        table.sim-results {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        table.sim-results th {
+            text-align: left;
+            color: var(--text-muted);
+            font-weight: 600;
+            padding: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        table.sim-results td {
+            padding: 12px 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            color: var(--text-main);
+        }
+        table.sim-results tr:hover {
+            background-color: rgba(255,255,255,0.02);
+            cursor: pointer;
+        }
+        table.sim-results tr.active-row {
+            background-color: rgba(77, 163, 255, 0.1);
+            border-left: 3px solid var(--accent-primary);
+        }
+        .btn-sm-view {
+            padding: 4px 10px;
+            font-size: 12px;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: var(--text-main);
+            cursor: pointer;
+        }
+        .btn-sm-view:hover { background: var(--accent-primary); color: white; }
+        
         #suggestions li:last-child { border-bottom: none; }
         
         #suggestions li:hover {
@@ -349,16 +417,16 @@
         </button>
 
         <nav id="main-nav" style="display: flex; align-items: center;">
-            <a href="index2.html" style="font-size: 16px; margin-left: 0;">Início</a>
-            <a href="index2.html#dashboard" style="font-size: 16px;">Plataforma</a>
-            <a href="index2.html#mercado" style="font-size: 16px;">Mercado</a>
+            <a href="index2.html" style="font-size: 16px; margin-left: 0;" data-i18n="nav_home">Início</a>
+            <a href="index2.html#dashboard" style="font-size: 16px;" data-i18n="nav_platform">Plataforma</a>
+            <a href="index2.html#mercado" style="font-size: 16px;" data-i18n="nav_market">Mercado</a>
 
             <div class="dropdown" style="margin-left: 20px;">
-                <button class="nav-btn-drop" onclick="this.nextElementSibling.classList.toggle('show')">Análise ▼</button>
+                <button class="nav-btn-drop" onclick="this.nextElementSibling.classList.toggle('show')"><span data-i18n="nav_analysis">Análise</span> ▼</button>
                 <div class="dropdown-content">
-                    <a href="analise_carteiras.html" class="protected-link">Correlação & Risco</a>
-                    <a href="simulacao.html" class="protected-link">Simulações</a>
-                    <a href="portfolio.html" class="protected-link">Gerenciar Portfólio</a>
+                    <a href="analise_carteiras.html" class="protected-link" data-i18n="nav_risk">Correlação & Risco</a>
+                    <a href="simulacao.html" class="protected-link" data-i18n="nav_simulations">Simulações</a>
+                    <a href="portfolio.html" class="protected-link" data-i18n="nav_portfolio">Gerenciar Portfólio</a>
                 </div>
             </div>
 
@@ -381,9 +449,10 @@
         <h1 data-i18n="sim_title">Simulação de Monte Carlo</h1>
 
         <div class="control-panel">
-            <div class="input-group">
-                <label data-i18n="sim_ticker">Ativo (Ticker)</label>
-                <input type="text" id="tickerInput" placeholder="Buscar ativos (ex: PETR4)..." autocomplete="off" data-i18n="search_placeholder">
+            <div class="input-group" style="flex: 2;">
+                <label data-i18n="sim_ticker">Ativos (Carteira)</label>
+                <div class="tags-container" id="tagsContainer"></div>
+                <input type="text" id="tickerInput" placeholder="Adicionar ativo (ex: PETR4)..." autocomplete="off" data-i18n="search_placeholder">
                 <ul id="suggestions"></ul>
                 <div id="search-status" style="display:none; font-size:12px; color:var(--text-muted); margin-top:4px;"></div>
             </div>
@@ -399,6 +468,27 @@
             </div>
 
             <button class="btn-sim" onclick="runSimulation()" data-i18n="sim_exec">Executar Simulação</button>
+        </div>
+
+        <!-- Results List -->
+        <div class="results-table-container" id="resultsTableContainer">
+            <h3 style="font-size: 18px; margin-bottom: 15px;">Resultados da Carteira</h3>
+            <table class="sim-results">
+                <thead>
+                    <tr>
+                        <th>Ativo</th>
+                        <th>Preço Atual</th>
+                        <th>Média Projetada</th>
+                        <th>Otimista (95%)</th>
+                        <th>Pessimista (5%)</th>
+                        <th>Chance de Lucro</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="resultsBody">
+                    <!-- Rows -->
+                </tbody>
+            </table>
         </div>
 
         <div class="metrics-grid">
@@ -516,6 +606,34 @@
 
         // --- Search Logic ---
         let allAssets = [];
+        let selectedTickers = [];
+
+        function addTag(ticker) {
+            ticker = ticker.toUpperCase();
+            if (selectedTickers.includes(ticker)) return;
+            if (selectedTickers.length >= 10) return alert("Máximo de 10 ativos.");
+            
+            selectedTickers.push(ticker);
+            renderTags();
+            document.getElementById('tickerInput').value = '';
+            document.getElementById('tickerInput').focus();
+        }
+
+        function removeTag(ticker) {
+            selectedTickers = selectedTickers.filter(t => t !== ticker);
+            renderTags();
+        }
+
+        function renderTags() {
+            const container = document.getElementById('tagsContainer');
+            container.innerHTML = '';
+            selectedTickers.forEach(t => {
+                const tag = document.createElement('div');
+                tag.className = 'tag';
+                tag.innerHTML = `${t} <span onclick="removeTag('${t}')">×</span>`;
+                container.appendChild(tag);
+            });
+        }
 
         async function fetchAssets() {
             const inputGroup = document.querySelector('.input-group');
@@ -609,7 +727,7 @@
                 `;
 
                 li.onclick = () => {
-                    document.getElementById('tickerInput').value = asset.symbol;
+                    addTag(asset.symbol);
                     suggestions.style.display = 'none';
                 };
 
@@ -625,21 +743,33 @@
             setupAutocomplete();
         });
 
+        let globalSimulationData = null; // Store full response
+        let globalDates = [];
+
         async function runSimulation() {
-            const ticker = document.getElementById('tickerInput').value.toUpperCase();
             const days = document.getElementById('daysInput').value;
             const simulations = document.getElementById('simsInput').value;
             const loader = document.getElementById('loader');
+            
+            // Collect tickers: Tags + Input text (if any)
+            let tickersToSend = [...selectedTickers];
+            const currentInput = document.getElementById('tickerInput').value.trim().toUpperCase();
+            if (currentInput && !tickersToSend.includes(currentInput)) {
+                tickersToSend.push(currentInput);
+            }
 
-            if(!ticker) return alert("Digite um ticker válido");
+            if(tickersToSend.length === 0) return alert("Adicione pelo menos um ativo.");
 
             loader.style.display = 'flex';
+            
+            // Hide table initially
+            document.getElementById('resultsTableContainer').style.display = 'none';
 
             try {
                 const response = await fetch(`${API_BASE_URL}/api/simulacao/montecarlo`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ ticker, days, simulations })
+                    body: JSON.stringify({ tickers: tickersToSend, days, simulations })
                 });
 
                 const data = await response.json();
@@ -648,8 +778,21 @@
                     alert('Erro: ' + data.error);
                     return;
                 }
+                
+                // Store global data
+                globalSimulationData = data.results; 
+                globalDates = data.dates;
 
-                updateUI(data);
+                renderResultsTable(data.results);
+                
+                // Automatically show the first result
+                if (data.results.length > 0) {
+                     if (data.results[0].error) {
+                         alert(`Erro no primeiro ativo (${data.results[0].ticker}): ${data.results[0].error}`);
+                     } else {
+                        updateChart(data.results[0]);
+                     }
+                }
 
             } catch (e) {
                 console.error(e);
@@ -658,31 +801,79 @@
                 loader.style.display = 'none';
             }
         }
+        
+        function renderResultsTable(results) {
+            const container = document.getElementById('resultsTableContainer');
+            const tbody = document.getElementById('resultsBody');
+            tbody.innerHTML = '';
+            
+            if (!results || results.length === 0) return;
+            
+            container.style.display = 'block';
+            
+            results.forEach((res, index) => {
+                const tr = document.createElement('tr');
+                if (index === 0) tr.classList.add('active-row');
+                
+                if (res.error) {
+                    tr.innerHTML = `
+                        <td><strong>${res.ticker}</strong></td>
+                        <td colspan="5" style="color: var(--danger-red);">Erro: ${res.error}</td>
+                        <td></td>
+                    `;
+                } else {
+                    tr.innerHTML = `
+                        <td><strong>${res.ticker}</strong></td>
+                        <td>${formatCurrency(res.current_price)}</td>
+                        <td>${formatCurrency(res.metrics.mean_final)}</td>
+                        <td class="val-opt">${formatCurrency(res.metrics.p95)}</td>
+                        <td class="val-pess">${formatCurrency(res.metrics.p05)}</td>
+                        <td>${res.metrics.win_prob.toFixed(1)}%</td>
+                        <td><button class="btn-sm-view">Ver Gráfico</button></td>
+                    `;
+                    
+                    tr.onclick = () => {
+                        // Highlight row
+                        document.querySelectorAll('.sim-results tr').forEach(r => r.classList.remove('active-row'));
+                        tr.classList.add('active-row');
+                        
+                        updateChart(res);
+                    };
+                }
+                tbody.appendChild(tr);
+            });
+        }
+        
+        let lastChartData = null; // For theme toggling re-render
 
-        let lastSimulationData = null;
+        function updateChart(res) {
+            lastChartData = res;
+            if (!res || res.error) return; 
+            
+            updateMetrics(res);
+            drawPlotly(res, globalDates);
+        }
+        
+        function updateMetrics(res) {
+            document.getElementById('currPrice').innerText = formatCurrency(res.current_price);
+            document.getElementById('meanPrice').innerText = formatCurrency(res.metrics.mean_final);
+            document.getElementById('optPrice').innerText = formatCurrency(res.metrics.p95);
+            document.getElementById('pessPrice').innerText = formatCurrency(res.metrics.p05);
+            document.getElementById('winProb').innerText = res.metrics.win_prob.toFixed(1) + "%";
+        }
 
-        function updateUI(data) {
-            lastSimulationData = data; // Save for theme toggling
+        function drawPlotly(data, dates) {
             const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
             const gridColor = isDark ? '#233554' : '#e0e0e0';
             const textColor = isDark ? '#8892b0' : '#666666';
 
-            // Metrics
-            document.getElementById('currPrice').innerText = formatCurrency(data.current_price);
-            document.getElementById('meanPrice').innerText = formatCurrency(data.metrics.mean_final);
-            document.getElementById('optPrice').innerText = formatCurrency(data.metrics.p95);
-            document.getElementById('pessPrice').innerText = formatCurrency(data.metrics.p05);
-            document.getElementById('winProb').innerText = data.metrics.win_prob.toFixed(1) + "%";
-
-            // Chart
             const traces = [];
 
             // Add Confidence Interval (Cone) - Filled Area
-            // We use 'tonexty' fill. So first trace (lower) is just line (invisible), second trace (upper) fills down to it.
             if(data.p05_path && data.p95_path) {
                 // Lower Bound (Transparent Line)
                 traces.push({
-                    x: data.dates,
+                    x: dates,
                     y: data.p05_path,
                     mode: 'lines',
                     line: { width: 0 },
@@ -692,10 +883,10 @@
 
                 // Upper Bound (Fill to Lower)
                 traces.push({
-                    x: data.dates,
+                    x: dates,
                     y: data.p95_path,
                     fill: 'tonexty',
-                    fillcolor: 'rgba(77, 163, 255, 0.1)', // Light blue tint
+                    fillcolor: 'rgba(77, 163, 255, 0.1)', 
                     mode: 'lines',
                     line: { width: 0 },
                     name: 'Intervalo 95%',
@@ -704,11 +895,10 @@
                 });
             }
 
-            // Add Simulations (Faint Lines) - Reduce count or opacity if needed
-            // Currently looks fine as 'cloud' behind the mean
+            // Add Simulations (Faint Lines)
             data.plot_paths.forEach(path => {
                 traces.push({
-                    x: data.dates,
+                    x: dates,
                     y: path,
                     type: 'scatter',
                     mode: 'lines',
@@ -720,7 +910,7 @@
 
             // Add Mean Path (Bold Green)
             traces.push({
-                x: data.dates,
+                x: dates,
                 y: data.mean_path,
                 type: 'scatter',
                 mode: 'lines',
@@ -731,7 +921,7 @@
 
             // Add Start Line (Dashed)
             traces.push({
-                x: [data.dates[0], data.dates[data.dates.length-1]],
+                x: [dates[0], dates[dates.length-1]],
                 y: [data.current_price, data.current_price],
                 type: 'scatter',
                 mode: 'lines',
@@ -742,7 +932,8 @@
             const layout = {
                 paper_bgcolor: 'rgba(0,0,0,0)',
                 plot_bgcolor: 'rgba(0,0,0,0)',
-                title: false,
+                title: `${data.ticker} - Simulação`,
+                font: { family: 'Manrope, sans-serif', color: textColor },
                 xaxis: { 
                     showgrid: false, 
                     color: textColor,
@@ -754,12 +945,21 @@
                     color: textColor,
                     zeroline: false
                 },
-                margin: { t: 20, l: 40, r: 20, b: 40 },
+                margin: { t: 40, l: 40, r: 20, b: 40 },
                 showlegend: true,
                 legend: { x: 0, y: 1, font: { color: textColor } }
             };
 
             Plotly.newPlot('chartDiv', traces, layout, {responsive: true, displayModeBar: false});
+        }
+        
+        // Update handling for theme toggle
+        // We modify the global updateUI (which might be called by toggleTheme) 
+        // to use our lastChartData
+        function updateUI(ignored) {
+             if (lastChartData && globalDates) {
+                 drawPlotly(lastChartData, globalDates);
+             }
         }
 
         function formatCurrency(val) {
