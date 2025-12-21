@@ -165,10 +165,15 @@
             border-radius: 12px;
             padding: 24px;
             margin-bottom: 30px;
-            display: flex;
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
             gap: 30px;
-            align-items: flex-end;
-            flex-wrap: wrap;
+            align-items: end;
+        }
+        @media (max-width: 900px) {
+            .control-panel {
+                grid-template-columns: 1fr;
+            }
         }
 
         .input-group { display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 200px; }
@@ -449,39 +454,45 @@
         <h1 data-i18n="sim_title">Simulação de Monte Carlo</h1>
 
         <div class="control-panel">
-            <div class="input-group" style="flex: 2;">
+            <!-- Asset Selection -->
+            <div class="input-group">
                 <label data-i18n="sim_ticker">Ativos (Carteira)</label>
                 <div class="tags-container" id="tagsContainer"></div>
-                <input type="text" id="tickerInput" placeholder="Adicionar ativo (ex: PETR4)..." autocomplete="off" data-i18n="search_placeholder">
-                <ul id="suggestions"></ul>
+                <div style="position: relative;">
+                    <input type="text" id="tickerInput" placeholder="" autocomplete="off" data-i18n="search_placeholder" style="width: 100%;">
+                    <ul id="suggestions"></ul>
+                </div>
                 <div id="search-status" style="display:none; font-size:12px; color:var(--text-muted); margin-top:4px;"></div>
             </div>
             
-            <div class="input-group">
-                <label><span data-i18n="sim_horizon">Horizonte (Dias)</span>: <span id="daysVal" class="range-val">30</span></label>
-                <input type="range" id="daysInput" min="7" max="180" value="30" oninput="document.getElementById('daysVal').innerText = this.value">
+            <!-- Params -->
+            <div style="display: flex; gap: 20px; width: 100%;">
+                <div class="input-group">
+                    <label><span data-i18n="sim_horizon">Horizonte (Dias)</span>: <span id="daysVal" class="range-val">30</span></label>
+                    <input type="range" id="daysInput" min="7" max="180" value="30" oninput="document.getElementById('daysVal').innerText = this.value">
+                </div>
+
+                <div class="input-group">
+                    <label><span data-i18n="sim_sims">Simulações</span>: <span id="simsVal" class="range-val">1000</span></label>
+                    <input type="range" id="simsInput" min="100" max="2000" step="100" value="1000" oninput="document.getElementById('simsVal').innerText = this.value">
+                </div>
             </div>
 
-            <div class="input-group">
-                <label><span data-i18n="sim_sims">Simulações</span>: <span id="simsVal" class="range-val">1000</span></label>
-                <input type="range" id="simsInput" min="100" max="2000" step="100" value="1000" oninput="document.getElementById('simsVal').innerText = this.value">
-            </div>
-
-            <button class="btn-sim" onclick="runSimulation()" data-i18n="sim_exec">Executar Simulação</button>
+            <button class="btn-sim" onclick="runSimulation()" data-i18n="sim_exec" style="height: 50px;">Executar Simulação</button>
         </div>
 
         <!-- Results List -->
         <div class="results-table-container" id="resultsTableContainer">
-            <h3 style="font-size: 18px; margin-bottom: 15px;">Resultados da Carteira</h3>
+            <h3 style="font-size: 18px; margin-bottom: 15px;" data-i18n="sim_results_title">Resultados da Carteira</h3>
             <table class="sim-results">
                 <thead>
                     <tr>
-                        <th>Ativo</th>
-                        <th>Preço Atual</th>
-                        <th>Média Projetada</th>
-                        <th>Otimista (95%)</th>
-                        <th>Pessimista (5%)</th>
-                        <th>Chance de Lucro</th>
+                        <th data-i18n="sim_tbl_asset">Ativo</th>
+                        <th data-i18n="sim_tbl_price">Preço Atual</th>
+                        <th data-i18n="sim_tbl_mean">Média Projetada</th>
+                        <th data-i18n="sim_tbl_opt">Otimista (95%)</th>
+                        <th data-i18n="sim_tbl_pess">Pessimista (5%)</th>
+                        <th data-i18n="sim_tbl_win">Chance de Lucro</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -829,11 +840,19 @@
                         <td class="val-opt">${formatCurrency(res.metrics.p95)}</td>
                         <td class="val-pess">${formatCurrency(res.metrics.p05)}</td>
                         <td>${res.metrics.win_prob.toFixed(1)}%</td>
-                        <td><button class="btn-sm-view">Ver Gráfico</button></td>
+                        <td><button class="btn-sm-view" data-i18n="sim_btn_view">Ver Gráfico</button></td>
                     `;
                     
-                    tr.onclick = () => {
-                        // Highlight row
+                    tr.onclick = (e) => {
+                        // If clicked, we update the chart. But we also need to re-translate the button if language changed?
+                        // Actually, data-i18n works on page load or when updateLanguage() is called.
+                        // Since this element is created dynamically, we must manually translate it OR call updateLanguage().
+                        // Let's assume updateLanguage() is available globally (from translations.js).
+                        if(window.updateLanguage) window.updateLanguage(); 
+                        
+                        // Wait, updateLanguage translates everything. It might be overlapping with this click.
+                        
+                        // Standard click logic
                         document.querySelectorAll('.sim-results tr').forEach(r => r.classList.remove('active-row'));
                         tr.classList.add('active-row');
                         
@@ -842,6 +861,9 @@
                 }
                 tbody.appendChild(tr);
             });
+            
+            // Translate newly added elements
+            if(window.updateLanguage) window.updateLanguage();
         }
         
         let lastChartData = null; // For theme toggling re-render
