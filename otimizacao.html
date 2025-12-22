@@ -260,6 +260,18 @@
             align-items: flex-end;
         }
 
+        @media (max-width: 768px) {
+            .opt-controls-row {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 20px;
+            }
+            .opt-controls-row .input-group {
+                width: 100% !important;
+                flex: none !important;
+            }
+        }
+
         .chart-box {
             background-color: var(--bg-panel);
             border: 1px solid var(--border-color);
@@ -715,6 +727,8 @@
             const ms = data.max_sharpe;
             const mv = data.min_volatility;
 
+            const isMobile = window.innerWidth < 768;
+
             const traceCloud = {
                 x: cloud.volatility,
                 y: cloud.returns,
@@ -722,15 +736,18 @@
                 marker: {
                     color: cloud.sharpe,
                     colorscale: 'Viridis',
-                    colorbar: { title: 'Sharpe', thickness: 10 },
-                    size: 8,
+                    showscale: !isMobile, // Clean look: hide colorbar on mobile
+                    colorbar: { title: 'Sharpe', thickness: 15 },
+                    size: isMobile ? 5 : 8,
                     opacity: 0.6
                 },
                 text: cloud.sharpe.map(s => `${txt_sharpe}: ${s.toFixed(2)}`),
                 hoverinfo: 'x+y+text',
-                name: txt_random
+                name: txt_random,
+                showlegend: !isMobile // Clean look: hide random dots legend on mobile
             };
 
+            // traceMS and traceMV remain the same
             const traceMS = {
                 x: [ms.volatility],
                 y: [ms.return],
@@ -753,15 +770,31 @@
                 paper_bgcolor: bgColor,
                 plot_bgcolor: bgColor,
                 font: { color: textColor },
-                xaxis: { title: txt_axis_vol, gridcolor: gridColor },
-                yaxis: { title: txt_axis_ret, gridcolor: gridColor },
-                margin: { t: 30, l: 50, r: 30, b: 50 },
+                xaxis: { 
+                    title: { text: txt_axis_vol, font: { size: isMobile ? 11 : 14 } }, 
+                    gridcolor: gridColor,
+                    tickfont: { size: isMobile ? 10 : 12 }
+                },
+                yaxis: { 
+                    title: { text: txt_axis_ret, font: { size: isMobile ? 11 : 14 } }, 
+                    gridcolor: gridColor,
+                    tickfont: { size: isMobile ? 10 : 12 }
+                },
+                margin: isMobile ? { t: 50, l: 40, r: 15, b: 50 } : { t: 30, l: 50, r: 30, b: 50 },
                 hovermode: 'closest',
                 showlegend: true,
-                legend: { x: 0, y: 1 }
+                legend: isMobile ? {
+                    orientation: 'h',
+                    x: 0.5,
+                    y: 1.02,
+                    xanchor: 'center',
+                    yanchor: 'bottom',
+                    bgcolor: 'rgba(0,0,0,0)'
+                } : { x: 0, y: 1 }
             };
 
-            Plotly.newPlot('efChart', [traceCloud, traceMS, traceMV], layoutEF, {responsive: true});
+            const config = { responsive: true, displayModeBar: false };
+            Plotly.newPlot('efChart', [traceCloud, traceMS, traceMV], layoutEF, config);
 
             // 2. Metrics Update
             document.getElementById('ms-ret').innerText = (ms.return * 100).toFixed(1) + "%";
