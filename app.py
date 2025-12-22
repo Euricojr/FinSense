@@ -4,6 +4,7 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, log
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 import yfinance as yf
+from scipy.optimize import minimize
 import pandas as pd
 import numpy as np
 import time
@@ -194,6 +195,11 @@ def analise():
 @login_required
 def simulacao():
     return render_template('simulacao.html', user=current_user)
+
+@app.route('/otimizacao')
+@login_required
+def otimizacao():
+    return render_template('otimizacao.html', user=current_user)
 
 # --- AUTH ROUTES ---
 @app.route('/login', methods=['GET', 'POST'])
@@ -527,6 +533,11 @@ def portfolio_benchmark():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
+
+        
+
+            
 @app.route('/api/calculate_portfolio', methods=['POST'])
 def calculate_portfolio_endpoint():
     try:
@@ -996,7 +1007,6 @@ def portfolio_correlation():
 
 
 @app.route('/api/simulacao/montecarlo', methods=['POST'])
-@app.route('/api/simulacao/montecarlo', methods=['POST'])
 def monte_carlo_simulation():
     try:
         data = request.get_json()
@@ -1123,6 +1133,120 @@ def monte_carlo_simulation():
 
     except Exception as e:
         logger.error(f"Error in Monte Carlo: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+
+@app.route('/api/optimize_portfolio', methods=['POST'])
+@login_required
+def optimize_portfolio():
+    try:
+        data = request.get_json()
+        tickers = data.get('tickers', [])
+        period = data.get('period', '2y') # default 2y
+
+        if len(tickers) < 2:
+            return jsonify({"error": "Select at least 2 assets for optimization"}), 400
+            
+        # Determine Start Date based on period
+        years = 2
+        if period == '1y': years = 1
+        elif period == '3y': years = 3
+        elif period == '5y': years = 5
+        
+        start_date = (pd.Timestamp.now() - pd.DateOffset(years=years)).strftime('%Y-%m-%d')
+        end_date = pd.Timestamp.now().strftime('%Y-%m-%d')
+        
+        prices = yf.download(tickers, start=start_date, end=end_date, progress=False, threads=True)['Close']
+        prices = prices.dropna()
+        
+        if prices.empty:
+            return jsonify({"error": "Could not download data for optimization"}), 400
+            
+        # 1. Expected Returns and Sample Covariance
+        # 1. Expected Returns and Sample Covariance
+        # Use simple mean and sample covariance
+        mu = prices.pct_change(fill_method=None).mean() * 252
+        S = prices.pct_change(fill_method=None).cov() * 252
+
+        # Constraints
+        n_assets = len(mu)
+        args_base = (mu, S)
+        constraints = ({'type': 'eq', 'fun': lambda x: np.sum(x) - 1})
+        bounds = tuple((0, 1) for asset in range(n_assets))
+        init_guess = n_assets * [1. / n_assets,]
+        rf = 0.02
+
+        # 2. Max Sharpe Ratio
+        def neg_sharpe_ratio(weights, mu, S, rf):
+            ret = np.sum(mu * weights)
+            vol = np.sqrt(np.dot(weights.T, np.dot(S, weights)))
+            return -(ret - rf) / vol
+
+        args_sharpe = (mu, S, rf)
+        opt_sharpe = minimize(neg_sharpe_ratio, init_guess, args=args_sharpe, method='SLSQP', bounds=bounds, constraints=constraints)
+        
+        weights_sharpe = opt_sharpe.x
+        ret_sharpe = np.sum(mu * weights_sharpe)
+        vol_sharpe = np.sqrt(np.dot(weights_sharpe.T, np.dot(S, weights_sharpe)))
+        sharpe_ratio = (ret_sharpe - rf) / vol_sharpe
+        
+        # Format weights
+        cleaned_weights_sharpe = {str(ticker): round(weight, 5) for ticker, weight in zip(tickers, weights_sharpe)}
+
+        # 3. Min Volatility
+        def portfolio_volatility(weights, mu, S):
+            return np.sqrt(np.dot(weights.T, np.dot(S, weights)))
+            
+        opt_min = minimize(portfolio_volatility, init_guess, args=args_base, method='SLSQP', bounds=bounds, constraints=constraints)
+        
+        weights_min = opt_min.x
+        ret_min = np.sum(mu * weights_min)
+        vol_min = np.sqrt(np.dot(weights_min.T, np.dot(S, weights_min)))
+        sharpe_min = (ret_min - rf) / vol_min
+        
+        cleaned_weights_min = {str(ticker): round(weight, 5) for ticker, weight in zip(tickers, weights_min)}
+        
+        # 4. Generate Random Portfolios for Scatter Cloud
+        n_samples = 500
+        n_assets = len(mu)
+        
+        # Efficient random generation
+        w = np.random.random((n_samples, n_assets))
+        w = w / np.sum(w, axis=1)[:, np.newaxis] # Normalize to 1
+        
+        # Returns
+        mean_returns = mu.values
+        cov_matrix = S.values
+        
+        port_ret = np.dot(w, mean_returns)
+        port_vol = np.sqrt(np.einsum('ij,jk,ik->i', w, cov_matrix, w))
+        port_sharpe = (port_ret - rf) / port_vol
+        
+        cloud_data = {
+            "returns": port_ret.tolist(),
+            "volatility": port_vol.tolist(),
+            "sharpe": port_sharpe.tolist()
+        }
+        
+        return jsonify({
+            "max_sharpe": {
+                "weights": cleaned_weights_sharpe,
+                "return": float(ret_sharpe),
+                "volatility": float(vol_sharpe),
+                "sharpe": float(sharpe_ratio)
+            },
+            "min_volatility": {
+                "weights": cleaned_weights_min,
+                "return": float(ret_min),
+                "volatility": float(vol_min),
+                "sharpe": float(sharpe_min)
+            },
+            "cloud": cloud_data
+        })
+        
+    except Exception as e:
+        logger.error(f"Optimization error: {e}")
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':

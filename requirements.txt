@@ -8,3 +8,5 @@ numpy
 python-bcb
 gunicorn
 werkzeug
+PyPortfolioOpt
+scipy
