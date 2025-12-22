@@ -214,13 +214,34 @@
         .input-group { display: flex; flex-direction: column; gap: 8px; flex: 1; }
         .input-group label { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
         
-        input[type="text"] {
+        /* Multi-select Input Style */
+        .multi-select-container {
             background: var(--bg-main);
             border: 1px solid var(--border-color);
-            color: var(--text-main);
-            padding: 12px;
             border-radius: 6px;
+            padding: 5px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 5px;
+            min-height: 45px;
+            cursor: text;
+            transition: border-color 0.2s;
+        }
+        .multi-select-container:focus-within {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 2px rgba(0, 86, 179, 0.1);
+        }
+
+        input[type="text"] {
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+            padding: 8px;
             font-family: inherit;
+            flex: 1;
+            min-width: 150px;
+            outline: none;
         }
 
         button.btn-opt {
@@ -257,7 +278,7 @@
             display: flex;
             gap: 15px;
             margin-bottom: 20px;
-            align-items: flex-end;
+            align-items: flex-start; /* Changed from flex-end to align labels */
         }
 
         @media (max-width: 768px) {
@@ -325,20 +346,21 @@
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
-            margin-bottom: 10px;
-            min-height: 32px;
+            margin-top: 8px; /* Changed from bottom to top */
+            /* Removed min-height to avoid gap */
         }
         .tag {
-            background-color: rgba(77, 163, 255, 0.15);
+            background-color: var(--bg-panel);
             color: var(--accent-primary);
-            border: 1px solid rgba(77, 163, 255, 0.3);
-            padding: 5px 12px;
-            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            padding: 2px 10px;
+            border-radius: 4px;
             font-size: 13px;
             font-weight: 600;
             display: flex;
             align-items: center;
             gap: 6px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
         .tag span { cursor: pointer; font-size: 14px; opacity: 0.7; }
         .tag span:hover { opacity: 1; color: var(--danger-red); }
@@ -459,10 +481,12 @@
             <div class="opt-controls-row">
                 <div class="input-group" style="flex: 2;">
                     <label data-i18n="opt_input_label">Ativos para Otimização (Mín. 2)</label>
-                    <div class="tags-container" id="tagsContainer"></div>
                     <div style="position: relative;">
-                        <input type="text" id="tickerInput" placeholder="Busque por nome ou ticker (ex: AAPL, PETR4)..." autocomplete="off" style="width: 100%;" data-i18n="search_placeholder">
-                        <ul id="suggestions"></ul>
+                        <div class="multi-select-container" onclick="document.getElementById('tickerInput').focus()">
+                            <div class="tags-container" id="tagsContainer" style="margin:0; gap:5px; width:auto;"></div>
+                            <input type="text" id="tickerInput" placeholder="Busque por nome ou ticker..." autocomplete="off" data-i18n="search_placeholder">
+                        </div>
+                        <ul id="suggestions" style="top: 100%;"></ul>
                     </div>
                 </div>
 
