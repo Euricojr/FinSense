@@ -87,7 +87,7 @@
         .dropdown-content {
             display: none; position: absolute;
             background-color: var(--bg-panel);
-            min-width: 160px;
+            min-width: 220px;
             box-shadow: 0 8px 16px rgba(0,0,0,0.2);
             z-index: 1001; border-radius: 8px;
             overflow: hidden; border: 1px solid var(--border-color);
@@ -99,6 +99,7 @@
             padding: 12px 16px;
             text-decoration: none;
             display: block; margin-left: 0; font-size: 14px;
+            white-space: nowrap;
         }
         .dropdown-content a:hover { background-color: var(--bg-main); color: var(--accent-primary); }
 
@@ -451,7 +452,7 @@
             <div class="dropdown" style="margin-left: 20px;">
                 <button class="nav-btn-drop" onclick="this.nextElementSibling.classList.toggle('show')"><span data-i18n="nav_analysis">Análise</span> ▼</button>
                 <div class="dropdown-content">
-                    <a href="predicao" class="protected-link" style="color: #b400ff; font-weight:700;">Predição IA ✨</a>
+                    <a href="predicao" class="protected-link">Modelo de Predição</a>
                     <a href="analise_carteiras.html" class="protected-link" data-i18n="nav_risk">Correlação & Risco</a>
                     <a href="simulacao.html" class="protected-link" data-i18n="nav_simulations">Simulações</a>
                     <a href="otimizacao.html" class="protected-link" style="color: var(--accent-primary);" data-i18n="nav_optimization">Otimização Markowitz</a>

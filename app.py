@@ -994,9 +994,22 @@ def predict_price():
                 
                 sentiment = 50 + (normalized_slope * 1000)
                 sentiment = max(0, min(100, sentiment))
+                # Dynamic Score Calculation
+                # R2 Score can be negative. We map it to a realistic "Confidence" scale.
+                # Range [-inf, 1.0] -> Display [50, 95]
+                # If R2 > 0: Map [0, 1] -> [60, 95]
+                # If R2 <= 0: Map [-1, 0] -> [50, 60] (with floor at -1)
                 
-                safe_score = max(0, min(1, score))
-                score_display = 60 + (safe_score * 20)
+                clamped_r2 = max(-1.0, min(1.0, score))
+                
+                if clamped_r2 > 0:
+                    score_display = 60 + (clamped_r2 * 35) # Max 95%
+                else:
+                    # Map -1 to 0 -> 50 to 60
+                    score_display = 60 + (clamped_r2 * 10)
+                
+                # Ensure it creates unique values even for very similar low scores
+                score_display = round(score_display, 2)
                 
                 results[ticker] = {
                     "sentiment": round(sentiment, 1),
