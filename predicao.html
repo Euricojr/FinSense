@@ -18,8 +18,8 @@
             --accent-primary: #0056b3;
             --accent-hover: #004494;
             --border-color: #e0e0e0;
-            --neon-purple: #b400ff; /* Vibrante */
-            --neon-glow: rgba(180, 0, 255, 0.4);
+            --neon-purple: #007bff; /* Blue to match site */
+            --neon-glow: rgba(0, 123, 255, 0.4);
             --hero-bg: #0a192f;
             --card-trend-up: #00b894;
             --card-trend-down: #d63031;
@@ -35,8 +35,8 @@
             --accent-primary: #4da3ff;
             --accent-hover: #2d89ef;
             --border-color: #233554;
-            --neon-purple: #d35dff; 
-            --neon-glow: rgba(211, 93, 255, 0.2);
+            --neon-purple: #3399ff; /* Brighter Blue for Dark Mode */
+            --neon-glow: rgba(51, 153, 255, 0.3);
             --hero-bg: #020c1b;
         }
 
@@ -278,7 +278,73 @@
             padding: 10px; cursor: pointer; border-bottom: 1px solid var(--border-color); 
             display: flex; justify-content: space-between; font-size: 13px;
         }
-        #suggestions li:hover { background-color: var(--bg-main); color: var(--accent-primary); }
+        /* Tags */
+        .tags-input-container {
+            display: flex; 
+            flex-wrap: wrap; 
+            align-items: center;
+            gap: 6px;
+            background: var(--bg-main);
+            border: 1px solid var(--border-color);
+            padding: 6px 10px; 
+            border-radius: 8px;
+            min-height: 48px;
+            cursor: text;
+            transition: border-color 0.2s;
+        }
+        .tags-input-container:focus-within {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 2px rgba(0, 86, 179, 0.2);
+        }
+        .tag {
+            background: rgba(180, 0, 255, 0.2); 
+            color: var(--neon-purple);
+            border: 1px solid rgba(180, 0, 255, 0.4);
+            padding: 4px 10px; 
+            border-radius: 6px; 
+            font-size: 13px; 
+            font-weight: 600;
+            display: inline-flex; 
+            align-items: center; 
+            gap: 6px;
+            user-select: none;
+        }
+        .tag span { 
+            cursor: pointer; 
+            font-size: 16px; 
+            line-height: 1;
+            opacity: 0.7; 
+            transition: opacity 0.2s;
+        }
+        .tag span:hover { opacity: 1; color: #ff6b6b; }
+        
+        .tags-input-container input {
+            border: none; 
+            background: transparent; 
+            outline: none;
+            flex: 1; 
+            min-width: 150px; /* Ensure input doesn't get squashed */
+            padding: 6px 0; 
+            color: var(--text-main); 
+            font-family: inherit;
+            font-size: 14px;
+        }
+
+        /* Tabs */
+        .result-tabs {
+            display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px;
+        }
+        .tab-btn {
+            background: var(--bg-panel); border: 1px solid var(--border-color);
+            color: var(--text-muted); padding: 8px 16px; border-radius: 20px;
+            cursor: pointer; font-size: 14px; font-weight: 600; white-space: nowrap;
+            transition: all 0.2s;
+        }
+        .tab-btn.active {
+            background: var(--neon-purple); color: white; border-color: var(--neon-purple);
+            box-shadow: 0 4px 10px var(--neon-glow);
+        }
+        .tab-btn:hover:not(.active) { background: var(--bg-main); color: var(--text-main); }
     </style>
 </head>
 <body>
@@ -325,13 +391,34 @@
         <p class="subtitle">Previsão automática de preços usando Machine Learning. O algoritmo foi treinado com 2 anos de histórico para projetar os próximos 7 dias.</p>
 
         <div class="control-panel">
-            <div class="input-group">
-                <label>Ativo (Ticker)</label>
-                <input type="text" id="tickerInput" placeholder="Ex: BTC-USD, PETR4.SA" autocomplete="off">
+            <div class="input-group" style="flex: 2;">
+                <label>Ativos (Tags)</label>
+                <div class="tags-input-container" onclick="document.getElementById('tickerInput').focus()">
+                    <div id="tickerTags"></div>
+                    <input type="text" id="tickerInput" placeholder="Ex: BTC-USD, PETR4.SA (Enter)" autocomplete="off">
+                </div>
                 <ul id="suggestions"></ul>
             </div>
-            <button class="btn-predict" onclick="runPrediction()">🤖 Gerar Previsão</button>
+            
+            <div class="input-group">
+                <label>Treino (Anos)</label>
+                <select id="trainPeriod" style="padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-main);">
+                    <option value="2">2 Anos (Rápido)</option>
+                    <option value="3">3 Anos</option>
+                    <option value="4">4 Anos</option>
+                    <option value="5">5 Anos (Longo Prazo)</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label>Horizonte: <span id="horizonVal">7</span> Dias</label>
+                <input type="range" id="forecastHorizon" min="5" max="30" value="7" oninput="document.getElementById('horizonVal').innerText = this.value">
+            </div>
+
+            <button class="btn-predict" onclick="runPrediction()">🤖 Gerar Análise</button>
         </div>
+
+        <div class="result-tabs" id="resultTabs"></div>
 
         <div class="insights-container">
             <!-- Tendência -->
@@ -406,33 +493,73 @@
         document.getElementById('theme-btn').innerText = savedTheme === 'dark' ? '☀️' : '🌙';
 
         let allAssets = [];
-        let lastData = null;
+        let resultsCache = {};
+        let activeTags = [];
 
-        // Auth Check
+        // Auth & Load Assets (Same as before)
         fetch(`${API_BASE_URL}/api/me`).then(r => r.json()).then(d => {
             if(d.authenticated) {
                 document.getElementById('nav-public').style.display='none';
                 document.getElementById('nav-auth').style.display='flex';
                 document.getElementById('username-display').innerText = d.username;
-            } else {
-                window.location.href='login.html';
-            }
+            } else { window.location.href='login.html'; }
         }).catch(() => window.location.href='login.html');
 
-        // Load Assets
-        fetch(`${API_BASE_URL}/api/assets`).then(r=>r.json()).then(d => {
-            allAssets = d;
-            console.log("Assets loaded:", d.length);
+        fetch(`${API_BASE_URL}/api/assets`).then(r=>r.json()).then(d => { allAssets = d; });
+
+        // --- Tag System ---
+        const input = document.getElementById('tickerInput');
+        const tagsContainer = document.getElementById('tickerTags');
+        const list = document.getElementById('suggestions');
+
+        input.addEventListener('keydown', (e) => {
+            if(e.key === 'Enter' || e.key === ',') {
+                e.preventDefault();
+                addTag(input.value);
+            }
+            if(e.key === 'Backspace' && input.value === '') {
+                activeTags.pop(); renderTags();
+            }
         });
 
-        // --- AutoComplete ---
-        const input = document.getElementById('tickerInput');
-        const list = document.getElementById('suggestions');
-        
+        function addTag(text) {
+            const clean = text.replace(',', '').trim().toUpperCase();
+            if(clean && !activeTags.includes(clean)) {
+                activeTags.push(clean);
+                renderTags();
+            }
+            input.value = '';
+            list.style.display='none';
+        }
+
+        function removeTag(idx) {
+            activeTags.splice(idx, 1);
+            renderTags();
+        }
+
+        function renderTags() {
+            tagsContainer.innerHTML = '';
+            activeTags.forEach((t, i) => {
+                const tag = document.createElement('div');
+                tag.className = 'tag';
+                tag.innerHTML = `${t} <span onclick="event.stopPropagation(); removeTag(${i})">×</span>`;
+                tagsContainer.appendChild(tag);
+            });
+            
+            // Update placeholder to save space
+            if(activeTags.length > 0) {
+                input.placeholder = "Add +";
+                input.style.minWidth = "80px"; // Allow it to be smaller
+            } else {
+                input.placeholder = "Ex: BTC-USD, PETR4.SA (Enter)";
+                input.style.minWidth = "150px";
+            }
+        }
+
+        // AutoComplete (Updated to add tag)
         input.addEventListener('input', (e) => {
             const q = e.target.value.toLowerCase().trim();
             if(q.length < 1) { list.style.display='none'; return; }
-            
             const matches = allAssets.filter(a => 
                 (a.symbol && a.symbol.toLowerCase().includes(q)) || 
                 (a.name && a.name.toLowerCase().includes(q))
@@ -442,23 +569,21 @@
             matches.forEach(m => {
                 const li = document.createElement('li');
                 li.innerHTML = `<strong>${m.symbol}</strong> <span>${m.name}</span>`;
-                li.onclick = () => {
-                    input.value = m.symbol;
-                    list.style.display='none';
-                };
+                li.onclick = () => { addTag(m.symbol); };
                 list.appendChild(li);
             });
             list.style.display = matches.length ? 'block' : 'none';
         });
-        
         document.addEventListener('click', (e) => {
-            if(!input.contains(e.target) && !list.contains(e.target)) list.style.display='none';
+             if(!input.contains(e.target) && !list.contains(e.target)) list.style.display='none';
         });
 
         // --- Core Functionality ---
         async function runPrediction() {
-            const ticker = input.value.trim().toUpperCase();
-            if(!ticker) return alert("Digite um ativo válido (ex: PETR4.SA)");
+            if(activeTags.length === 0) return alert("Adicione pelo menos um ativo.");
+
+            const period = document.getElementById('trainPeriod').value;
+            const horizon = document.getElementById('forecastHorizon').value;
 
             document.getElementById('loader').style.display = 'flex';
             
@@ -466,26 +591,60 @@
                 const res = await fetch(`${API_BASE_URL}/api/predict`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ ticker: ticker })
+                    body: JSON.stringify({ 
+                        tickers: activeTags,
+                        period_years: period,
+                        horizon_days: horizon
+                    })
                 });
 
                 const data = await res.json();
                 
                 if(data.error) {
                     alert("Erro: " + data.error);
-                } else {
-                    lastData = data;
-                    updateDashboard(data);
+                } else if(data.results) {
+                    resultsCache = data.results;
+                    renderTabs(Object.keys(resultsCache));
+                    // Auto-select first
+                    const first = Object.keys(resultsCache)[0];
+                    if(first) switchTab(first);
                 }
             } catch(e) {
-                alert("Erro de conexão com o servidor.");
+                alert("Erro de conexão.");
                 console.error(e);
             } finally {
                 document.getElementById('loader').style.display = 'none';
             }
         }
 
-        function updateDashboard(data) {
+        function renderTabs(tickers) {
+            const container = document.getElementById('resultTabs');
+            container.innerHTML = '';
+            tickers.forEach(t => {
+                const btn = document.createElement('button');
+                btn.className = 'tab-btn';
+                btn.innerText = t;
+                btn.onclick = () => switchTab(t);
+                btn.id = `tab-${t}`;
+                container.appendChild(btn);
+            });
+        }
+
+        function switchTab(ticker) {
+            // Update Active Tab
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            const btn = document.getElementById(`tab-${ticker}`);
+            if(btn) btn.classList.add('active');
+
+            const data = resultsCache[ticker];
+            if(data.error) {
+                alert(`Erro para ${ticker}: ${data.error}`);
+            } else {
+                updateDashboard(data, ticker);
+            }
+        }
+
+        function updateDashboard(data, ticker) {
             // Metrics
             const trendEl = document.getElementById('val-trend');
             const scoreEl = document.getElementById('val-score');
@@ -514,13 +673,17 @@
                 iconTrend.innerText = '➡️';
             }
 
+            // Chart
+            // Add ticker to data object for title
+            data.ticker = ticker;
             renderChart(data);
         }
 
         function renderChart(data) {
-            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-            const colorText = isDark ? '#e6f1ff' : '#1a1a1a';
-            const gridColor = isDark ? '#233554' : '#e0e0e0';
+           // ... (Same Chart Logic as before) ...
+           const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+           const colorText = isDark ? '#e6f1ff' : '#1a1a1a';
+           const gridColor = isDark ? '#233554' : '#e0e0e0';
             
             // 1. History (Solid)
             const traceHistory = {
@@ -533,90 +696,47 @@
             };
 
             // 2. Prediction (Dashed Neon)
-            // Connect last history point to first prediction point for continuity
             const connectX = [data.dates_history[data.dates_history.length-1], data.dates_future[0]];
             const connectY = [data.prices_history[data.prices_history.length-1], data.prices_predicted[0]];
             
             const fullPredX = [data.dates_history[data.dates_history.length-1], ...data.dates_future];
             const fullPredY = [data.prices_history[data.prices_history.length-1], ...data.prices_predicted];
 
-            // 3. Upper/Lower Bounds (Shaded)
-            // Align with prediction x-axis
-            // We need to prepend the last known price/date to bounds as well so the shape starts correctly
+            // 3. Upper/Lower Bounds
             const lastPrice = data.prices_history[data.prices_history.length-1];
-            
             const upperY = [lastPrice, ...data.upper_bound];
             const lowerY = [lastPrice, ...data.lower_bound];
             
-            const traceLower = {
-                x: fullPredX,
-                y: lowerY,
-                mode: 'lines',
-                line: {width: 0},
-                showlegend: false,
-                hoverinfo: 'skip'
-            };
+            const traceLower = { x: fullPredX, y: lowerY, mode: 'lines', line: {width: 0}, showlegend: false, hoverinfo: 'skip' };
 
             const traceUpper = {
-                x: fullPredX,
-                y: upperY,
-                fill: 'tonexty',
+                x: fullPredX, y: upperY, fill: 'tonexty',
                 fillcolor: isDark ? 'rgba(180, 0, 255, 0.1)' : 'rgba(180, 0, 255, 0.2)',
-                mode: 'lines',
-                line: {width: 0},
-                name: 'Incerteza (95%)',
-                hoverinfo: 'skip'
+                mode: 'lines', line: {width: 0}, name: 'Incerteza (95%)', hoverinfo: 'skip'
             };
 
             const tracePred = {
-                x: fullPredX,
-                y: fullPredY,
-                type: 'scatter',
-                mode: 'lines+markers',
-                name: 'IA Predição',
-                line: { 
-                    color: isDark ? '#d35dff' : '#b400ff', 
-                    width: 3, 
-                    dash: 'dot' 
-                },
-                marker: { size: 6 }
+                x: fullPredX, y: fullPredY, type: 'scatter', mode: 'lines+markers', name: 'IA Predição',
+                line: { color: isDark ? '#d35dff' : '#b400ff', width: 3, dash: 'dot' }, marker: { size: 6 }
             };
 
-            // Neon Glow Effect (Duplicate Trace)
             const traceGlow = {
-                x: fullPredX,
-                y: fullPredY,
-                type: 'scatter',
-                mode: 'lines',
-                showlegend: false,
-                hoverinfo: 'skip',
-                line: { 
-                    color: isDark ? 'rgba(211, 93, 255, 0.3)' : 'rgba(180, 0, 255, 0.4)', 
-                    width: 15
-                }
+                x: fullPredX, y: fullPredY, type: 'scatter', mode: 'lines', showlegend: false, hoverinfo: 'skip',
+                line: { color: isDark ? 'rgba(211, 93, 255, 0.3)' : 'rgba(180, 0, 255, 0.4)', width: 15 }
             };
 
             const layout = {
                 title: { text: `Previsão: ${data.ticker}`, font: { color: colorText, size: 18 } },
-                paper_bgcolor: 'transparent',
-                plot_bgcolor: 'transparent',
-                xaxis: { 
-                    gridcolor: gridColor, 
-                    tickfont: { color: colorText },
-                    title: 'Data'
-                },
-                yaxis: { 
-                    gridcolor: gridColor, 
-                    tickfont: { color: colorText },     
-                    title: 'Preço' 
-                },
-                showlegend: true,
-                legend: { font: { color: colorText }, orientation: 'h', y: -0.2 },
+                paper_bgcolor: 'transparent', plot_bgcolor: 'transparent',
+                xaxis: { gridcolor: gridColor, tickfont: { color: colorText }, title: 'Data' },
+                yaxis: { gridcolor: gridColor, tickfont: { color: colorText }, title: 'Preço' },
+                showlegend: true, legend: { font: { color: colorText }, orientation: 'h', y: -0.2 },
                 margin: { t: 40, r: 20, l: 40, b: 40 }
             };
 
             Plotly.newPlot('chartDiv', [traceHistory, traceLower, traceUpper, traceGlow, tracePred], layout, {responsive: true, displayModeBar: false});
         }
+
 
         function renderGauge(value) {
             // Value 0-100

@@ -881,139 +881,144 @@ def calculate_technical_features(df):
 def predict_price():
     try:
         data = request.get_json()
-        ticker = data.get('ticker', 'BTC-USD')
         
-        # 1. Download Data (2 Years)
-        df = yf.download(ticker, period="2y", interval="1d", progress=False, auto_adjust=False)
-        
-        if df.empty:
-            return jsonify({"error": "Ticker not found or no data."}), 404
+        # 1. Parse Dynamic Parameters
+        tickers = data.get('tickers', [])
+        # Fallback for single ticker input (legacy support)
+        if not tickers and 'ticker' in data:
+            tickers = [data.get('ticker')]
             
-        # Clean MultiIndex
-        if isinstance(df.columns, pd.MultiIndex):
-             try:
-                if ticker in df.columns.get_level_values(1):
-                    df = df.xs(ticker, axis=1, level=1)
-                else:
-                    df.columns = df.columns.get_level_values(0)
-             except:
-                df.columns = df.columns.get_level_values(0)
+        period_years = int(data.get('period_years', 2))
+        horizon_days = int(data.get('horizon_days', 7))
+        
+        # Validation
+        if not tickers:
+            return jsonify({"error": "No tickers provided."}), 400
+        
+        period_str = f"{period_years}y"
+        results = {}
+        
+        # 2. Batch Processing Loop
+        for ticker in tickers:
+            try:
+                # A. Download Data
+                df = yf.download(ticker, period=period_str, interval="1d", progress=False, auto_adjust=False)
                 
-        df.columns = [c.capitalize() for c in df.columns] # Ensure Close, High, Low...
+                if df.empty:
+                    results[ticker] = {"error": "No data found."}
+                    continue
+                    
+                # Clean MultiIndex
+                if isinstance(df.columns, pd.MultiIndex):
+                     try:
+                        if ticker in df.columns.get_level_values(1):
+                            df = df.xs(ticker, axis=1, level=1)
+                        else:
+                            df.columns = df.columns.get_level_values(0)
+                     except:
+                        df.columns = df.columns.get_level_values(0)
+                        
+                df.columns = [c.capitalize() for c in df.columns]
+                
+                # B. Feature Engineering
+                df = calculate_technical_features(df)
+                
+                if len(df) < 60:
+                    results[ticker] = {"error": "Not enough data (min 60 days)."}
+                    continue
+                    
+                # C. Prepare ML Dataset (Return-Based)
+                features = ['Dist_SMA7', 'Dist_SMA21', 'RSI', 'Volatility', 'Ret_1', 'Ret_3', 'Ret_5']
+                X = df[features]
+                y = df['Close'].shift(-1) / df['Close'] # Target Ratio
+                
+                X = X[:-1]
+                y = y[:-1]
+                
+                X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=False)
+                
+                model = RandomForestRegressor(n_estimators=100, random_state=42)
+                model.fit(X_train, y_train)
+                score = model.score(X_test, y_test)
+                
+                # D. Recursive Prediction (Dynamic Horizon)
+                last_row_feat = df.iloc[[-1]][features].copy()
+                last_close = df['Close'].iloc[-1]
+                
+                predictions = []
+                bounds_upper = []
+                bounds_lower = []
+                
+                test_preds = model.predict(X_test)
+                residuals = y_test - test_preds
+                std_resid = np.std(residuals)
+                
+                history_window = df.iloc[-60:].copy()
+                current_price = last_close
+                future_dates = []
+                last_date = df.index[-1]
+                
+                for i in range(horizon_days):
+                    temp_df = calculate_technical_features(history_window.copy())
+                    if temp_df.empty: break
+                    
+                    input_feat = temp_df.iloc[[-1]][features]
+                    pred_ratio = model.predict(input_feat)[0]
+                    next_price = current_price * pred_ratio
+                    predictions.append(next_price)
+                    
+                    # Uncertainty grows with timeframe
+                    margin_ratio = 1.96 * std_resid * np.sqrt(i+1)
+                    bounds_upper.append(current_price * (pred_ratio + margin_ratio))
+                    bounds_lower.append(current_price * (pred_ratio - margin_ratio))
+                    
+                    next_date = last_date + pd.Timedelta(days=i+1)
+                    future_dates.append(next_date.strftime('%Y-%m-%d'))
+                    
+                    new_row = pd.DataFrame({'Open': [next_price], 'High': [next_price], 'Low': [next_price], 'Close': [next_price], 'Volume': [0]}, index=[next_date])
+                    history_window = pd.concat([history_window, new_row])
+                    current_price = next_price
+                
+                # E. Result Construction
+                history_final = df.iloc[-60:]
+                
+                trend = "Lateral"
+                if predictions[-1] > predictions[0] * 1.01: trend = "Alta"
+                elif predictions[-1] < predictions[0] * 0.99: trend = "Baixa"
+                
+                slope = (predictions[-1] - predictions[0]) / predictions[0]
+                # Normalize sentiment impact by horizon length (longer horizon = bigger potential change)
+                # Standardize to ~1% change per 7 days
+                time_factor = 7 / horizon_days
+                normalized_slope = slope * time_factor
+                
+                sentiment = 50 + (normalized_slope * 1000)
+                sentiment = max(0, min(100, sentiment))
+                
+                safe_score = max(0, min(1, score))
+                score_display = 60 + (safe_score * 20)
+                
+                results[ticker] = {
+                    "sentiment": round(sentiment, 1),
+                    "dates_history": history_final.index.strftime('%Y-%m-%d').tolist(),
+                    "prices_history": history_final['Close'].tolist(),
+                    "dates_future": future_dates,
+                    "prices_predicted": predictions,
+                    "upper_bound": bounds_upper,
+                    "lower_bound": bounds_lower,
+                    "metrics": {
+                        "score": round(score_display, 1),
+                        "raw_score": round(score * 100, 2),
+                        "trend": trend,
+                        "volatility": f"{history_final['Volatility'].iloc[-1]*100:.2f}%"
+                    }
+                }
+                
+            except Exception as e:
+                logger.error(f"Error predicting {ticker}: {e}")
+                results[ticker] = {"error": str(e)}
         
-        # 2. Feature Engineering
-        df = calculate_technical_features(df)
-        
-        if len(df) < 60:
-            return jsonify({"error": "Not enough data for prediction."}), 400
-            
-        # 3. Prepare ML Dataset
-        # Target: Prediction of NEXT Day Ratio (Close_t+1 / Close_t)
-        # We predict Returns to handle All-Time Highs (Extrapolation)
-        features = ['Dist_SMA7', 'Dist_SMA21', 'RSI', 'Volatility', 'Ret_1', 'Ret_3', 'Ret_5']
-        X = df[features]
-        y = df['Close'].shift(-1) / df['Close'] # Target Ratio
-        
-        # Drop last row (NaN target)
-        X = X[:-1]
-        y = y[:-1]
-        
-        # Train/Test Split
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=False)
-        
-        # 4. Train Model
-        model = RandomForestRegressor(n_estimators=100, random_state=42)
-        model.fit(X_train, y_train)
-        
-        # Evaluate
-        score = model.score(X_test, y_test)
-        
-        # 5. Recursive Prediction (Next 7 Days)
-        last_row_feat = df.iloc[[-1]][features].copy()
-        last_close = df['Close'].iloc[-1]
-        
-        predictions = []
-        bounds_upper = []
-        bounds_lower = []
-        
-        # Estimate uncertainty (std dev of residuals on test set)
-        test_preds = model.predict(X_test)
-        residuals = y_test - test_preds
-        std_resid = np.std(residuals)
-        
-        # Recursive Loop
-        # We need a rolling history to calc features for next steps
-        history_window = df.iloc[-60:].copy() # Keep last 60 for indicators
-        
-        current_price = last_close
-        future_dates = []
-        last_date = df.index[-1]
-        
-        for i in range(7):
-            # Recalculate indicators on history_window
-            temp_df = calculate_technical_features(history_window.copy())
-            if temp_df.empty: break
-            
-            input_feat = temp_df.iloc[[-1]][features]
-            
-            # Predict Ratio (e.g. 1.01 for 1% gain)
-            pred_ratio = model.predict(input_feat)[0]
-            
-            # Calculate Next Price
-            next_price = current_price * pred_ratio
-            predictions.append(next_price)
-            
-            # Confidence interval (on the ratio first, then price)
-            # Uncertainty grows with time
-            margin_ratio = 1.96 * std_resid * np.sqrt(i+1)
-            
-            bounds_upper.append(current_price * (pred_ratio + margin_ratio))
-            bounds_lower.append(current_price * (pred_ratio - margin_ratio))
-            
-            next_date = last_date + pd.Timedelta(days=i+1)
-            future_dates.append(next_date.strftime('%Y-%m-%d'))
-            
-            # Update history window
-            new_row = pd.DataFrame({
-                'Open': [next_price], 'High': [next_price], 'Low': [next_price], 'Close': [next_price], 'Volume': [0]
-            }, index=[next_date])
-            
-            history_window = pd.concat([history_window, new_row])
-            current_price = next_price
-        
-        # 6. Response Construction
-        history_final = df.iloc[-60:]
-        
-        trend = "Lateral"
-        if predictions[-1] > predictions[0] * 1.01: trend = "Alta"
-        elif predictions[-1] < predictions[0] * 0.99: trend = "Baixa"
-        
-        # Sentiment Calculation (0-100) based on slope
-        # Max slope reference ~5% change in 7 days
-        slope = (predictions[-1] - predictions[0]) / predictions[0]
-        sentiment = 50 + (slope * 1000) # Simple linear map
-        sentiment = max(0, min(100, sentiment)) # Clamp 0-100
-        
-        # Normalize Score to 60-80% range for realism
-        safe_score = max(0, min(1, score))
-        score_display = 60 + (safe_score * 20)
-        
-        return jsonify({
-            "ticker": ticker,
-            "sentiment": round(sentiment, 1),
-            "dates_history": history_final.index.strftime('%Y-%m-%d').tolist(),
-            "prices_history": history_final['Close'].tolist(),
-            "dates_future": future_dates,
-            "prices_predicted": predictions,
-            "upper_bound": bounds_upper,
-            "lower_bound": bounds_lower,
-            "metrics": {
-                "score": round(score_display, 1), # Normalized Score
-                "raw_score": round(score * 100, 2),
-                "trend": trend,
-                "volatility": f"{history_final['Volatility'].iloc[-1]*100:.2f}%"
-            }
-        })
+        return jsonify({"results": results})
         
     except Exception as e:
         logger.error(f"Prediction error: {e}")
