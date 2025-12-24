@@ -367,7 +367,7 @@
             <div class="dropdown" style="margin-left: 20px;">
                 <button class="nav-btn-drop" onclick="this.nextElementSibling.classList.toggle('show')"><span data-i18n="nav_analysis">Análise</span> ▼</button>
                 <div class="dropdown-content">
-                    <a href="predicao" class="protected-link">Modelo de Predição</a>
+                    <a href="predicao" class="protected-link" data-i18n="nav_prediction">Modelo de Predição</a>
                     <a href="analise" class="protected-link" data-i18n="nav_risk">Correlação & Risco</a>
                     <a href="simulacao" class="protected-link" data-i18n="nav_simulations">Simulações</a>
                     <a href="otimizacao" class="protected-link" data-i18n="nav_optimization">Otimização Markowitz</a>
@@ -376,47 +376,50 @@
             </div>
 
             <button id="theme-btn" class="theme-toggle" onclick="toggleTheme()" title="Alternar Tema">☀️</button>
-            <button id="lang-toggle" class="theme-toggle" onclick="toggleLanguage()" style="margin-left: 10px;">EN</button>
+            <!-- Language Toggle -->
+            <button id="lang-toggle" onclick="toggleLanguage()" class="nav-btn-drop" style="margin-left: 20px;" title="Switch Language">
+                <span style="font-weight:700; font-size:14px;">PT</span>
+            </button>
             <div id="nav-auth" style="display: none; align-items: center; margin-left: 20px;">
-                 <div style="margin-left: 15px; font-size: 14px; color: rgba(255, 255, 255, 0.9);">Olá, <strong id="username-display">User</strong></div>
-                 <a href="#" class="btn-logout" onclick="logout()" style="margin-left: 15px; color: #ff6b6b; text-decoration: none;">Sair</a>
+                 <div style="margin-left: 15px; font-size: 14px; color: rgba(255, 255, 255, 0.9);"><span data-i18n="nav_hello">Olá</span>, <strong id="username-display">User</strong></div>
+                 <a href="#" class="btn-logout" onclick="logout()" style="margin-left: 15px; color: #ff6b6b; text-decoration: none;" data-i18n="nav_logout">Sair</a>
             </div>
             <div id="nav-public" style="display: flex; align-items: center; margin-left: 20px;">
-                 <a href="login.html" style="background:var(--accent-primary); color:white; padding:8px 16px; border-radius:6px; text-decoration:none;">Entrar</a>
+                 <a href="login.html" style="background:var(--accent-primary); color:white; padding:8px 16px; border-radius:6px; text-decoration:none;" data-i18n="link_login">Entrar</a>
             </div>
         </nav>
     </header>
 
     <div class="container">
-        <h1>Modelo de Predição</h1>
-        <p class="subtitle">Projeção avançada de preços utilizando Machine Learning. O algoritmo analisa padrões históricos e indicadores técnicos para estimar tendências futuras com base nos parâmetros selecionados.</p>
+        <h1 data-i18n="pred_title">Modelo de Predição</h1>
+        <p class="subtitle" data-i18n="pred_subtitle">Projeção avançada de preços utilizando Machine Learning. O algoritmo analisa padrões históricos e indicadores técnicos para estimar tendências futuras com base nos parâmetros selecionados.</p>
 
         <div class="control-panel">
             <div class="input-group" style="flex: 2;">
-                <label>Ativos (Tags)</label>
+                <label data-i18n="pred_assets_label">Ativos (Tags)</label>
                 <div class="tags-input-container" onclick="document.getElementById('tickerInput').focus()">
                     <div id="tickerTags"></div>
-                    <input type="text" id="tickerInput" placeholder="Ex: BTC-USD, PETR4.SA (Enter)" autocomplete="off">
+                    <input type="text" id="tickerInput" placeholder="Ex: BTC-USD, PETR4.SA (Enter)" data-i18n="pred_placeholder" autocomplete="off">
                 </div>
                 <ul id="suggestions"></ul>
             </div>
             
             <div class="input-group">
-                <label>Treino (Anos)</label>
+                <label data-i18n="pred_train_label">Treino (Anos)</label>
                 <select id="trainPeriod" style="padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-main);">
-                    <option value="2">2 Anos (Rápido)</option>
-                    <option value="3">3 Anos</option>
-                    <option value="4">4 Anos</option>
-                    <option value="5">5 Anos (Longo Prazo)</option>
+                    <option value="2">2 <span data-i18n="pred_year_suffix">Anos</span></option>
+                    <option value="3">3 <span data-i18n="pred_year_suffix">Anos</span></option>
+                    <option value="4">4 <span data-i18n="pred_year_suffix">Anos</span></option>
+                    <option value="5">5 <span data-i18n="pred_year_suffix">Anos</span></option>
                 </select>
             </div>
 
             <div class="input-group">
-                <label>Horizonte: <span id="horizonVal">7</span> Dias</label>
+                <label data-i18n="pred_horizon_label">Horizonte: <span id="horizonVal">7</span> Dias</label>
                 <input type="range" id="forecastHorizon" min="5" max="30" value="7" oninput="document.getElementById('horizonVal').innerText = this.value">
             </div>
 
-            <button class="btn-predict" onclick="runPrediction()">🤖 Gerar Análise</button>
+            <button class="btn-predict" onclick="runPrediction()" data-i18n="pred_btn_analyze">🤖 Gerar Análise</button>
         </div>
 
         <div class="result-tabs" id="resultTabs"></div>
@@ -426,7 +429,7 @@
             <div class="insight-card">
                 <div class="icon-box" id="icon-trend">📊</div>
                 <div class="insight-content">
-                    <h4>Tendência (7 Dias)</h4>
+                    <h4 data-i18n="pred_trend">Tendência (7 Dias)</h4>
                     <div class="value" id="val-trend">---</div>
                 </div>
             </div>
@@ -434,7 +437,7 @@
             <div class="insight-card">
                 <div class="icon-box" style="color: var(--neon-purple);">🎯</div>
                 <div class="insight-content">
-                    <h4>Precisão do Modelo</h4>
+                    <h4 data-i18n="pred_accuracy">Precisão do Modelo</h4>
                     <div class="value" id="val-score">---</div>
                 </div>
             </div>
@@ -442,13 +445,9 @@
              <div class="insight-card">
                 <div class="icon-box">⚡</div>
                 <div class="insight-content">
-                    <h4>Volatilidade Recente</h4>
+                    <h4 data-i18n="pred_volatility">Volatilidade Recente</h4>
                     <div class="value" id="val-vol">---</div>
                 </div>
-            </div>
-            <!-- Sentiment Gauge -->
-            <div class="insight-card" style="min-width: 250px; justify-content: center; padding: 10px;">
-                 <div id="gaugeDiv" style="width: 100%; height: 150px;"></div>
             </div>
         </div>
 
@@ -461,8 +460,8 @@
         </div>
 
         <div style="margin-top:20px; font-size:12px; color:var(--text-muted);">
-            * O modelo utiliza Random Forest Regressor treinado com indicadores técnicos (SMA, RSI, Volatilidade).<br>
-            * A área sombreada representa o intervalo de incerteza (95%).
+            <div data-i18n="pred_footer_1">* O modelo utiliza Random Forest Regressor treinado com indicadores técnicos (SMA, RSI, Volatilidade).</div>
+            <div data-i18n="pred_footer_2">* A área sombreada representa o intervalo de incerteza (95%).</div>
         </div>
     </div>
 
@@ -652,12 +651,19 @@
             const volEl = document.getElementById('val-vol');
             const iconTrend = document.getElementById('icon-trend');
 
-            trendEl.innerText = data.metrics.trend;
+            // Translate Trend
+            const lang = window.currentLang || 'pt';
+            let trendText = data.metrics.trend; // Default to backend value
+            
+            if(data.metrics.trend === 'Alta') trendText = translations[lang].trend_up;
+            if(data.metrics.trend === 'Baixa') trendText = translations[lang].trend_down;
+            if(data.metrics.trend === 'Lateral') trendText = translations[lang].trend_neutral;
+
+            trendEl.innerText = trendText;
             scoreEl.innerText = data.metrics.score + "%";
             volEl.innerText = data.metrics.volatility;
 
-            // Gauge
-            if(data.sentiment !== undefined) renderGauge(data.sentiment);
+
 
             // Trend Styling
             if(data.metrics.trend === 'Alta') {
@@ -685,6 +691,8 @@
            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
            const colorText = isDark ? '#e6f1ff' : '#1a1a1a';
            const gridColor = isDark ? '#233554' : '#e0e0e0';
+           const lang = window.currentLang || 'pt';
+           const t = translations[lang]; // Shortcut
             
             // 1. History (Solid)
             const traceHistory = {
@@ -692,7 +700,7 @@
                 y: data.prices_history,
                 type: 'scatter',
                 mode: 'lines',
-                name: 'Histórico',
+                name: t.pred_chart_history,
                 line: { color: '#007bff', width: 2 }
             };
 
@@ -717,7 +725,7 @@
                 fillcolor: isDark ? 'rgba(51, 153, 255, 0.1)' : 'rgba(0, 123, 255, 0.2)',
                 mode: 'lines',
                 line: {width: 0},
-                name: 'Incerteza (95%)',
+                name: t.pred_chart_unc,
                 hoverinfo: 'skip'
             };
 
@@ -726,7 +734,7 @@
                 y: fullPredY,
                 type: 'scatter',
                 mode: 'lines+markers',
-                name: 'IA Predição',
+                name: t.pred_chart_pred,
                 line: { 
                     color: isDark ? '#3399ff' : '#007bff', 
                     width: 3, 
@@ -750,18 +758,18 @@
             };
 
             const layout = {
-                title: { text: `Previsão: ${data.ticker}`, font: { color: colorText, size: 18 } },
+                title: { text: `${t.pred_chart_title}: ${data.ticker}`, font: { color: colorText, size: 18 } },
                 paper_bgcolor: 'transparent',
                 plot_bgcolor: 'transparent',
                 xaxis: { 
                     gridcolor: gridColor, 
                     tickfont: { color: colorText },
-                    title: 'Data'
+                    title: t.pred_chart_xaxis
                 },
                 yaxis: { 
                     gridcolor: gridColor, 
                     tickfont: { color: colorText },     
-                    title: 'Preço' 
+                    title: t.pred_chart_yaxis 
                 },
                 showlegend: true,
                 legend: { font: { color: colorText }, orientation: 'h', y: -0.2 },
@@ -772,42 +780,7 @@
         }
 
 
-        function renderGauge(value) {
-            // Value 0-100
-            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-            const colorText = isDark ? '#e6f1ff' : '#1a1a1a';
 
-            const data = [
-                {
-                    type: "indicator",
-                    mode: "gauge+number",
-                    value: value,
-                    title: { text: "Sentimento IA", font: { size: 14, color: colorText } },
-                    number: { font: { size: 20, color: colorText } },
-                    gauge: {
-                        axis: { range: [null, 100], tickwidth: 1, tickcolor: colorText },
-                        bar: { color: isDark ? "#3399ff" : "#007bff" },
-                        bgcolor: "transparent",
-                        borderwidth: 2,
-                        bordercolor: "rgba(128,128,128,0.5)",
-                        steps: [
-                            { range: [0, 40], color: "rgba(214, 48, 49, 0.3)" }, // Bearish
-                            { range: [40, 60], color: "rgba(178, 190, 195, 0.3)" }, // Neutral
-                            { range: [60, 100], color: "rgba(0, 184, 148, 0.3)" } // Bullish
-                        ],
-                    }
-                }
-            ];
-
-            const layout = {
-                width: 200, height: 140,
-                margin: { t: 30, b: 10, l: 30, r: 30 },
-                paper_bgcolor: "transparent",
-                font: { color: colorText, family: "Manrope" }
-            };
-
-            Plotly.newPlot('gaugeDiv', data, layout, {responsive: true, displayModeBar: false});
-        }
     </script>
 </body>
 </html>

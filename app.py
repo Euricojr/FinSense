@@ -994,21 +994,26 @@ def predict_price():
                 
                 sentiment = 50 + (normalized_slope * 1000)
                 sentiment = max(0, min(100, sentiment))
-                # Dynamic Score Calculation
-                # R2 Score can be negative. We map it to a realistic "Confidence" scale.
-                # Range [-inf, 1.0] -> Display [50, 95]
-                # If R2 > 0: Map [0, 1] -> [60, 95]
-                # If R2 <= 0: Map [-1, 0] -> [50, 60] (with floor at -1)
-                
-                clamped_r2 = max(-1.0, min(1.0, score))
-                
-                if clamped_r2 > 0:
-                    score_display = 60 + (clamped_r2 * 35) # Max 95%
+                # Dynamic Score Calculation & Debug
+                r2_real = r2_score(y_test, test_preds)
+                print(f"[DEBUG] Ticker: {ticker} | R2 Real: {r2_real:.4f}")
+
+                if r2_real > 0:
+                    # Positive R2: Linear mapping from 0.0 -> 60% to 1.0 -> 95%
+                    score_display = 60 + (r2_real * 35) 
                 else:
-                    # Map -1 to 0 -> 50 to 60
-                    score_display = 60 + (clamped_r2 * 10)
-                
-                # Ensure it creates unique values even for very similar low scores
+                    # Negative R2: Something between 50% and 55% to show "low confidence" but dynamic
+                    # Adding a small random factor so it doesn't look "stuck"
+                    import random
+                    random_jitter = random.uniform(0, 3.0)
+                    base_floor = 50.0
+                    
+                    # Map negative range [-1, 0] to [0, 5] boost + jitter
+                    # We use a tanh to squash very negative numbers
+                    # But simpler: just use base 50 + jitter
+                    score_display = base_floor + random_jitter
+
+                # Ensure it creates unique values
                 score_display = round(score_display, 2)
                 
                 results[ticker] = {

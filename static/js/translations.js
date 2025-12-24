@@ -228,7 +228,37 @@ const translations = {
         opt_period_1y: "1 Ano",
         opt_period_2y: "2 Anos",
         opt_period_3y: "3 Anos",
-        opt_period_5y: "5 Anos"
+        opt_period_5y: "5 Anos",
+
+        // Prediction
+        pred_title: "Modelo de Predição",
+        pred_subtitle: "Projeção avançada de preços utilizando Machine Learning. O algoritmo analisa padrões históricos e indicadores técnicos para estimar tendências futuras com base nos parâmetros selecionados.",
+        pred_assets_label: "ATIVOS (TAGS)",
+        pred_train_label: "TREINO (ANOS)",
+        pred_horizon_label: "HORIZONTE: <span id='horizonValue'>7</span> DIAS",
+        pred_btn_analyze: "Gerar Análise",
+        pred_trend: "TENDÊNCIA",
+        pred_accuracy: "PRECISÃO DO MODELO",
+        pred_volatility: "VOLATILIDADE RECENTE",
+        pred_sentiment: "Sentimento IA",
+        pred_placeholder: "Ex: BTC-USD, PETR4.SA (Enter)",
+        pred_year_suffix: "Anos",
+        pred_chart_title: "Previsão",
+        pred_chart_history: "Histórico",
+        pred_chart_pred: "IA Predição",
+        pred_chart_unc: "Incerteza (95%)",
+        pred_gauge_title: "Sentimento IA",
+        pred_footer_1: "* O modelo utiliza Random Forest Regressor treinado com indicadores técnicos (SMA, RSI, Volatilidade).",
+        pred_footer_2: "* A área sombreada representa o intervalo de incerteza (95%).",
+        nav_prediction: "Modelo de Predição",
+        trend_up: "Alta",
+        trend_down: "Baixa",
+        trend_up: "Alta",
+        trend_down: "Baixa",
+        trend_neutral: "Lateral",
+        nav_hello: "Olá",
+        pred_chart_xaxis: "Data",
+        pred_chart_yaxis: "Preço"
     },
     en: {
         // Nav
@@ -460,7 +490,37 @@ const translations = {
         opt_period_1y: "1 Year",
         opt_period_2y: "2 Years",
         opt_period_3y: "3 Years",
-        opt_period_5y: "5 Years"
+        opt_period_5y: "5 Years",
+
+        // Prediction
+        pred_title: "Prediction Model",
+        pred_subtitle: "Advanced price projection using Machine Learning. The algorithm analyzes historical patterns and technical indicators to estimate future trends based on selected parameters.",
+        pred_assets_label: "ASSETS (TAGS)",
+        pred_train_label: "TRAINING (YEARS)",
+        pred_horizon_label: "HORIZON: <span id='horizonValue'>7</span> DAYS",
+        pred_btn_analyze: "Generate Analysis",
+        pred_trend: "TREND",
+        pred_accuracy: "MODEL ACCURACY",
+        pred_volatility: "RECENT VOLATILITY",
+        pred_sentiment: "AI Sentiment",
+        pred_placeholder: "Ex: BTC-USD, MSFT (Enter)",
+        pred_year_suffix: "Years",
+        pred_chart_title: "Forecast",
+        pred_chart_history: "History",
+        pred_chart_pred: "AI Prediction",
+        pred_chart_unc: "Uncertainty (95%)",
+        pred_gauge_title: "AI Sentiment",
+        pred_footer_1: "* The model uses Random Forest Regressor trained with technical indicators (SMA, RSI, Volatility).",
+        pred_footer_2: "* The shaded area represents the 95% uncertainty interval.",
+        nav_prediction: "Prediction Model",
+        trend_up: "Up",
+        trend_down: "Down",
+        trend_up: "Up",
+        trend_down: "Down",
+        trend_neutral: "Sideways",
+        nav_hello: "Hello",
+        pred_chart_xaxis: "Date",
+        pred_chart_yaxis: "Price"
     }
 };
 
