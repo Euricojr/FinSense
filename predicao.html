@@ -297,9 +297,9 @@
             box-shadow: 0 0 0 2px rgba(0, 86, 179, 0.2);
         }
         .tag {
-            background: rgba(180, 0, 255, 0.2); 
-            color: var(--neon-purple);
-            border: 1px solid rgba(180, 0, 255, 0.4);
+            background: rgba(0, 123, 255, 0.2); 
+            color: var(--neon-purple); /* Uses the new blue variable */
+            border: 1px solid rgba(0, 123, 255, 0.4);
             padding: 4px 10px; 
             border-radius: 6px; 
             font-size: 13px; 
@@ -710,27 +710,60 @@
             const traceLower = { x: fullPredX, y: lowerY, mode: 'lines', line: {width: 0}, showlegend: false, hoverinfo: 'skip' };
 
             const traceUpper = {
-                x: fullPredX, y: upperY, fill: 'tonexty',
-                fillcolor: isDark ? 'rgba(180, 0, 255, 0.1)' : 'rgba(180, 0, 255, 0.2)',
-                mode: 'lines', line: {width: 0}, name: 'Incerteza (95%)', hoverinfo: 'skip'
+                x: fullPredX,
+                y: upperY,
+                fill: 'tonexty',
+                fillcolor: isDark ? 'rgba(51, 153, 255, 0.1)' : 'rgba(0, 123, 255, 0.2)',
+                mode: 'lines',
+                line: {width: 0},
+                name: 'Incerteza (95%)',
+                hoverinfo: 'skip'
             };
 
             const tracePred = {
-                x: fullPredX, y: fullPredY, type: 'scatter', mode: 'lines+markers', name: 'IA Predição',
-                line: { color: isDark ? '#d35dff' : '#b400ff', width: 3, dash: 'dot' }, marker: { size: 6 }
+                x: fullPredX,
+                y: fullPredY,
+                type: 'scatter',
+                mode: 'lines+markers',
+                name: 'IA Predição',
+                line: { 
+                    color: isDark ? '#3399ff' : '#007bff', 
+                    width: 3, 
+                    dash: 'dot' 
+                },
+                marker: { size: 6 }
             };
 
+            // Neon Glow Effect (Duplicate Trace)
             const traceGlow = {
-                x: fullPredX, y: fullPredY, type: 'scatter', mode: 'lines', showlegend: false, hoverinfo: 'skip',
-                line: { color: isDark ? 'rgba(211, 93, 255, 0.3)' : 'rgba(180, 0, 255, 0.4)', width: 15 }
+                x: fullPredX,
+                y: fullPredY,
+                type: 'scatter',
+                mode: 'lines',
+                showlegend: false,
+                hoverinfo: 'skip',
+                line: { 
+                    color: isDark ? 'rgba(51, 153, 255, 0.3)' : 'rgba(0, 123, 255, 0.4)', 
+                    width: 15
+                }
             };
 
             const layout = {
                 title: { text: `Previsão: ${data.ticker}`, font: { color: colorText, size: 18 } },
-                paper_bgcolor: 'transparent', plot_bgcolor: 'transparent',
-                xaxis: { gridcolor: gridColor, tickfont: { color: colorText }, title: 'Data' },
-                yaxis: { gridcolor: gridColor, tickfont: { color: colorText }, title: 'Preço' },
-                showlegend: true, legend: { font: { color: colorText }, orientation: 'h', y: -0.2 },
+                paper_bgcolor: 'transparent',
+                plot_bgcolor: 'transparent',
+                xaxis: { 
+                    gridcolor: gridColor, 
+                    tickfont: { color: colorText },
+                    title: 'Data'
+                },
+                yaxis: { 
+                    gridcolor: gridColor, 
+                    tickfont: { color: colorText },     
+                    title: 'Preço' 
+                },
+                showlegend: true,
+                legend: { font: { color: colorText }, orientation: 'h', y: -0.2 },
                 margin: { t: 40, r: 20, l: 40, b: 40 }
             };
 
@@ -752,7 +785,7 @@
                     number: { font: { size: 20, color: colorText } },
                     gauge: {
                         axis: { range: [null, 100], tickwidth: 1, tickcolor: colorText },
-                        bar: { color: "#d35dff" },
+                        bar: { color: isDark ? "#3399ff" : "#007bff" },
                         bgcolor: "transparent",
                         borderwidth: 2,
                         bordercolor: "rgba(128,128,128,0.5)",
