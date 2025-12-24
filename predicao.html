@@ -415,8 +415,8 @@
             </div>
 
             <div class="input-group">
-                <label data-i18n="pred_horizon_label">Horizonte: <span id="horizonVal">7</span> Dias</label>
-                <input type="range" id="forecastHorizon" min="5" max="30" value="7" oninput="document.getElementById('horizonVal').innerText = this.value">
+                <label data-i18n="pred_horizon_label">Horizonte: <span id="horizonValue">7</span> Dias</label>
+                <input type="range" id="forecastHorizon" min="5" max="30" value="7" oninput="document.getElementById('horizonValue').innerText = this.value">
             </div>
 
             <button class="btn-predict" onclick="runPrediction()" data-i18n="pred_btn_analyze">🤖 Gerar Análise</button>

@@ -10,3 +10,4 @@ gunicorn
 werkzeug
 PyPortfolioOpt
 scipy
+scikit-learn
