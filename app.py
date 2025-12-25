@@ -171,7 +171,16 @@ class Transaction(db.Model):
     ticker = db.Column(db.String(20), nullable=False)
     date = db.Column(db.String(10), nullable=False) # YYYY-MM-DD
     qty = db.Column(db.Float, nullable=False)
+    qty = db.Column(db.Float, nullable=False)
     price = db.Column(db.Float, nullable=False)
+
+class Expense(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    description = db.Column(db.String(200), nullable=False)
+    amount = db.Column(db.Float, nullable=False)
+    date = db.Column(db.String(10), nullable=False) # YYYY-MM-DD
+    category = db.Column(db.String(50), nullable=False)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -208,6 +217,11 @@ def otimizacao():
 @login_required
 def predicao():
     return render_template('predicao.html', user=current_user)
+
+@app.route('/financas')
+@login_required
+def financas():
+    return render_template('financas.html', user=current_user)
 
 # --- AUTH ROUTES ---
 @app.route('/login', methods=['GET', 'POST'])
@@ -289,7 +303,99 @@ def delete_transaction(id):
         db.session.delete(tx)
         db.session.commit()
         return jsonify({'message': 'Deleted'})
+    if tx:
+        db.session.delete(tx)
+        db.session.commit()
+        return jsonify({'message': 'Deleted'})
     return jsonify({'error': 'Not found'}), 404
+
+@app.route('/api/expenses', methods=['GET', 'POST', 'DELETE'])
+@login_required
+def manage_expenses():
+    if request.method == 'GET':
+        exps = Expense.query.filter_by(user_id=current_user.id).order_by(Expense.date.desc()).all()
+        return jsonify([{
+            'id': e.id,
+            'description': e.description,
+            'amount': e.amount,
+            'date': e.date,
+            'category': e.category
+        } for e in exps])
+
+    if request.method == 'POST':
+        data = request.json
+        try:
+            new_exp = Expense(
+                user_id=current_user.id,
+                description=data.get('description', 'Despesa'),
+                amount=float(data['amount']),
+                date=data['date'],
+                category=data['category']
+            )
+            db.session.add(new_exp)
+            db.session.commit()
+            return jsonify({'message': 'Expense added', 'id': new_exp.id})
+        except Exception as e:
+            return jsonify({'error': str(e)}), 400
+
+@app.route('/api/expenses/<int:id>', methods=['DELETE'])
+@login_required
+def delete_expense(id):
+    exp = Expense.query.filter_by(id=id, user_id=current_user.id).first()
+    if exp:
+        db.session.delete(exp)
+        db.session.commit()
+        return jsonify({'message': 'Deleted'})
+    return jsonify({'error': 'Not found'}), 404
+
+@app.route('/api/expenses/parse', methods=['POST'])
+@login_required
+def parse_expense():
+    import re
+    from datetime import datetime
+    
+    text = request.json.get('text', '')
+    if not text: return jsonify({"error": "No text provided"}), 400
+
+    # Smart Regex Logic
+    # Extract value (R$ 50,00 | 50 | 50.00)
+    # Simple regex for number (handles comma decimal)
+    amount = 0.0
+    amount_match = re.search(r'(?:R\$)?\s*(\d+(?:[.,]\d{2})?)', text)
+    if amount_match:
+        val_str = amount_match.group(1).replace(',', '.')
+        try: amount = float(val_str)
+        except: pass
+    
+    # Extract Category (Keywords)
+    text_lower = text.lower()
+    category = "Outros"
+    
+    categories = {
+        "Alimentação": ["comida", "restaurante", "almoço", "jantar", "lanche", "mercado", "food", "pizza", "burger", "ifood"],
+        "Transporte": ["uber", "taxi", "ônibus", "gasolina", "combustivel", "carro", "metrô", "passagem"],
+        "Lazer": ["cinema", "filme", "jogo", "game", "show", "ingresso", "netflix", "spotify", "bar"],
+        "Moradia": ["aluguel", "condominio", "luz", "agua", "internet", "casa"],
+        "Saúde": ["medico", "remedio", "farmacia", "hospital", "dentista", "exame"]
+    }
+    
+    for cat, keywords in categories.items():
+        if any(k in text_lower for k in keywords):
+            category = cat
+            break
+            
+    # Extract Description (The input text itself, maybe cleaned)
+    description = text
+    
+    # Date (Default today)
+    date = datetime.now().strftime('%Y-%m-%d')
+    
+    return jsonify({
+        "amount": amount,
+        "category": category,
+        "description": description,
+        "date": date
+    })
 
 @app.route('/<path:filename>')
 def serve_static(filename):
