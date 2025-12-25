@@ -180,6 +180,16 @@ class Expense(db.Model):
     description = db.Column(db.String(200), nullable=False)
     amount = db.Column(db.Float, nullable=False)
     date = db.Column(db.String(10), nullable=False) # YYYY-MM-DD
+    amount = db.Column(db.Float, nullable=False)
+    date = db.Column(db.String(10), nullable=False) # YYYY-MM-DD
+    category = db.Column(db.String(50), nullable=False)
+
+class Income(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    description = db.Column(db.String(200), nullable=False)
+    amount = db.Column(db.Float, nullable=False)
+    date = db.Column(db.String(10), nullable=False)
     category = db.Column(db.String(50), nullable=False)
 
 @login_manager.user_loader
@@ -359,7 +369,6 @@ def parse_expense():
 
     # Smart Regex Logic
     # Extract value (R$ 50,00 | 50 | 50.00)
-    # Simple regex for number (handles comma decimal)
     amount = 0.0
     amount_match = re.search(r'(?:R\$)?\s*(\d+(?:[.,]\d{2})?)', text)
     if amount_match:
@@ -367,34 +376,143 @@ def parse_expense():
         try: amount = float(val_str)
         except: pass
     
-    # Extract Category (Keywords)
+    # Extract Type (default Expense) and Category
     text_lower = text.lower()
+    
+    # Check for Income Keywords
+    is_income = any(x in text_lower for x in ['ganhei', 'recebi', 'salário', 'depósito', 'pix recebido', 'vendi'])
+    
     category = "Outros"
     
-    categories = {
-        "Alimentação": ["comida", "restaurante", "almoço", "jantar", "lanche", "mercado", "food", "pizza", "burger", "ifood"],
-        "Transporte": ["uber", "taxi", "ônibus", "gasolina", "combustivel", "carro", "metrô", "passagem"],
-        "Lazer": ["cinema", "filme", "jogo", "game", "show", "ingresso", "netflix", "spotify", "bar"],
-        "Moradia": ["aluguel", "condominio", "luz", "agua", "internet", "casa"],
-        "Saúde": ["medico", "remedio", "farmacia", "hospital", "dentista", "exame"]
-    }
-    
-    for cat, keywords in categories.items():
-        if any(k in text_lower for k in keywords):
-            category = cat
-            break
+    if is_income:
+        # Income Categories
+        if 'salário' in text_lower or 'pagamento' in text_lower: category = 'Salário'
+        elif 'dividendo' in text_lower: category = 'Dividendos'
+        elif 'vend' in text_lower: category = 'Vendas'
+        else: category = 'Outros'
+    else:
+        # Expense Categories
+        categories = {
+            "Alimentação": ["comida", "restaurante", "almoço", "jantar", "lanche", "mercado", "food", "pizza", "burger", "ifood"],
+            "Transporte": ["uber", "taxi", "ônibus", "gasolina", "combustivel", "carro", "metrô", "passagem"],
+            "Lazer": ["cinema", "filme", "jogo", "game", "show", "ingresso", "netflix", "spotify", "bar"],
+            "Moradia": ["aluguel", "condominio", "luz", "agua", "internet", "casa"],
+            "Saúde": ["medico", "remedio", "farmacia", "hospital", "dentista", "exame"]
+        }
+        for cat, keywords in categories.items():
+            if any(k in text_lower for k in keywords):
+                category = cat
+                break
             
-    # Extract Description (The input text itself, maybe cleaned)
+    # Extract Description
     description = text
     
-    # Date (Default today)
     date = datetime.now().strftime('%Y-%m-%d')
     
     return jsonify({
+        "type": "income" if is_income else "expense",
         "amount": amount,
         "category": category,
         "description": description,
         "date": date
+    })
+
+# --- INCOME & SUMMARY API ---
+
+@app.route('/api/incomes', methods=['GET', 'POST'])
+@login_required
+def manage_incomes():
+    if request.method == 'GET':
+        incs = Income.query.filter_by(user_id=current_user.id).order_by(Income.date.desc()).all()
+        return jsonify([{
+            'id': i.id, 'description': i.description, 'amount': i.amount, 
+            'date': i.date, 'category': i.category, 'type': 'income'
+        } for i in incs])
+
+    if request.method == 'POST':
+        data = request.json
+        try:
+            new_inc = Income(
+                user_id=current_user.id,
+                description=data.get('description', 'Receita'),
+                amount=float(data['amount']),
+                date=data['date'],
+                category=data['category']
+            )
+            db.session.add(new_inc)
+            db.session.commit()
+            return jsonify({'message': 'Income added', 'id': new_inc.id})
+        except Exception as e:
+            return jsonify({'error': str(e)}), 400
+
+@app.route('/api/incomes/<int:id>', methods=['DELETE'])
+@login_required
+def delete_income(id):
+    inc = Income.query.filter_by(id=id, user_id=current_user.id).first()
+    if inc:
+        db.session.delete(inc)
+        db.session.commit()
+        return jsonify({'message': 'Deleted'})
+    return jsonify({'error': 'Not found'}), 404
+
+@app.route('/api/financas/summary')
+@login_required
+def financas_summary():
+    # 1. Calculate Totals (Current Month could be filtered, but using All Time for simplicity or last 30 days)
+    # Using All Time for now as requested "Mês" implies filtering but let's stick to available data for robustness first.
+    # Ideally filter by current month.
+    
+    from datetime import datetime
+    today = datetime.now()
+    current_month = today.strftime('%Y-%m')
+    
+    # Expenses
+    exps = Expense.query.filter_by(user_id=current_user.id).all()
+    # Filter for month? Or just take all? request says "Total de Ganhos (Mês)".
+    # Let's simple filter in python for Month
+    
+    month_exps = [e for e in exps if e.date.startswith(current_month)]
+    total_expenses = sum(e.amount for e in month_exps)
+    
+    # Incomes
+    incs = Income.query.filter_by(user_id=current_user.id).all()
+    month_incs = [i for i in incs if i.date.startswith(current_month)]
+    total_income = sum(i.amount for i in month_incs)
+    
+    balance = total_income - total_expenses
+    
+    # Top Category
+    cat_map = {}
+    for e in month_exps:
+        cat_map[e.category] = cat_map.get(e.category, 0) + e.amount
+    
+    top_category = max(cat_map, key=cat_map.get) if cat_map else "Nada"
+    
+    # AI Logic (Rule Based)
+    advice = ""
+    if total_income == 0 and total_expenses == 0:
+        advice = "Nenhum dado financeiro este mês. Comece a registrar para que eu possa julgar seus hábitos!"
+    elif balance < 0:
+        advice = f"Alerta vermelho! Você gastou R$ {abs(balance):.2f} a mais do que ganhou. A culpa é do {top_category}? Corte gastos ou venda algo urgente."
+    elif balance == 0:
+        advice = "Você está no zero a zero. Equilíbrio perfeito ou falta de ambição? Tente salvar pelo menos 10% no próximo mês."
+    else:
+        # Positive balance
+        ratio = (total_expenses / total_income) if total_income > 0 else 0
+        if ratio < 0.5:
+            advice = f"Excelente! Você economizou mais da metade do ganho. Invista esse saldo em FIIs ou Ações Seguras agora mesmo."
+        elif ratio < 0.8:
+            advice = f"Bom trabalho, sobrou dinheiro. Que tal reduzir os gastos com {top_category} para aumentar seus aportes?"
+        else:
+            advice = f"Ufa, sobrou pouco. Cuidado com {top_category}, está consumindo quase tudo. Invista o resto antes que você gaste!"
+            
+    return jsonify({
+        "total_income": total_income,
+        "total_expenses": total_expenses,
+        "balance": balance,
+        "top_category": top_category,
+        "advice": advice,
+        "month": current_month
     })
 
 @app.route('/<path:filename>')
