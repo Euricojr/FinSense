@@ -415,26 +415,50 @@
         }
         
         /* Tags */
-        .tags-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 10px;
-        }
-        .tag {
-            background-color: rgba(77, 163, 255, 0.15);
-            color: var(--accent-primary);
-            border: 1px solid rgba(77, 163, 255, 0.3);
-            padding: 5px 12px;
-            border-radius: 16px;
-            font-size: 13px;
-            font-weight: 600;
-            display: flex;
+        /* Tags - Matching Predicao.html */
+        .tags-input-container {
+            display: flex; 
+            flex-wrap: wrap; 
             align-items: center;
             gap: 6px;
+            background: var(--bg-main);
+            border: 1px solid var(--border-color);
+            padding: 6px 10px; 
+            border-radius: 8px;
+            min-height: 48px;
+            cursor: text;
+            transition: border-color 0.2s;
         }
-        .tag span { cursor: pointer; font-size: 14px; opacity: 0.7; }
-        .tag span:hover { opacity: 1; color: var(--danger-red); }
+        .tags-input-container:focus-within {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 2px rgba(0, 86, 179, 0.2);
+        }
+        .tags-input-container input {
+            border: none !important; 
+            background: transparent !important; 
+            outline: none;
+            flex: 1; 
+            min-width: 150px; 
+            padding: 6px 0 !important; 
+            color: var(--text-main) !important; 
+            font-family: inherit;
+            font-size: 14px;
+        }
+        .tag {
+            background: rgba(0, 123, 255, 0.25); 
+            color: #3399ff;
+            border: 1px solid rgba(0, 123, 255, 0.5);
+            padding: 4px 10px; 
+            border-radius: 6px; 
+            font-size: 13px; 
+            font-weight: 600;
+            display: inline-flex; 
+            align-items: center; 
+            gap: 6px;
+            user-select: none;
+        }
+        .tag span { cursor: pointer; font-size: 16px; opacity: 0.7; line-height: 1; }
+        .tag span:hover { opacity: 1; color: #ff6b6b; }
 
         /* Results Table */
         .results-table-container {
@@ -542,13 +566,14 @@
 
         <div class="control-panel">
             <!-- Asset Selection -->
+            <!-- Asset Selection -->
             <div class="input-group">
-                <label data-i18n="sim_ticker">Ativos (Carteira)</label>
-                <div class="tags-container" id="tagsContainer"></div>
-                <div style="position: relative;">
-                    <input type="text" id="tickerInput" placeholder="" autocomplete="off" data-i18n="search_placeholder" style="width: 100%;">
-                    <ul id="suggestions"></ul>
+                <label data-i18n="sim_ticker" style="text-transform: uppercase; font-size: 12px; color: var(--text-muted); font-weight: 600;">Ativos (Carteira)</label>
+                <div class="tags-input-container" onclick="document.getElementById('tickerInput').focus()">
+                    <div id="tagsContainer" style="display:flex; gap:6px; flex-wrap:wrap;"></div>
+                    <input type="text" id="tickerInput" placeholder="Ex: PETR4.SA (Enter)" autocomplete="off" data-i18n="search_placeholder">
                 </div>
+                <ul id="suggestions"></ul>
                 <div id="search-status" style="display:none; font-size:12px; color:var(--text-muted); margin-top:4px;"></div>
             </div>
             
@@ -824,7 +849,8 @@
                     <span style="font-size: 11px; opacity: 0.7; text-transform: uppercase;">${asset.category}</span>
                 `;
 
-                li.onclick = () => {
+                li.onmousedown = (e) => {
+                    e.preventDefault();
                     addTag(asset.symbol);
                     suggestions.style.display = 'none';
                 };

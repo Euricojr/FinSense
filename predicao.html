@@ -297,9 +297,9 @@
             box-shadow: 0 0 0 2px rgba(0, 86, 179, 0.2);
         }
         .tag {
-            background: rgba(0, 123, 255, 0.2); 
-            color: var(--neon-purple); /* Uses the new blue variable */
-            border: 1px solid rgba(0, 123, 255, 0.4);
+            background: rgba(0, 123, 255, 0.25); 
+            color: #3399ff;
+            border: 1px solid rgba(0, 123, 255, 0.5);
             padding: 4px 10px; 
             border-radius: 6px; 
             font-size: 13px; 
@@ -417,7 +417,7 @@
 
         <div class="control-panel">
             <div class="input-group" style="flex: 2;">
-                <label data-i18n="pred_assets_label">Ativos (Tags)</label>
+                <label data-i18n="pred_assets_label" style="text-transform: uppercase; font-size: 12px; color: var(--text-muted); font-weight: 600;">Ativos (Tags)</label>
                 <div class="tags-input-container" onclick="document.getElementById('tickerInput').focus()">
                     <div id="tickerTags"></div>
                     <input type="text" id="tickerInput" placeholder="Ex: BTC-USD, PETR4.SA (Enter)" data-i18n="pred_placeholder" autocomplete="off">
@@ -426,7 +426,7 @@
             </div>
             
             <div class="input-group">
-                <label data-i18n="pred_train_label">Treino (Anos)</label>
+                <label data-i18n="pred_train_label" style="text-transform: uppercase; font-size: 12px; color: var(--text-muted); font-weight: 600;">Treino (Anos)</label>
                 <select id="trainPeriod" style="padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-main);">
                     <option value="2">2 <span data-i18n="pred_year_suffix">Anos</span></option>
                     <option value="3">3 <span data-i18n="pred_year_suffix">Anos</span></option>
@@ -515,6 +515,7 @@
 
         let allAssets = [];
         let resultsCache = {};
+        let activeTags = [];
         async function checkAuth() {
             try {
                 const response = await fetch(`${API_BASE_URL}/api/me`);
@@ -603,7 +604,11 @@
             matches.forEach(m => {
                 const li = document.createElement('li');
                 li.innerHTML = `<strong>${m.symbol}</strong> <span>${m.name}</span>`;
-                li.onclick = () => { addTag(m.symbol); };
+                // Use mousedown to ensure it fires before input blur (if any) or other focus changes
+                li.onmousedown = (e) => { 
+                    e.preventDefault(); // Prevent input blur
+                    addTag(m.symbol); 
+                };
                 list.appendChild(li);
             });
             list.style.display = matches.length ? 'block' : 'none';
