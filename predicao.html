@@ -52,17 +52,16 @@
 
         /* --- Header --- */
         header {
-            background-color: #020c1b;
+            background-color: transparent;
             padding: 0 40px;
             height: 70px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            position: sticky;
+            position: absolute;
             top: 0;
             width: 100%;
             z-index: 1000;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
 
         .logo { font-weight: 700; font-size: 22px; color: white; }
@@ -154,7 +153,7 @@
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 40px 20px;
+            padding: 100px 20px 40px 20px;
         }
 
         h1 { font-size: 28px; margin-bottom: 10px; font-weight: 700; }
@@ -346,6 +345,28 @@
             box-shadow: 0 4px 10px var(--neon-glow);
         }
         .tab-btn:hover:not(.active) { background: var(--bg-main); color: var(--text-main); }
+
+        /* --- Standardized Logout Button (from index2.html) --- */
+        .btn-logout {
+            margin-left: 10px;
+            padding: 6px 16px;
+            border-radius: 20px; /* Pill Radius */
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+            display: inline-flex; /* Ensure proper sizing */
+            align-items: center;
+        }
+
+        .btn-logout:hover {
+            background-color: rgba(220, 53, 69, 0.15);
+            border-color: #ff5f56;
+            color: #ff5f56;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
     </style>
 </head>
 <body>
@@ -377,15 +398,15 @@
 
             <button id="theme-btn" class="theme-toggle" onclick="toggleTheme()" title="Alternar Tema">☀️</button>
             <!-- Language Toggle -->
-            <button id="lang-toggle" onclick="toggleLanguage()" class="nav-btn-drop" style="margin-left: 20px;" title="Switch Language">
+            <button id="lang-toggle" class="theme-toggle" onclick="toggleLanguage()" title="Switch Language" style="margin-left: 10px;">
                 <span style="font-weight:700; font-size:14px;">PT</span>
             </button>
-            <div id="nav-auth" style="display: none; align-items: center; margin-left: 20px;">
-                 <div style="margin-left: 15px; font-size: 14px; color: rgba(255, 255, 255, 0.9);"><span data-i18n="nav_hello">Olá</span>, <strong id="username-display">User</strong></div>
-                 <a href="#" class="btn-logout" onclick="logout()" style="margin-left: 15px; color: #ff6b6b; text-decoration: none;" data-i18n="nav_logout">Sair</a>
+            <div id="nav-auth" style="display: flex; align-items: center; margin-left: 20px;">
+                <span id="user-display" style="color: white; font-weight: 500; font-size: 14px; margin-right: 15px;">Olá, eurico</span>
+                <a href="#" class="btn-logout" onclick="logout()" data-i18n="nav_logout">Sair</a>
             </div>
-            <div id="nav-public" style="display: flex; align-items: center; margin-left: 20px;">
-                 <a href="login.html" style="background:var(--accent-primary); color:white; padding:8px 16px; border-radius:6px; text-decoration:none;" data-i18n="link_login">Entrar</a>
+            <div id="nav-public" style="display: none; align-items: center; margin-left: 20px;">
+                <a href="login.html" class="btn-logout" style="border: 1px solid rgba(255,255,255,0.2);" data-i18n="nav_login">Entrar</a>
             </div>
         </nav>
     </header>
@@ -494,16 +515,29 @@
 
         let allAssets = [];
         let resultsCache = {};
-        let activeTags = [];
-
-        // Auth & Load Assets (Same as before)
-        fetch(`${API_BASE_URL}/api/me`).then(r => r.json()).then(d => {
-            if(d.authenticated) {
-                document.getElementById('nav-public').style.display='none';
-                document.getElementById('nav-auth').style.display='flex';
-                document.getElementById('username-display').innerText = d.username;
-            } else { window.location.href='login.html'; }
-        }).catch(() => window.location.href='login.html');
+        async function checkAuth() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/me`);
+                const data = await response.json();
+                if (data.authenticated) {
+                    document.getElementById('nav-auth').style.display = 'flex';
+                    document.getElementById('nav-public').style.display = 'none';
+                    const userDisplay = document.getElementById('user-display');
+                    if (userDisplay) {
+                        userDisplay.innerText = `Olá, ${data.username || 'Investidor'}`;
+                    }
+                } else {
+                    document.getElementById('nav-auth').style.display = 'none';
+                    document.getElementById('nav-public').style.display = 'flex';
+                    // Optional: redirect protected page
+                    window.location.href = 'login.html';
+                }
+            } catch (e) {
+                console.error("Auth check failed", e);
+                window.location.href = 'login.html';
+            }
+        }
+        checkAuth();
 
         fetch(`${API_BASE_URL}/api/assets`).then(r=>r.json()).then(d => { allAssets = d; });
 
