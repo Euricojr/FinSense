@@ -183,6 +183,7 @@ class Expense(db.Model):
     amount = db.Column(db.Float, nullable=False)
     date = db.Column(db.String(10), nullable=False) # YYYY-MM-DD
     category = db.Column(db.String(50), nullable=False)
+    payment_method = db.Column(db.String(50), default='Outros')
 
 class Income(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -329,7 +330,8 @@ def manage_expenses():
             'description': e.description,
             'amount': e.amount,
             'date': e.date,
-            'category': e.category
+            'category': e.category,
+            'payment_method': getattr(e, 'payment_method', 'Outros')
         } for e in exps])
 
     if request.method == 'POST':
@@ -340,7 +342,8 @@ def manage_expenses():
                 description=data.get('description', 'Despesa'),
                 amount=float(data['amount']),
                 date=data['date'],
-                category=data['category']
+                category=data['category'],
+                payment_method=data.get('payment_method', 'Outros')
             )
             db.session.add(new_exp)
             db.session.commit()
