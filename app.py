@@ -19,7 +19,7 @@ from sklearn.metrics import r2_score
 # --- CONFIGURATION ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # Set template_folder to base dir to render root HTMLs
-app = Flask(__name__, template_folder=BASE_DIR, static_folder='static')
+app = Flask(__name__, static_folder='static')
 CORS(app)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinSense - Análise de Mercado</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <script src="https://cdn.plot.ly/plotly-locale-pt-br-latest.js"></script>
+    <script src="/static/js/translations.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+</head>
+
+<body>
+
+    <header>
+        <div class="logo">
+            <img src="/static/assets/logo.png" alt="FinSense"
+                style="height: 160px; margin-top: -50px; margin-bottom: -50px; margin-left: -40px; vertical-align: middle;">
+        </div>
+
+        <!-- Mobile Menu Button -->
+        <button class="mobile-menu-btn" onclick="toggleMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+
+        <nav id="main-nav">
+            <a href="index2.html" style="font-size: 16px; margin-left: 0;" data-i18n="nav_home">Início</a>
+
+            <!-- Protected Links: Visible but intercepted if not logged in -->
+            <a href="#dashboard" style="font-size: 16px;" onclick="closeMenu()" data-i18n="nav_platform">Plataforma</a>
+            <a href="#mercado" style="font-size: 16px;" onclick="closeMenu()" data-i18n="nav_market">Mercado</a>
+
+            <a href="financas" class="protected-link" onclick="closeMenu()" style="font-size: 16px;">Gestão de Finanças</a>
+
+            <div class="dropdown" style="margin-left: 20px;">
+                <button class="nav-btn-drop" onclick="this.nextElementSibling.classList.toggle('show')"><span data-i18n="nav_analysis">Análise</span> ▼</button>
+                <div class="dropdown-content">
+                    <a href="predicao" class="protected-link" onclick="closeMenu()">Modelo de Predição</a>
+                    <a href="analise_carteiras.html" class="protected-link" onclick="closeMenu()" data-i18n="nav_risk">Correlação & Risco</a>
+                    <a href="simulacao.html" class="protected-link" onclick="closeMenu()" data-i18n="nav_simulations">Simulações</a>
+                    <a href="otimizacao.html" class="protected-link" onclick="closeMenu()" data-i18n="nav_optimization">Otimização Markowitz</a>
+                    <a href="portfolio.html" class="protected-link" onclick="closeMenu()" data-i18n="nav_portfolio">Gerenciar Portfólio</a>
+                </div>
+            </div>
+
+            <!-- Auth Section: Shows User Profile OR Login Button -->
+            <div id="nav-auth" style="display: none; align-items: center; margin-left: 20px;">
+                <div style="margin-left: 15px; font-size: 14px; color: rgba(255, 255, 255, 0.9);"><span data-i18n="nav_hello">Olá</span>, <strong
+                        id="username-display">User</strong></div>
+                <a href="#" id="btn-logout" class="btn-logout" onclick="logout()" data-i18n="nav_logout">Sair</a>
+            </div>
+
+            <div id="nav-public" style="display: flex; align-items: center; margin-left: 20px;">
+                <a href="login.html" class="cta-button"
+                    style="padding: 8px 16px; font-size: 14px; margin-left: 15px;" data-i18n="nav_login_reg">Entrar / Registrar</a>
+            </div>
+
+            <button id="theme-btn" class="theme-toggle" onclick="toggleTheme()" title="Alternar Tema"
+                style="margin-left: 15px;">🌙</button>
+            <button id="lang-toggle" class="theme-toggle" onclick="toggleLanguage()" title="Switch Language" style="margin-left: 10px;"><span style="font-weight:700; font-size:14px;">EN</span></button>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <canvas id="hero-particles"></canvas>
+        <h1><span data-i18n="hero_title_part1">O futuro das finanças</span> <br><span class="text-blue-highlight" data-i18n="hero_title_part2">precisa de clareza.</span></h1>
+        <p data-i18n="hero_subtitle">Monitore o mercado global em tempo real com a precisão que você precisa para tomar as melhores decisões.</p>
+        <a href="#dashboard" class="cta-button" data-i18n="hero_cta">Acessar Plataforma</a>
+        <a href="#dashboard" class="scroll-indicator" style="text-decoration: none; color: rgba(255,255,255,0.5);">↓</a>
+    </section>
+
+    <!-- Dashboard Section -->
+    <section id="dashboard">
+        <div class="dashboard-header">
+            <div class="dashboard-title" data-i18n="dash_title">FinSense Dashboard</div>
+        </div>
+
+        <div class="main-container">
+
+            <!-- Chart Section (Left) -->
+            <div class="chart-section">
+                <div class="chart-header">
+                    <div class="chart-title-group">
+                        <span id="titulo-ativo" class="chart-title">BTC-USD</span>
+                        <span id="preco" class="price-display">---</span>
+                        <div id="chart-spinner" class="spinner"></div>
+                    </div>
+                    
+                    <!-- Search Bar -->
+                    <div class="search-container">
+                        <input type="text" id="asset-search" placeholder="Buscar ativo (ex: PETR4)..." autocomplete="off" data-i18n="search_placeholder">
+                        <ul id="suggestions"></ul>
+                    </div>
+
+                    <div class="controls">
+                        <div class="control-group">
+                            <label class="control-label" data-i18n="controls_candles">Quantidade de Velas</label>
+                            <select id="seletor-periodo" onchange="mudouAtivo()">
+                                <option value="1d" data-i18n="tf_1d">1 Dia</option>
+                                <option value="5d" data-i18n="tf_5d">5 Dias</option>
+                                <option value="1mo" data-i18n="tf_1m">1 Mês</option>
+                                <option value="3mo" data-i18n="tf_3m">3 Meses</option>
+                                <option value="6mo" data-i18n="tf_6m">6 Meses</option>
+                                <option value="1y" selected data-i18n="tf_1y">1 Ano</option>
+                                <option value="max" data-i18n="tf_max">Máx</option>
+                            </select>
+                        </div>
+
+                        <div class="control-group">
+                            <label class="control-label" data-i18n="controls_time">Tempo</label>
+                            <select id="seletor-intervalo" onchange="mudouAtivo()">
+                                <option value="15m" data-i18n="tf_15m">15 Min</option>
+                                <option value="30m" data-i18n="tf_30m">30 Min</option>
+                                <option value="1h" data-i18n="tf_1h">1 Hora</option>
+                                <option value="1d" selected data-i18n="tf_1d">1 Dia</option>
+                                <option value="1wk" data-i18n="tf_1w">1 Sem</option>
+                            </select>
+                        </div>
+
+                        <div class="control-group">
+                            <label class="control-label" data-i18n="controls_indicators">Indicadores</label>
+                            <div class="multiselect-container">
+                                <button class="multiselect-btn" onclick="toggleMultiselect()" data-i18n="controls_select">Selecionar...</button>
+                                <div id="multiselect-menu" class="multiselect-menu">
+                                    <div class="multiselect-item" onclick="toggleCheck('check-ma')">
+                                        <input type="checkbox" id="check-ma" checked onchange="mudouAtivo()">
+                                        <label data-i18n="controls_ma">Média Móvel</label>
+                                        <input type="number" id="input-ma" value="14" min="1" max="200"
+                                            onchange="mudouAtivo()" onclick="event.stopPropagation()"
+                                            style="width: 50px; padding: 2px 5px; font-size: 12px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-main);">
+                                    </div>
+                                    <div class="multiselect-item" onclick="toggleCheck('check-rsi')">
+                                        <input type="checkbox" id="check-rsi" onchange="mudouAtivo()">
+                                        <label data-i18n="controls_rsi">RSI</label>
+                                    </div>
+                                    <div class="multiselect-item" onclick="toggleCheck('check-macd')">
+                                        <input type="checkbox" id="check-macd" onchange="mudouAtivo()">
+                                        <label data-i18n="controls_macd">MACD</label>
+                                    </div>
+                                    <div class="multiselect-item" onclick="toggleCheck('check-stoch')">
+                                        <input type="checkbox" id="check-stoch" onchange="mudouAtivo()">
+                                        <label data-i18n="controls_stoch">Estocástico</label>
+                                    </div>
+                                    <div class="multiselect-item" onclick="toggleCheck('check-vol')">
+                                        <input type="checkbox" id="check-vol" onchange="mudouAtivo()">
+                                        <label data-i18n="controls_vol">Volume</label>
+                                    </div>
+                                    <div class="multiselect-item" onclick="toggleCheck('check-atr')">
+                                        <input type="checkbox" id="check-atr" onchange="mudouAtivo()">
+                                        <label data-i18n="controls_atr">ATR</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="grafico" style="width: 100%; flex: 1; min-height: 0;"></div>
+            </div>
+
+            <!-- Sidebar Restored (Right) -->
+            <div class="sidebar">
+                <div class="sidebar-header" style="padding: 15px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                    <!-- Removed title "Ativos" to make room for full width select or keep it small? 
+                         Image shows "Criptomoedas" taking up space. Let's use the custom-select style. 
+                         User image shows basically just the dropdown in the header or below title?
+                         Let's put the select inside. -->
+                     <select id="sidebar-category" onchange="filterSidebar()" class="custom-select" style="width: 100%; padding: 8px;">
+                        <option value="cripto" selected data-i18n="cat_crypto">Criptomoedas</option>
+                        <option value="br" data-i18n="cat_br">Ações Brasil</option>
+                        <option value="us" data-i18n="cat_us">Ações EUA</option>
+                        <option value="indices" data-i18n="cat_indices">Índices</option>
+                        <option value="all" data-i18n="cat_all">Todos</option>
+                    </select>
+                </div>
+                <ul id="lista-ativos-lateral" class="asset-list">
+                    <!-- JS Populated -->
+                </ul>
+            </div>
+
+            <!-- Sidebar (Right) REMOVED -->
+        </div>
+    </section>
+
+    <!-- Destaques do Mercado Section -->
+    <section id="destaques">
+        <div class="destaques-header">
+            <span class="section-title" data-i18n="movers_title">Destaques do Mercado</span>
+            <select id="mover-category-select" onchange="loadMarketMovers()" class="custom-select"
+                style="width: 200px;">
+                <option value="all" data-i18n="cat_all_cats">Todas as Categorias</option>
+                <option value="cripto" selected data-i18n="cat_crypto">Criptomoedas</option>
+                <option value="br" data-i18n="cat_br">Ações Brasil</option>
+                <option value="us" data-i18n="cat_us">Ações EUA</option>
+                <option value="indices" data-i18n="cat_indices_global">Índices Globais</option>
+            </select>
+        </div>
+        <div class="destaques-grid">
+            <div class="mover-card">
+                <h3
+                    style="margin-top: 0; margin-bottom: 15px; font-size: 16px; color: var(--text-muted); border-bottom: 1px solid var(--border-color); padding-bottom: 10px;" data-i18n="movers_gainers">
+                    Maiores Altas (Top 5)</h3>
+                <ul id="gainers-list" class="mover-list">
+                    <li class="mover-item"><span class="mover-symbol" data-i18n="movers_loading">Carregando...</span></li>
+                </ul>
+            </div>
+            <div class="mover-card">
+                <h3
+                    style="margin-top: 0; margin-bottom: 15px; font-size: 16px; color: var(--text-muted); border-bottom: 1px solid var(--border-color); padding-bottom: 10px;" data-i18n="movers_losers">
+                    Maiores Baixas (Top 5)</h3>
+                <ul id="losers-list" class="mover-list">
+                    <li class="mover-item"><span class="mover-symbol" data-i18n="movers_loading">Carregando...</span></li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Market Section (Heatmap) -->
+    <section id="mercado">
+        <div class="market-container">
+            <div class="heatmap-container">
+                <div id="heatmap-loader" class="heatmap-loading">
+                    <div class="spinner active"></div>
+                    <span style="margin-left: 10px; font-weight: 600; color: var(--text-main);" data-i18n="heatmap_loading">Carregando
+                        Mercado...</span>
+                </div>
+                <div class="heatmap-header">
+                    <span class="section-title" data-i18n="heatmap_title">Mapa de Mercado</span>
+                    <select id="heatmap-category" onchange="carregarHeatmap()" class="custom-select"
+                        style="width: 200px;">
+                        <option value="cripto" selected data-i18n="cat_crypto">Criptomoedas</option>
+                        <option value="br" data-i18n="cat_br">Ações Brasil</option>
+                        <option value="us" data-i18n="cat_us">Ações EUA</option>
+                        <option value="indices" data-i18n="cat_indices_global">Índices Globais</option>
+                    </select>
+                </div>
+
+                <!-- Plotly Treemap Container -->
+                <div id="heatmap-plot" style="width: 100%; height: 600px;"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Hidden Input for State -->
+    <input type="hidden" id="ativo-atual" value="BTC-USD">
+
+    <!-- Custom Login Modal -->
+    <div id="login-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h3 style="margin-bottom: 10px; color: var(--text-main);" data-i18n="modal_title">🔒 Acesso Restrito</h3>
+            <p style="color: var(--text-muted); margin-bottom: 20px;" data-i18n="modal_body">Você precisa estar logado para acessar os recursos
+                avançados da plataforma.</p>
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button onclick="closeModal()" class="btn-cancel" data-i18n="modal_cancel">Cancelar</button>
+                <a href="login.html" class="cta-button" style="text-decoration: none; padding: 10px 20px;" data-i18n="modal_login">Fazer
+                    Login</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/particles.js"></script>
+    <script src="/static/js/dashboard.js"></script>
+</body>
+
+</html>
