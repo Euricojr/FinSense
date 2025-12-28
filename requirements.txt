@@ -6,8 +6,6 @@ yfinance
 pandas
 numpy
 python-bcb
-gunicorn
 werkzeug
-PyPortfolioOpt
 scipy
 scikit-learn

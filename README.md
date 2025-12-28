@@ -133,22 +133,64 @@ A organização das pastas segue o padrão Flask:
 
 ### 🚀 Como Rodar
 
-Para visualizar o projeto corretamente com todas as funcionalidades:
+Para visualizar o projeto corretamente com todas as funcionalidades, siga os passos abaixo:
 
-1. Abra o terminal na pasta do projeto.
-2. Execute o comando:
-   ```bash
-   python app.py
-   ```
-3. O terminal mostrará um link (geralmente `http://127.0.0.1:5000` ou `http://localhost:5000`).
-4. **Segure Ctrl e clique no link** (ou copie e cole no navegador) para acessar.
+#### 1. Pré-requisitos
+
+Certifique-se de ter o [Python](https://www.python.org/downloads/) instalado (versão 3.8 ou superior).
+
+#### 2. Instalação e Ambiente Virtual
+
+É altamente recomendável criar um ambiente virtual para evitar conflitos. No terminal da pasta do projeto:
+
+**Windows:**
+
+```powershell
+# Cria o ambiente
+python -m venv .venv
+
+# Ativa o ambiente
+.\.venv\Scripts\activate
+
+# Instala as dependências
+pip install -r requirements.txt
+```
+
+**Linux / Mac:**
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+#### 3. Executando
+
+Após instalar as dependências, execute o comando:
+
+```bash
+python app.py
+```
+
+1. O terminal mostrará um link (geralmente `http://127.0.0.1:5000` ou `http://localhost:5000`).
+2. **Segure Ctrl e clique no link** (ou copie e cole no navegador) para acessar.
+3. Crie uma conta na tela de Login (o banco de dados será criado automaticamente).
 
 > **Nota:** Se utilizar o Live Server, certifique-se de abrir a pasta raiz do projeto no VS Code para que os caminhos dos arquivos funcionem corretamente.
 
 ---
 
-### 🛠️ Tecnologias
+### 🛠️ Tecnologias e Ferramentas
 
 - **Backend**: Python (Flask), YFinance, BCB.
 - **Data Science/AI**: Scikit-learn, Numpy, Pandas, Scipy.
 - **Frontend**: HTML5, CSS3, JavaScript (Plotly.js, Particles.js).
+
+#### 🧩 Extensões Recomendadas (VS Code)
+
+Ao abrir o projeto no VS Code, você deve receber uma recomendação automática para instalar as seguintes extensões (arquivo `.vscode/extensions.json`):
+
+- **Python** & **Pylance**: Suporte essencial para o código Python.
+- **Prettier**: Para formatar HTML/CSS/JS automaticamente.
+- **Jupyter**: Caso queira rodar análises em notebooks.
+- **Code Runner**: Para executar trechos de código rapidamente.
