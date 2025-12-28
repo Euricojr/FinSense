@@ -1014,7 +1014,7 @@ def calculate_portfolio_history(transactions, benchmark_ticker='^BVSP'):
     # Handle CDI special case
     is_cdi = (benchmark_ticker == 'CDI')
     # If CDI, we don't download it from Yahoo
-    download_tickers = unique_tickers + ([benchmark_ticker] if not is_cdi else [])
+    download_tickers = unique_tickers + ([benchmark_ticker] if (benchmark_ticker and not is_cdi and benchmark_ticker not in unique_tickers) else [])
     
     all_tickers = download_tickers
     
@@ -1023,21 +1023,53 @@ def calculate_portfolio_history(transactions, benchmark_ticker='^BVSP'):
     # We'll use '1d' interval.
     
     try:
-        market_data = yf.download(all_tickers, start=start_date, end=end_date, progress=False, threads=True)['Close']
+        if not all_tickers:
+             market_data = pd.DataFrame()
+        else:
+             # Disable threads to avoid potential threading issues causing data corruption
+             raw_data = yf.download(all_tickers, start=start_date, end=end_date, progress=False, threads=False)
+             
+             if not raw_data.empty:
+                 if 'Close' in raw_data.columns:
+                     market_data = raw_data['Close']
+                 else:
+                     # If only one ticker, yf might return DataFrame with OHLC directly as columns
+                     # Check if columns are OHLC
+                     if 'Close' in raw_data: # Access as key
+                          market_data = raw_data['Close']
+                     else:
+                          # Fallback: assume raw_data IS the close data if it matches shape? Unlikely.
+                          # If single ticker result (cols: Open, High, Low, Close...)
+                          market_data = raw_data
+             else:
+                 market_data = pd.DataFrame()
+                 
     except Exception as e:
-         # Fallback empty
+         logger.error(f"Data download failed: {e}")
          return jsonify({"error": "Data download failed"}), 500
     
     # Handle single ticker case in yfinance (returns Series instead of DataFrame)
-    if len(all_tickers) == 1:
-        market_data = pd.DataFrame({all_tickers[0]: market_data})
-    
+    # Ensure market_data is a DataFrame with tickers as columns
+    if isinstance(market_data, pd.Series):
+        if len(all_tickers) == 1:
+             market_data = pd.DataFrame({all_tickers[0]: market_data})
+        else:
+             market_data = pd.DataFrame(market_data) # Index handling?
+
+    # Verify we have a DataFrame
+    if not isinstance(market_data, pd.DataFrame):
+         market_data = pd.DataFrame()
+
     # Fill NAs (forward fill first, then backward fill for very start)
     market_data = market_data.fillna(method='ffill').fillna(method='bfill')
     
     # 3. Calculate Daily Portfolio Value
     # Create an index of all days
-    all_days = market_data.index
+    if market_data.empty:
+         # Fallback to simple date range if no market data (prevents crash)
+         all_days = pd.date_range(start=start_date, end=end_date)
+    else:
+         all_days = market_data.index
     
     # Initial Benchmark Value (normalized)
     bench_start_val = 100.0 # Base 100
@@ -1065,28 +1097,95 @@ def calculate_portfolio_history(transactions, benchmark_ticker='^BVSP'):
     bench_series = pd.Series(0.0, index=all_days)
 
     if not benchmark_ticker:
-        # If no benchmark, just return 0s or handle logic
+        # If no benchmark, just return 0s
         pass
     else:
-        # Similar logic for benchmark
-        if benchmark_ticker in market_data.columns:
-            # We assume user invested 100 initially in benchmark
-            # Returns
-            bench_prices = market_data[benchmark_ticker]
-            # Normalize to start at 100 on first day of portfolio
-            # Find first valid index where portfolio started
-            
-            # Simple approach: Calculate Cumulative Return of benchmark from start_date
-            # and map to portfolio dates
-            
-            # We already have bench_cum in previous function, here we are calculating history value ($)
-            # Let's just track % change relative to start
-            pass
-
+        try:
+            if is_cdi:
+                # --- CDI Logic ---
+                # Fetch Real CDI Data using python-bcb
+                # Code 12 = Taxa de juros - CDI (% a.d.)
+                start_str = start_date.strftime('%Y-%m-%d')
+                cdi_daily = sgs.get({'CDI': 12}, start=start_str)
+                
+                if cdi_daily is not None and not cdi_daily.empty:
+                    # The API returns % (e.g., 0.05). We need factor (1 + 0.05/100)
+                    cdi_daily['factor'] = 1 + (cdi_daily['CDI'] / 100)
+                    
+                    # Reindex to all_days (business days + weekends from yfinance range)
+                    # Fill missing with factor 1.0 (no growth on weekends)
+                    cdi_aligned = cdi_daily['factor'].reindex(all_days, fill_value=1.0)
+                    
+                    # Calculate cumulative product
+                    cdi_accum = cdi_aligned.cumprod()
+                    
+                    # Normalize to start at 100 or match portfolio start
+                    # Let's normalize to 100 at the start of the chart
+                    if not cdi_accum.empty:
+                        base = cdi_accum.iloc[0]
+                        if base > 0:
+                            bench_series = (cdi_accum / base) * 100.0
+                        else:
+                            bench_series = cdi_accum * 100.0 # fallback
+                
+            elif benchmark_ticker in market_data.columns:
+                # --- Standard Ticker Logic (e.g. ^BVSP) ---
+                bench_prices = market_data[benchmark_ticker]
+                
+                # Normalize to start at 100
+                first_valid_idx = bench_prices.first_valid_index()
+                if first_valid_idx:
+                    base_price = bench_prices.loc[first_valid_idx]
+                    if base_price > 0:
+                        # Rebase entire series to 100
+                        bench_series = (bench_prices / base_price) * 100.0
+                
+                # Align to full index (should be already if from market_data)
+                bench_series = bench_series.reindex(all_days).fillna(method='ffill').fillna(method='bfill')
+                
+        except Exception as e:
+            logger.error(f"Error calculating benchmark {benchmark_ticker}: {e}")
+            # Fallback to zeros is already set
 
     # Final Assembly for Chart
     # Convert Series to List
-    # We need to handle 0 values in invested_series to avoid division by zero or weird jumps
+    
+    # "Invested" is absolute value (R$). "Portfolio" is absolute value (R$).
+    # "Benchmark" is currently normalized to 100. This is mismatched on a single Y-axis chart.
+    
+    # We need to scale the Benchmark to be "Equivalent".
+    # Logic: "If I had invested the SAME AMOUNTS at the SAME DATES into the Benchmark, what would I have now?"
+    # This is the "Benchmark Equivalent" curve.
+    
+    bench_equiv_series = pd.Series(0.0, index=all_days)
+    
+    # To do this correctly, we need a "Benchmark Quota" or Index.
+    # We already calculated `bench_series` above which acts as a normalized price index (start=100).
+    
+    if not bench_series.empty and bench_series.sum() != 0:
+        bench_qty_held = pd.Series(0.0, index=all_days)
+        
+        for _, tx in df_tx.iterrows():
+            mask = all_days >= tx['date']
+            try:
+                # Get index value at transaction date
+                idx_loc = all_days.get_indexer([tx['date']], method='pad')[0]
+                if idx_loc == -1: idx_loc = 0
+                
+                index_val_at_buy = bench_series.iloc[idx_loc]
+                if index_val_at_buy == 0: index_val_at_buy = 1.0 # Protect div by zero
+                
+                investment = tx['qty'] * tx['price']
+                
+                # Buy "units" of the benchmark index
+                units_bought = investment / index_val_at_buy
+                
+                bench_qty_held.loc[mask] += units_bought
+            except:
+                pass
+        
+        # Value = Units * Current Index Price
+        bench_equiv_series = bench_qty_held * bench_series
     
     dates = portfolio_series.index.strftime('%Y-%m-%d').tolist()
     
@@ -1095,7 +1194,7 @@ def calculate_portfolio_history(transactions, benchmark_ticker='^BVSP'):
         "dates": dates,
         "portfolio": portfolio_series.fillna(0).tolist(),
         "invested": invested_series.fillna(0).tolist(),
-        "benchmark": [], # TODO: Implement full benchmark history value comparison if needed
+        "benchmark": bench_equiv_series.fillna(0).tolist(), 
         "benchmark_symbol": benchmark_ticker
     })
 
