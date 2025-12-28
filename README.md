@@ -27,16 +27,7 @@ Este projeto foi desenvolvido estritamente para **fins didáticos e de aprendiza
 
 ---
 
-## ☁️ Hospedagem no Render.com
-
-Este projeto está hospedado na plataforma **Render**.
-
-> ⚠️ **Atenção:** Como estamos utilizando o plano gratuito, a aplicação pode entrar em modo de "suspenção" (sleep) após períodos de inatividade.
-> **O primeiro acesso pode levar cerca de 1 a 2 minutos para carregar**, pois o servidor precisa "acordar". Por favor, aguarde o carregamento.
-
----
-
-## 🧩 Partes do Projeto
+### 🧩 Partes do Projeto
 
 O FinSense é uma plataforma unificada para acompanhamento e análise de ativos financeiros (Ações Brasil, EUA e Criptomoedas).
 
@@ -51,11 +42,9 @@ Visão geral do mercado financeiro em tempo real.
 <p align="center">
   <img src="assets/dashboard.png" alt="Dashboard Full" width="95%" style="margin-bottom: 15px;" />
 </p>
-
 <p align="center">
   <img src="assets/market_movers.png" alt="Market Movers" width="95%" style="margin-bottom: 15px;" />
 </p>
-
 <p align="center">
   <img src="assets/heatmap.png" alt="Heatmap" width="95%" />
 </p>
@@ -65,10 +54,7 @@ Visão geral do mercado financeiro em tempo real.
 Ferramenta para controle pessoal de investimentos.
 
 - **Registro**: Adicione suas compras de ativos com data e preço.
-- **Evolução Patrimonial**: Gráfico comparativo que mostra:
-  - 🔵 **Valor Atual**: Quanto vale sua carteira hoje.
-  - 🟢 **Total Investido**: Quanto dinheiro você efetivamente aportou.
-  - 🟠 **Benchmark**: Comparativo (ex: "E se eu tivesse comprado Ibovespa/CDI?").
+- **Evolução Patrimonial**: Gráfico comparativo que mostra Valor Atual vs Total Investido vs Benchmark.
 - **Alocação**: Gráfico de pizza mostrando a divisão da carteira (Ações BR, EUA, Cripto).
 
 <p align="center">
@@ -80,15 +66,45 @@ Ferramenta para controle pessoal de investimentos.
 Ferramenta avançada para entender a diversificação.
 
 - **Matriz de Correlação**: Calcula como seus ativos se comportam uns em relação aos outros.
-- Ajuda a identificar se sua carteira está diversificada ou se todos os ativos sobem/caem juntos.
 
 <p align="center">
   <img src="assets/portfolio_analysis.png" alt="Portfolio Analysis" width="95%" />
 </p>
 
+### 4. Controle Financeiro (`Finanças`) 🆕
+
+Módulo completo para gestão de despesas pessoais com auxílio de IA.
+
+- **Entrada Inteligente (IA)**: Adicione despesas usando linguagem natural (ex: "Gastei 50 reais no uber hoje").
+- **Dashboard de Despesas**: Acompanhe seus gastos por categoria e evolução mensal.
+- **Metas de Orçamento**: Defina e monitore limites de gastos.
+
+### 5. Predição de Mercado (`Predição`) 🆕
+
+Modelos de Machine Learning para auxiliar na tomada de decisão.
+
+- **Random Forest**: Previsão de preço de fechamento.
+- **Regressão Logística**: Probabilidade direcional (Alta/Baixa).
+- **Indicador de Confluência**: Sinal unificado quando ambos os modelos concordam.
+
+### 6. Simulação de Monte Carlo (`Simulação`) 🆕
+
+Projeção estocástica de cenários futuros para sua carteira.
+
+- **Cenários**: Visualize milhares de possíveis caminhos para seus investimentos.
+- **VaR (Value at Risk)**: Estime a perda máxima provável em diferentes níveis de confiança.
+
+### 7. Otimização de Portfólio (`Otimização`) 🆕
+
+Ferramenta baseada na Teoria Moderna de Portfólio (Markowitz).
+
+- **Fronteira Eficiente**: Encontre a melhor relação risco x retorno.
+- **Pesos Ideais**: Sugestão de rebalanceamento para maximizar o Sharpe Ratio.
+
 ---
 
 ### 🛠️ Tecnologias
 
-- **Backend**: Python (Flask), YFinance (Dados de Mercado), BCB (Dados do Banco Central).
-- **Frontend**: HTML5, CSS3, JavaScript (Plotly.js para gráficos).
+- **Backend**: Python (Flask), YFinance, BCB.
+- **Data Science/AI**: Scikit-learn, Numpy, Pandas, Scipy.
+- **Frontend**: HTML5, CSS3, JavaScript (Plotly.js, Particles.js).
