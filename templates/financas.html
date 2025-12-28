@@ -282,7 +282,7 @@
         </div>
         
         <nav id="main-nav" style="display: flex; align-items: center;">
-            <a href="index2.html" style="font-size: 16px; margin-left: 0; text-decoration: none; color: rgba(255,255,255,0.7);" data-i18n="nav_home">Início</a>
+            <a href="/" style="font-size: 16px; margin-left: 0; text-decoration: none; color: rgba(255,255,255,0.7);" data-i18n="nav_home">Início</a>
             <a href="index2.html#dashboard" style="font-size: 16px; margin-left: 20px; text-decoration: none; color: rgba(255,255,255,0.7);" data-i18n="nav_platform">Plataforma</a>
             <a href="index2.html#mercado" style="font-size: 16px; margin-left: 20px; text-decoration: none; color: rgba(255,255,255,0.7);" data-i18n="nav_market">Mercado</a>
             <a href="financas" style="font-size: 16px; margin-left: 20px; text-decoration: none; color: white; font-weight: 600;" data-i18n="nav_fin_mng">Gestão de Finanças</a>
@@ -449,7 +449,7 @@
                 }
             } catch(e) { window.location.href = 'login.html'; }
         }
-        async function logout() { await fetch(`${API_BASE_URL}/logout`); window.location.href='index2.html'; }
+        async function logout() { await fetch(`${API_BASE_URL}/logout`); window.location.href='/'; }
 
         // --- UI LOGIC ---
         function toggleTheme() {

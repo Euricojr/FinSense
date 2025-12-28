@@ -204,6 +204,36 @@ def home():
     # Pass current_user to template
     return render_template('index2.html', user=current_user)
 
+# --- COMPATIBILITY ROUTES (Fix for 404s) ---
+@app.route('/index2.html')
+@app.route('/index.html')
+def home_redirect():
+    return redirect(url_for('home'))
+
+@app.route('/templates/login')
+@app.route('/login.html')
+def login_redirect():
+    return redirect(url_for('login'))
+
+@app.route('/portfolio.html')
+def portfolio_redirect(): return redirect(url_for('portfolio'))
+
+@app.route('/analise_carteiras.html')
+def analise_redirect(): return redirect(url_for('analise'))
+
+@app.route('/simulacao.html')
+def simulacao_redirect(): return redirect(url_for('simulacao'))
+
+@app.route('/otimizacao.html')
+def otimizacao_redirect(): return redirect(url_for('otimizacao'))
+
+@app.route('/predicao.html')
+def predicao_redirect(): return redirect(url_for('predicao'))
+
+@app.route('/financas.html')
+def financas_redirect(): return redirect(url_for('financas'))
+
+
 @app.route('/portfolio')
 @login_required
 def portfolio():

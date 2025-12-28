@@ -12,14 +12,42 @@
         }
 
         // --- API Base URL Logic ---
+        // --- API Base URL Logic ---
         function getBaseUrl() {
             const hostname = window.location.hostname;
             const port = window.location.port;
-            // Development with Live Server (usually port 5500)
-            if ((hostname === '127.0.0.1' || hostname === 'localhost') && port !== '5000') {
+
+            // Auto-Redirect Live Server (5500) to Flask (5000)
+            if (port === '5500' && (hostname === '127.0.0.1' || hostname === 'localhost')) {
+                // Determine target path
+                let path = window.location.pathname;
+                
+                // Fix path: remove /templates/ if present logic is tricky, 
+                // typically Live Server serves /templates/index2.html
+                // Flask serves / (for index2.html) or /login
+                
+                if (path.includes('index2.html')) {
+                    window.location.href = 'http://127.0.0.1:5000/';
+                    return 'http://127.0.0.1:5000'; // Unreachable but safe
+                }
+                
+                // For other files, try to map to route
+                // e.g. /templates/login.html -> /login
+                // But wait, the files are just 'login' in the href now.
+                // If user is on 5500 and clicks 'login', it goes to /templates/login (404)
+                // This script runs on the PAGE load. If 404, script doesn't run.
+                
+                // So this redirect helps if they land on a valid HTML page like index2.html
+                // But it won't fix the 404 page itself unless we inject script there (we can't).
+                
+                // However, if we redirect index2.html immediately, they get to the right place.
+                window.location.href = 'http://127.0.0.1:5000' + path.replace('/templates', '').replace('.html', '');
                 return 'http://127.0.0.1:5000';
             }
-            // Production or Flask Server (port 5000)
+
+            if ((hostname === '127.0.0.1' || hostname === 'localhost') && port !== '5000') {
+                 return 'http://127.0.0.1:5000';
+            }
             return '';
         }
         const API_BASE_URL = getBaseUrl();
@@ -70,10 +98,10 @@
         async function logout() {
             try {
                 await fetch(`${API_BASE_URL}/logout`);
-                window.location.href = 'index2.html';
+                window.location.href = '/';
             } catch (e) {
                 console.error("Logout failed", e);
-                window.location.href = 'index2.html';
+                window.location.href = '/';
             }
         }
 

@@ -273,7 +273,7 @@
 
                 if (response.ok) {
                     // Success usually redirects to index2.html, but if JSON returned:
-                    window.location.href = 'index2.html';
+                    window.location.href = '/';
                 } else {
                     // Error
                     alertBox.innerText = data.error || ((window.translations && window.translations[currentLang] && window.translations[currentLang].error_auth) || 'Erro na autenticação');

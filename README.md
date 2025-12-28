@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/logo.png" alt="FinSense Logo" width="300" />
+  <img src="static/assets/logo.png" alt="FinSense Logo" width="300" />
 </p>
 
 ---
@@ -14,7 +14,7 @@
 - **Portfolio Manager**: Track your investments, view historical evolution (Invested vs. Current Value vs. Benchmark), and analyze asset allocation.
 - **Risk & Correlation**: Advanced tools to verify portfolio diversification and asset correlation.
 
-![Dashboard Preview](assets/dashboard.png)
+![Dashboard Preview](static/assets/dashboard.png)
 
 ---
 
@@ -38,13 +38,13 @@ Visão geral do mercado financeiro em tempo real.
 - **Heatmap**: Mapa de calor visual para identificar rapidamente setores em alta ou baixa.
 
 <p align="center">
-  <img src="assets/dashboard.png" alt="Dashboard Full" width="95%" style="margin-bottom: 15px;" />
+  <img src="static/assets/dashboard.png" alt="Dashboard Full" width="95%" style="margin-bottom: 15px;" />
 </p>
 <p align="center">
-  <img src="assets/market_movers.png" alt="Market Movers" width="95%" style="margin-bottom: 15px;" />
+  <img src="static/assets/market_movers.png" alt="Market Movers" width="95%" style="margin-bottom: 15px;" />
 </p>
 <p align="center">
-  <img src="assets/heatmap.png" alt="Heatmap" width="95%" />
+  <img src="static/assets/heatmap.png" alt="Heatmap" width="95%" />
 </p>
 
 ### 2. Gerenciador de Portfólio (`Minha Carteira`)
@@ -56,7 +56,7 @@ Ferramenta para controle pessoal de investimentos.
 - **Alocação**: Gráfico de pizza mostrando a divisão da carteira (Ações BR, EUA, Cripto).
 
 <p align="center">
-  <img src="assets/portfolio_dashboard.png" alt="Portfolio Dashboard" width="95%" />
+  <img src="static/assets/portfolio_dashboard.png" alt="Portfolio Dashboard" width="95%" />
 </p>
 
 ### 3. Análise de Correlação & Risco
@@ -66,7 +66,7 @@ Ferramenta avançada para entender a diversificação.
 - **Matriz de Correlação**: Calcula como seus ativos se comportam uns em relação aos outros.
 
 <p align="center">
-  <img src="assets/portfolio_analysis.png" alt="Portfolio Analysis" width="95%" />
+  <img src="static/assets/portfolio_analysis.png" alt="Portfolio Analysis" width="95%" />
 </p>
 
 ### 4. Controle Financeiro (`Finanças`) 🆕
@@ -77,6 +77,10 @@ Módulo completo para gestão de despesas pessoais com auxílio de IA.
 - **Dashboard de Despesas**: Acompanhe seus gastos por categoria e evolução mensal.
 - **Metas de Orçamento**: Defina e monitore limites de gastos.
 
+<p align="center">
+  <img src="static/assets/financas.png" alt="Gestão Financeira" width="95%" />
+</p>
+
 ### 5. Predição de Mercado (`Predição`) 🆕
 
 Modelos de Machine Learning para auxiliar na tomada de decisão.
@@ -85,6 +89,13 @@ Modelos de Machine Learning para auxiliar na tomada de decisão.
 - **Regressão Logística**: Probabilidade direcional (Alta/Baixa).
 - **Indicador de Confluência**: Sinal unificado quando ambos os modelos concordam.
 
+<p align="center">
+  <img src="static/assets/predicao_setup.png" alt="Predição Setup" width="95%" style="margin-bottom: 15px;" />
+</p>
+<p align="center">
+  <img src="static/assets/predicao_chart.png" alt="Predição Gráfico" width="95%" />
+</p>
+
 ### 6. Simulação de Monte Carlo (`Simulação`) 🆕
 
 Projeção estocástica de cenários futuros para sua carteira.
@@ -92,12 +103,47 @@ Projeção estocástica de cenários futuros para sua carteira.
 - **Cenários**: Visualize milhares de possíveis caminhos para seus investimentos.
 - **VaR (Value at Risk)**: Estime a perda máxima provável em diferentes níveis de confiança.
 
+<p align="center">
+  <img src="static/assets/simulacao_setup.png" alt="Simulação Setup" width="95%" style="margin-bottom: 15px;" />
+</p>
+<p align="center">
+  <img src="static/assets/simulacao_chart.png" alt="Simulação Gráfico" width="95%" />
+</p>
+
 ### 7. Otimização de Portfólio (`Otimização`) 🆕
 
 Ferramenta baseada na Teoria Moderna de Portfólio (Markowitz).
 
 - **Fronteira Eficiente**: Encontre a melhor relação risco x retorno.
 - **Pesos Ideais**: Sugestão de rebalanceamento para maximizar o Sharpe Ratio.
+
+---
+
+### 📂 Estrutura do Projeto
+
+A organização das pastas segue o padrão Flask:
+
+- **`templates/`**: Contém todos os arquivos HTML (páginas do site).
+  - _Ex: `index2.html`, `login.html`, `portfolio.html`._
+- **`static/`**: Arquivos estáticos (CSS, JS, Imagens).
+  - **`assets/`**: Imagens do projeto (logos, previews).
+  - **`css/`**: Estilos (ex: `dashboard.css`).
+  - **`js/`**: Scripts interativos (ex: `dashboard.js`).
+- **`app.py`**: O "cérebro" da aplicação. Arquivo principal Python que roda o servidor Flask e gerencia as rotas e API.
+
+### 🚀 Como Rodar
+
+Para visualizar o projeto corretamente com todas as funcionalidades:
+
+1. Abra o terminal na pasta do projeto.
+2. Execute o comando:
+   ```bash
+   python app.py
+   ```
+3. O terminal mostrará um link (geralmente `http://127.0.0.1:5000` ou `http://localhost:5000`).
+4. **Segure Ctrl e clique no link** (ou copie e cole no navegador) para acessar.
+
+> **Nota:** Se utilizar o Live Server, certifique-se de abrir a pasta raiz do projeto no VS Code para que os caminhos dos arquivos funcionem corretamente.
 
 ---
 

@@ -381,7 +381,7 @@
         </button>
 
         <nav id="main-nav">
-            <a href="index2.html" data-i18n="nav_home">Início</a>
+            <a href="/" data-i18n="nav_home">Início</a>
             <a href="index2.html#dashboard" data-i18n="nav_platform">Plataforma</a>
             <a href="index2.html#mercado" data-i18n="nav_market">Mercado</a>
 
@@ -391,7 +391,7 @@
                 <button class="nav-btn-drop" onclick="this.nextElementSibling.classList.toggle('show')"><span data-i18n="nav_analysis">Análise</span> ▼</button>
                 <div class="dropdown-content">
                     <a href="predicao" class="protected-link" data-i18n="nav_prediction">Modelo de Predição</a>
-                    <a href="analise_carteiras.html" class="protected-link" data-i18n="nav_risk">Correlação & Risco</a>
+                    <a href="analise" class="protected-link" data-i18n="nav_risk">Correlação & Risco</a>
                     <a href="simulacao" class="protected-link" data-i18n="nav_simulations">Simulações</a>
                     <a href="otimizacao" class="protected-link" data-i18n="nav_optimization">Otimização Markowitz</a>
                     <a href="portfolio" class="protected-link" data-i18n="nav_portfolio">Gerenciar Portfólio</a>
@@ -408,7 +408,7 @@
                 <a href="#" class="btn-logout" onclick="logout()" data-i18n="nav_logout">Sair</a>
             </div>
             <div id="nav-public" style="display: none; align-items: center; margin-left: 20px;">
-                <a href="login.html" class="btn-logout" style="border: 1px solid rgba(255,255,255,0.2);" data-i18n="nav_login">Entrar</a>
+                <a href="login" class="btn-logout" style="border: 1px solid rgba(255,255,255,0.2);" data-i18n="nav_login">Entrar</a>
             </div>
         </nav>
     </header>
@@ -508,7 +508,7 @@
             document.getElementById('theme-btn').innerText = next === 'dark' ? '☀️' : '🌙';
             if(lastData) renderChart(lastData);
         }
-        async function logout() { await fetch(`${API_BASE_URL}/logout`); window.location.href='index2.html'; }
+        async function logout() { await fetch(`${API_BASE_URL}/logout`); window.location.href='/'; }
 
         // --- Init ---
         const savedTheme = localStorage.getItem('theme') || 'dark'; // Default dark per request
