@@ -29,13 +29,12 @@
 
         [data-theme="light"] {
             --bg-main: #f0f2f5;
-            --bg-card: #ffffff;
+            --bg-card: rgba(255, 255, 255, 0.9);
             --bg-panel: #ffffff;
             --text-main: #1a1a1a;
-            --text-muted: #555;
+            --text-muted: #666;
             --border-neon: rgba(0, 123, 255, 0.3);
-            --border-soft: rgba(0, 0, 0, 0.08);
-            --accent-cyan: #007bff;
+            --border-soft: rgba(0, 0, 0, 0.05);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Manrope', sans-serif; }
@@ -221,36 +220,40 @@
             min-height: 400px;
         }
 
-        /* Smart Entry - Refined */
-        .smart-hero {
-            background: var(--bg-card); /* Match card style for consistency */
-            border: 1px solid var(--border-soft);
+        /* Smart Entry Input */
+        .smart-entry-container {
+            margin-bottom: 20px; position: relative;
+        }
+        .smart-input {
+            width: 100%;
+            background: rgba(10, 25, 47, 0.6);
+            border: 1px solid var(--accent-primary);
+            padding: 15px 20px 15px 45px; /* Space for icon */
             border-radius: 12px;
-            padding: 15px 25px;
-            display: flex; align-items: center; gap: 15px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1); /* Softer shadow */
+            color: white; font-size: 15px;
+            box-shadow: 0 0 15px rgba(100, 255, 218, 0.1);
+            transition: all 0.3s ease;
+            outline: none;
         }
-        .smart-hero input {
-            flex: 1; background: transparent; border: none;
-            color: var(--text-main); font-size: 16px; outline: none;
-            font-family: inherit;
+        .smart-input:focus {
+            box-shadow: 0 0 20px rgba(100, 255, 218, 0.25);
+            background: rgba(10, 25, 47, 0.9);
         }
-        .smart-hero button {
-            background: var(--accent-cyan); color: #fff;
-            border: none; padding: 8px 20px; border-radius: 6px;
-            font-weight: 600; cursor: pointer; transition: all 0.2s;
-            font-size: 14px;
+        .smart-icon {
+            position: absolute; left: 15px; top: 50%; transform: translateY(-50%);
+            font-size: 18px; pointer-events: none;
         }
-        .smart-hero button:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2); }
 
-
-        /* Transaction List */
-        .trans-list { display: flex; flex-direction: column; gap: 0; max-height: 400px; overflow-y: auto; }
+        /* Transaction List Scroll Fix */
+        .trans-list { 
+            display: flex; flex-direction: column; gap: 0; 
+            max-height: 400px; overflow-y: auto; /* Enable Scroll */
+            padding-right: 5px; /* Avoid scrollbar covering content */
+        }
         .trans-item { 
             display: flex; align-items: center; padding: 18px 20px; 
             background: transparent;
-            border-bottom: 1px solid var(--border-soft);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
             transition: all 0.2s ease; cursor: pointer;
             position: relative;
             flex-wrap: wrap; /* Allow details to break to new line */
@@ -271,12 +274,12 @@
             font-size: 20px; margin-right: 15px;
         }
         .trans-info { flex: 1; min-width: 150px; }
-        .trans-desc { font-weight: 600; color: var(--text-main); font-size: 16px; margin-bottom: 4px; }
+        .trans-desc { font-weight: 600; color: white; font-size: 16px; margin-bottom: 4px; }
         .trans-meta { width: 100%; color: var(--text-muted); font-size: 13px; }
         .trans-amount { font-weight: 700; font-size: 16px; margin-left: auto; text-align: right; }
         
         .trans-details {
-            width: 100%; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-soft);
+            width: 100%; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.05);
             color: var(--accent-cyan); font-size: 14px; display: none;
         }
         .trans-item.active .trans-details { display: block; animation: fadeIn 0.3s ease; }
@@ -424,13 +427,6 @@
             <input type="month" id="dateFilter" class="date-filter" onchange="loadData()">
         </div>
 
-        <!-- Smart Entry Hero -->
-        <div class="smart-hero">
-            <span style="font-size: 20px;">✨</span>
-            <input type="text" id="smartInput" placeholder="Digite aqui: 'Hoje almoço 30 reais' ou 'Recebi 500 de vendas'..." onkeypress="if(event.key==='Enter') processSmartEntry()">
-            <button onclick="processSmartEntry()">Processar</button>
-        </div>
-
         <!-- KPI Row -->
         <div class="kpi-grid">
             <!-- Revenue Card -->
@@ -479,11 +475,20 @@
         <div class="bottom-grid">
             
             <!-- Transactions List -->
-            <div class="card" style="padding: 0; overflow: hidden; max-height: 500px;">
-                <div style="padding: 20px; border-bottom: 1px solid var(--border-soft); display: flex; justify-content: space-between;">
-                    <h3 style="font-size: 18px;">Transações Recentes</h3>
-                    <button onclick="openModal()" style="background:none; border:none; color: var(--accent-primary); cursor:pointer;">+ Novo</button>
+            <div class="card" style="padding: 0; overflow: hidden;">
+                <div style="padding: 20px; border-bottom: 1px solid var(--border-soft);">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                         <h3 style="font-size: 18px;">Transações Recentes</h3>
+                         <button onclick="openModal()" style="background:none; border:none; color: var(--accent-primary); cursor:pointer;">+ Novo</button>
+                    </div>
+
+                    <!-- Smart Entry Input -->
+                    <div class="smart-entry-container">
+                        <span class="smart-icon">✨</span>
+                        <input type="text" id="smart-input" class="smart-input" placeholder="IA: 'Gastei 50 no almoço' ou 'Recebi 1500 de salário'..." onkeypress="handleSmartEntry(event)">
+                    </div>
                 </div>
+
                 <div class="trans-list" id="transactionList">
                     <!-- Populated by JS -->
                 </div>
@@ -617,6 +622,49 @@
                 updateGoal(incomes, expenses, filterVal);
 
             } catch(e) { console.error("Error loading data:", e); }
+        }
+
+        // --- AI Smart Entry ---
+        async function handleSmartEntry(event) {
+            if (event.key === 'Enter') {
+                const input = document.getElementById('smart-input');
+                const text = input.value;
+                if (!text) return;
+
+                // Visual feedback
+                const originalPlaceholder = input.placeholder;
+                input.value = '';
+                input.placeholder = "Processando com IA...";
+                input.disabled = true;
+
+                try {
+                     const res = await fetch(`${API_BASE_URL}/api/expenses/parse`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ text: text })
+                    });
+                    
+                    const data = await res.json();
+                    
+                    if (res.ok) {
+                        // Success animation or notification could go here
+                        loadData(); // Reload everything
+                        input.placeholder = "✨ Sucesso! Digite outro...";
+                    } else {
+                        alert(data.error || "Erro ao processar.");
+                        input.placeholder = originalPlaceholder;
+                        input.value = text; // Restore text
+                    }
+
+                } catch (e) {
+                    console.error(e);
+                    alert("Erro de conexão.");
+                    input.placeholder = originalPlaceholder;
+                } finally {
+                    input.disabled = false;
+                    setTimeout(() => input.placeholder = originalPlaceholder, 3000);
+                }
+            }
         }
 
         function renderRevenueChart(incomes) {
@@ -896,29 +944,6 @@
             document.getElementById('desc').value = '';
             document.getElementById('amount').value = '';
             loadData();
-            loadData();
-        }
-
-
-
-        async function processSmartEntry() {
-            const input = document.getElementById('smartInput');
-            const text = input.value;
-            if(!text) return;
-            
-            try {
-                const res = await fetch(`${API_BASE_URL}/smart-entry`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({text})
-                });
-                if(res.ok) {
-                    input.value = '';
-                    loadData(); // Refresh list
-                } else {
-                    alert("Não entendi... Tente: 'Gastei 50 em comida'");
-                }
-            } catch(e) { console.error(e); }
         }
 
         window.onclick = function(event) {
