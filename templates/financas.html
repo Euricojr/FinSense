@@ -384,6 +384,17 @@
         .legend-item:hover { background: rgba(255,255,255,0.03); color: white;}
         .legend-dot { width: 6px; height: 6px; border-radius: 2px; box-shadow: 0 0 5px rgba(0,0,0,0.3); }
         .legend-val { font-size: 12px; font-weight: 700; color: var(--accent-cyan); }
+        .legend-val { font-size: 12px; font-weight: 700; color: var(--accent-cyan); }
+
+        /* Glow Animation */
+        @keyframes cyan-glow {
+            0% { box-shadow: 0 0 5px var(--accent-primary); border-color: var(--accent-primary); }
+            50% { box-shadow: 0 0 25px var(--accent-primary); border-color: var(--accent-neon); }
+            100% { box-shadow: initial; border-color: var(--border-neon); }
+        }
+        .glow-active {
+            animation: cyan-glow 1.5s ease-out;
+        }
     </style>
 </head>
 <body>
@@ -443,6 +454,17 @@
             </div>
         </div>
 
+        <!-- Mentor AI Banner -->
+        <div class="card" id="mentor-card" style="margin-bottom: 30px; border: 1px solid var(--accent-primary); background: linear-gradient(90deg, rgba(10, 25, 47, 0.9), rgba(17, 34, 64, 0.9));">
+            <div style="display: flex; gap: 20px; align-items: center;">
+                <div style="font-size: 32px; filter: drop-shadow(0 0 10px var(--accent-primary));">🤖</div>
+                <div style="flex: 1;">
+                    <h3 style="color: var(--accent-primary); font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">Mentor Estratégico</h3>
+                    <p id="mentor-advice" style="font-size: 18px; font-weight: 500; color: white;">Conectando ao cérebro financeiro...</p>
+                </div>
+            </div>
+        </div>
+
         <!-- KPI Row -->
         <div class="kpi-grid">
             <!-- Revenue Card -->
@@ -491,7 +513,7 @@
         <div class="bottom-grid">
             
             <!-- Transactions List -->
-            <div class="card" style="padding: 0; overflow: hidden;">
+            <div class="card" id="trans-card-container" style="padding: 0; overflow: hidden;">
                 <div style="padding: 20px; border-bottom: 1px solid var(--border-soft);">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
                          <h3 style="font-size: 18px;">Transações Recentes</h3>
@@ -603,6 +625,7 @@
 
              updateCategories();
              loadData();
+             loadAdvice();
         });
 
         function updateDateDisplay(dateStr) {
@@ -651,7 +674,25 @@
                 // 4. Update Goals
                 updateGoal(incomes, expenses, filterVal);
 
+                // 4. Update Goals
+                updateGoal(incomes, expenses, filterVal);
+
             } catch(e) { console.error("Error loading data:", e); }
+        }
+
+        async function loadAdvice() {
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/financas/summary`);
+                const data = await res.json();
+                if (data.advice) {
+                    const adviceEl = document.getElementById('mentor-advice');
+                    adviceEl.style.opacity = 0;
+                    setTimeout(() => {
+                        adviceEl.innerText = `"${data.advice}"`;
+                        adviceEl.style.opacity = 1;
+                    }, 300);
+                }
+            } catch(e) { console.error("Advice Error", e); }
         }
 
         // --- AI Smart Entry ---
@@ -677,8 +718,16 @@
                     const data = await res.json();
                     
                     if (res.ok) {
-                        // Success animation or notification could go here
-                        loadData(); // Reload everything
+                        // Success animation
+                        const card = document.getElementById('trans-card-container');
+                        if(card) {
+                            card.classList.remove('glow-active');
+                            void card.offsetWidth; 
+                            card.classList.add('glow-active');
+                        }
+
+                        loadData(); 
+                        loadAdvice();
                         input.placeholder = "✨ Sucesso! Digite outro...";
                     } else {
                         alert(data.error || "Erro ao processar.");

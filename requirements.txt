@@ -9,3 +9,5 @@ python-bcb
 werkzeug
 scipy
 scikit-learn
+groq
+python-dotenv

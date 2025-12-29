@@ -14,25 +14,34 @@ from bcb import sgs
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score
+from groq import Groq
+import json
+from datetime import datetime
+from dotenv import load_dotenv
 
+load_dotenv()
 
 # --- CONFIGURATION ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # Set template_folder to base dir to render root HTMLs
 app = Flask(__name__, static_folder='static')
+app.config['JSON_SORT_KEYS'] = False
 CORS(app)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Security & DB Config
-app.secret_key = 'super_secret_key_change_this_in_production' # Needed for sessions
+app.secret_key = 'super_secret_key_change_this_in_production' 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(BASE_DIR, 'database.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
-login_manager.login_view = 'login' # Redirect here if not logged in
+login_manager.login_view = 'login' 
+
+# GROQ Client
+groq_client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
 # Cache for Heatmap
 CACHE_HEATMAP = {}
@@ -394,95 +403,68 @@ def delete_expense(id):
 @app.route('/api/expenses/parse', methods=['POST'])
 @login_required
 def parse_expense():
-    import re
-    from datetime import datetime, timedelta
-    
     data = request.json
     text = data.get('text', '')
     if not text: return jsonify({"error": "No text provided"}), 400
 
-    text_lower = text.lower()
-
-    # 1. Extract Amount (Regex)
-    # Match: 70.50, 70,50, 70
-    amount_match = re.search(r'(\d+([.,]\d{1,2})?)', text)
-    if not amount_match:
-        return jsonify({"error": "Valor não encontrado na frase."}), 400
-    
-    amount_str = amount_match.group(1).replace(',', '.')
-    amount = float(amount_str)
-
-    # 2. Determine Type (Expense vs Income)
-    # Keywords for Income
-    # Keywords for Income
-    income_keywords = ['recebi', 'ganhei', 'salário', 'bônus', 'extra', 'venda', 'reembolso', 'dividendos', 'pix recebido', 'rendimento', '13º', 'comissão', 'receita', 'faturamento', 'lucro', 'depósito', 'deposito', 'entrada', 'caiu']
-    is_income = any(word in text_lower for word in income_keywords)
-    type_ = 'income' if is_income else 'expense'
-
-    # 3. Determine Category (Keyword Mapping)
-    category = "Outros"
-    
-    categories_map = {
-        'Alimentação': ['comida', 'almoço', 'janta', 'jantar', 'lanche', 'pizza', 'burger', 'restaurante', 'ifood', 'rappi', 'mercado', 'supermercado', 'padaria', 'café', 'coxinha', 'buffet', 'sorvete', 'doceria', 'pão', 'churrasco', 'açougue', 'hortifruti', 'sobremesa', 'bebida', 'cerveja', 'vinho', 'drink', 'bar', 'delivery', 'açaí', 'sushi'],
-        'Transporte': ['uber', '99', 'táxi', 'gasolina', 'álcool', 'diesel', 'combustível', 'abastecer', 'tanque', 'shell', 'ipiranga', 'estacionamento', 'pedágio', 'metrô', 'ônibus', 'trem', 'revisão', 'multa', 'mecânico', 'pneu', 'balanceamento', 'ipva', 'licenciamento'],
-        'Lazer': ['cinema', 'filme', 'jogo', 'game', 'show', 'balada', 'viagem', 'hotel', 'airbnb', 'passeio', 'praia', 'clube', 'festa', 'ingresso', 'steam', 'playstation', 'xbox', 'nintendo', 'twitch', 'bet'],
-        'Moradia': ['aluguel', 'condomínio', 'luz', 'energia', 'agua', 'água', 'internet', 'wi-fi', 'gás', 'faxina', 'diarista', 'reforma', 'móveis', 'decoração', 'leroy', 'telhanorte', 'cama', 'mesa', 'banho', 'iptu', 'manutenção', 'casa'],
-        'Saúde': ['farmácia', 'remédio', 'médico', 'dentista', 'consulta', 'hospital', 'exame', 'academia', 'suplemento', 'creatina', 'whey', 'psicólogo', 'terapia', 'convênio', 'plano de saúde', 'ocular', 'óculos'],
-        'Educação': ['faculdade', 'escola', 'curso', 'udemy', 'alura', 'livro', 'mensalidade', 'pós-graduação', 'material escolar', 'papelaria', 'idiomas', 'inglês', 'bootcamp'],
-        'Pessoal': ['cabelo', 'barbeiro', 'manicure', 'unha', 'estética', 'cosmético', 'perfume', 'roupa', 'tênis', 'sapato', 'bolsa', 'acessório', 'renner', 'riachuelo', 'zara', 'shein', 'shopee', 'amazon', 'mercado livre'],
-        'Assinaturas': ['netflix', 'spotify', 'youtube', 'prime', 'disney', 'hbo', 'globoplay', 'icloud', 'google one', 'chatgpt', 'assinatura', 'vpn', 'antivírus'],
-        'Pets': ['ração', 'pet', 'veterinário', 'banho e tosa', 'gato', 'cachorro', 'areia', 'vacina pet', 'dog'],
-        'Dívidas': ['fatura', 'cartão', 'empréstimo', 'financiamento', 'juros', 'parcela', 'dívida', 'negociação', 'serasa'],
-        'Impostos': ['imposto', 'darf', 'nota fiscal', 'tributo', 'taxa'],
-        
-        # Income Categories
-        'Salário': ['salário', 'bônus', '13º', 'adiantamento', 'férias', 'rescisão'],
-        'Investimentos': ['dividendos', 'rendimento', 'jcp', 'lucro', 'aporte', 'cdb', 'selic', 'tesouro'],
-        'Vendas': ['venda', 'comissão', 'faturamento', 'receita', 'vendi'],
-        'Presentes': ['presente', 'doação', 'aniversário', 'natal']
-    }
-    
-    # Priority for specific income categories if is_income
-    if is_income:
-        # Default income cat
-        category = 'Receitas' 
-        if any(w in text_lower for w in categories_map['Salário']): category = 'Salário'
-        elif any(w in text_lower for w in categories_map['Investimentos']): category = 'Investimentos'
-        elif any(w in text_lower for w in categories_map['Vendas']): category = 'Vendas'
-    else:
-        # Expense categories
-        for cat, keywords in categories_map.items():
-            if cat in ['Salário', 'Investimentos', 'Vendas']: continue # Skip income specific
-            if any(k in text_lower for k in keywords):
-                category = cat
-                break
-
-    # 4. Smart Date
-    date_val = datetime.now()
-    if 'anteontem' in text_lower:
-        date_val = date_val - timedelta(days=2)
-    elif 'ontem' in text_lower:
-        date_val = date_val - timedelta(days=1)
-    
-    date_str = date_val.strftime('%Y-%m-%d')
-
-    # 5. Auto-Save
     try:
-        if type_ == 'expense':
+        today_str = datetime.now().strftime('%Y-%m-%d')
+        
+        prompt = f"""
+        Você é um assistente financeiro inteligente (backend).
+        Analise o texto do usuário: "{text}"
+        
+        Extraia as informações e retorne APENAS um JSON (sem markdown) neste formato:
+        {{
+            "description": "descrição curta",
+            "amount": 0.00 (float),
+            "type": "Receita" ou "Despesa",
+            "category": "Categoria da lista",
+            "date": "YYYY-MM-DD"
+        }}
+
+        Regras:
+        1. Categorias Permitidas (Despesa): Alimentação, Transporte, Lazer, Moradia, Saúde, Educação, Pessoal, Assinaturas, Pets, Dívidas, Impostos, Outros.
+        2. Categorias Permitidas (Receita): Salário, Investimentos, Vendas, Presentes, Outros.
+        3. Identifique 'Tipo' pelo contexto: 'recebi', 'ganhei', 'salário' -> Receita. Caso contrário -> Despesa.
+        4. Data: Se disser 'ontem', calcule a data baseada em hoje ({today_str}). Se não disser nada, use hoje.
+        5. Formate "amount" como float puro (ex: 50.00).
+        """
+
+        chat_completion = groq_client.chat.completions.create(
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt,
+                }
+            ],
+            model="llama-3.1-8b-instant",
+            temperature=0,
+            response_format={"type": "json_object"}
+        )
+
+        result_str = chat_completion.choices[0].message.content
+        result = json.loads(result_str)
+        
+        # Normalize Type to internal identifiers
+        is_income = result.get('type') == 'Receita'
+        
+        # Save to DB
+        if not is_income:
             new_tx = Expense(
                 user_id=current_user.id,
-                description=text, # Use full text as description
-                amount=amount,
-                date=date_str,
-                category=category
+                description=result.get('description', text),
+                amount=float(result.get('amount', 0)),
+                date=result.get('date', today_str),
+                category=result.get('category', 'Outros')
             )
         else:
             new_tx = Income(
                 user_id=current_user.id,
-                description=text,
-                amount=amount,
-                date=date_str,
-                category=category
+                description=result.get('description', text),
+                amount=float(result.get('amount', 0)),
+                date=result.get('date', today_str),
+                category=result.get('category', 'Outros')
             )
         
         db.session.add(new_tx)
@@ -496,13 +478,13 @@ def parse_expense():
                 "amount": new_tx.amount,
                 "category": new_tx.category,
                 "date": new_tx.date,
-                "type": type_
+                "type": 'income' if is_income else 'expense'
             }
         })
 
     except Exception as e:
-        logger.error(f"Save Error: {e}")
-        return jsonify({"error": f"Erro ao salvar: {str(e)}"}), 500
+        logger.error(f"AI Parse Error: {e}")
+        return jsonify({"error": f"Erro na IA: {str(e)}"}), 500
 
 # --- INCOME & SUMMARY API ---
 
@@ -545,62 +527,69 @@ def delete_income(id):
 @app.route('/api/financas/summary')
 @login_required
 def financas_summary():
-    # 1. Calculate Totals (Current Month could be filtered, but using All Time for simplicity or last 30 days)
-    # Using All Time for now as requested "Mês" implies filtering but let's stick to available data for robustness first.
-    # Ideally filter by current month.
-    
-    from datetime import datetime
-    today = datetime.now()
-    current_month = today.strftime('%Y-%m')
-    
-    # Expenses
-    exps = Expense.query.filter_by(user_id=current_user.id).all()
-    # Filter for month? Or just take all? request says "Total de Ganhos (Mês)".
-    # Let's simple filter in python for Month
-    
-    month_exps = [e for e in exps if e.date.startswith(current_month)]
-    total_expenses = sum(e.amount for e in month_exps)
-    
-    # Incomes
-    incs = Income.query.filter_by(user_id=current_user.id).all()
-    month_incs = [i for i in incs if i.date.startswith(current_month)]
-    total_income = sum(i.amount for i in month_incs)
-    
-    balance = total_income - total_expenses
-    
-    # Top Category
-    cat_map = {}
-    for e in month_exps:
-        cat_map[e.category] = cat_map.get(e.category, 0) + e.amount
-    
-    top_category = max(cat_map, key=cat_map.get) if cat_map else "Nada"
-    
-    # AI Logic (Rule Based)
-    advice = ""
-    if total_income == 0 and total_expenses == 0:
-        advice = "Nenhum dado financeiro este mês. Comece a registrar para que eu possa julgar seus hábitos!"
-    elif balance < 0:
-        advice = f"Alerta vermelho! Você gastou R$ {abs(balance):.2f} a mais do que ganhou. A culpa é do {top_category}? Corte gastos ou venda algo urgente."
-    elif balance == 0:
-        advice = "Você está no zero a zero. Equilíbrio perfeito ou falta de ambição? Tente salvar pelo menos 10% no próximo mês."
-    else:
-        # Positive balance
-        ratio = (total_expenses / total_income) if total_income > 0 else 0
-        if ratio < 0.5:
-            advice = f"Excelente! Você economizou mais da metade do ganho. Invista esse saldo em FIIs ou Ações Seguras agora mesmo."
-        elif ratio < 0.8:
-            advice = f"Bom trabalho, sobrou dinheiro. Que tal reduzir os gastos com {top_category} para aumentar seus aportes?"
-        else:
-            advice = f"Ufa, sobrou pouco. Cuidado com {top_category}, está consumindo quase tudo. Invista o resto antes que você gaste!"
-            
-    return jsonify({
-        "total_income": total_income,
-        "total_expenses": total_expenses,
-        "balance": balance,
-        "top_category": top_category,
-        "advice": advice,
-        "month": current_month
-    })
+    try:
+        # Data aggregation
+        from datetime import datetime
+        today = datetime.now()
+        current_month = today.strftime('%Y-%m')
+        
+        exps = Expense.query.filter_by(user_id=current_user.id).all()
+        month_exps = [e for e in exps if e.date.startswith(current_month)]
+        total_expenses = sum(e.amount for e in month_exps)
+        
+        incs = Income.query.filter_by(user_id=current_user.id).all()
+        month_incs = [i for i in incs if i.date.startswith(current_month)]
+        total_income = sum(i.amount for i in month_incs)
+        
+        balance = total_income - total_expenses
+        
+        # Determine Top Category
+        cat_map = {}
+        for e in month_exps:
+            cat_map[e.category] = cat_map.get(e.category, 0) + e.amount
+        top_category = max(cat_map, key=cat_map.get) if cat_map else "Nenhuma"
+
+        # AI Advice via Groq
+        prompt = f"""
+        Você é um consultor financeiro "Mentor Estratégico".
+        Dados do Mês de {today.strftime('%B')}:
+        - Receita: R$ {total_income:.2f}
+        - Despesa: R$ {total_expenses:.2f}
+        - Saldo: R$ {balance:.2f}
+        - Maior gasto: {top_category}
+
+        Instrução: Dê uma única frase de conselho financeiro direto e impactante (max 20 palavras).
+        Se o saldo for positivo, sugira investimento. Se negativo, sugira corte específico.
+        Não use markdown. Texto puro.
+        """
+
+        chat_completion = groq_client.chat.completions.create(
+            messages=[{"role": "user", "content": prompt}],
+            model="llama-3.1-8b-instant",
+            temperature=0.7,
+            max_tokens=60
+        )
+        advice = chat_completion.choices[0].message.content.strip()
+
+        return jsonify({
+            "total_income": total_income,
+            "total_expenses": total_expenses,
+            "balance": balance,
+            "top_category": top_category,
+            "advice": advice,
+            "month": current_month
+        })
+
+    except Exception as e:
+        logger.error(f"Summary Error: {e}")
+        # Fail gracefully without AI
+        return jsonify({
+            "total_income": total_income if 'total_income' in locals() else 0,
+            "total_expenses": total_expenses if 'total_expenses' in locals() else 0,
+            "balance": balance if 'balance' in locals() else 0,
+            "advice": "Sem conexão com o mentor no momento.",
+            "month": current_month if 'current_month' in locals() else ""
+        })
 
 @app.route('/<path:filename>')
 def serve_static(filename):
