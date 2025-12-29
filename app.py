@@ -423,10 +423,10 @@ def parse_expense():
     category = "Outros"
     
     categories_map = {
-        'Alimentação': ['almoço', 'janta', 'lanche', 'pizza', 'burger', 'restaurante', 'ifood', 'rappi', 'mercado', 'supermercado', 'padaria', 'café', 'coxinha', 'buffet', 'sorvete', 'doceria', 'pão', 'churrasco', 'açougue', 'hortifruti', 'sobremesa', 'bebida', 'cerveja', 'vinho', 'drink', 'bar'],
-        'Transporte': ['uber', '99', 'táxi', 'gasolina', 'álcool', 'diesel', 'combustível', 'shell', 'ipiranga', 'estacionamento', 'pedágio', 'metrô', 'ônibus', 'trem', 'revisão', 'multa', 'mecânico', 'pneu', 'balanceamento', 'ipva', 'licenciamento'],
+        'Alimentação': ['comida', 'almoço', 'janta', 'jantar', 'lanche', 'pizza', 'burger', 'restaurante', 'ifood', 'rappi', 'mercado', 'supermercado', 'padaria', 'café', 'coxinha', 'buffet', 'sorvete', 'doceria', 'pão', 'churrasco', 'açougue', 'hortifruti', 'sobremesa', 'bebida', 'cerveja', 'vinho', 'drink', 'bar', 'delivery', 'açaí', 'sushi'],
+        'Transporte': ['uber', '99', 'táxi', 'gasolina', 'álcool', 'diesel', 'combustível', 'abastecer', 'tanque', 'shell', 'ipiranga', 'estacionamento', 'pedágio', 'metrô', 'ônibus', 'trem', 'revisão', 'multa', 'mecânico', 'pneu', 'balanceamento', 'ipva', 'licenciamento'],
         'Lazer': ['cinema', 'filme', 'jogo', 'game', 'show', 'balada', 'viagem', 'hotel', 'airbnb', 'passeio', 'praia', 'clube', 'festa', 'ingresso', 'steam', 'playstation', 'xbox', 'nintendo', 'twitch', 'bet'],
-        'Moradia': ['aluguel', 'condomínio', 'luz', 'energia', 'agua', 'água', 'internet', 'wi-fi', 'gás', 'faxina', 'diarista', 'reforma', 'móveis', 'decoração', 'leroy', 'telhanorte', 'cama', 'mesa', 'banho', 'iptu', 'manutenção'],
+        'Moradia': ['aluguel', 'condomínio', 'luz', 'energia', 'agua', 'água', 'internet', 'wi-fi', 'gás', 'faxina', 'diarista', 'reforma', 'móveis', 'decoração', 'leroy', 'telhanorte', 'cama', 'mesa', 'banho', 'iptu', 'manutenção', 'casa'],
         'Saúde': ['farmácia', 'remédio', 'médico', 'dentista', 'consulta', 'hospital', 'exame', 'academia', 'suplemento', 'creatina', 'whey', 'psicólogo', 'terapia', 'convênio', 'plano de saúde', 'ocular', 'óculos'],
         'Educação': ['faculdade', 'escola', 'curso', 'udemy', 'alura', 'livro', 'mensalidade', 'pós-graduação', 'material escolar', 'papelaria', 'idiomas', 'inglês', 'bootcamp'],
         'Pessoal': ['cabelo', 'barbeiro', 'manicure', 'unha', 'estética', 'cosmético', 'perfume', 'roupa', 'tênis', 'sapato', 'bolsa', 'acessório', 'renner', 'riachuelo', 'zara', 'shein', 'shopee', 'amazon', 'mercado livre'],
