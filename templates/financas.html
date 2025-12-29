@@ -3,55 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FinSense - Gestão de Finanças</title>
+    <title>FinSense - Dashboard Financeiro</title>
     <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
     <script src="/static/js/translations.js"></script>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
     <style>
-        /* ... existing root ... */ 
-        /* Add theme-toggle styles */
-        /* Add theme-toggle styles */
-        .theme-toggle {
-            background: rgba(255, 255, 255, 0.05); 
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            color: rgba(255, 255, 255, 0.9);
-            cursor: pointer; 
-            font-size: 14px; /* Smaller font for text inside */
-            margin-left: 10px;
-            width: 50px; height: 32px; border-radius: 20px; /* Pill shape */
-            display: flex; align-items: center; justify-content: center;
-            transition: all 0.2s ease;
-        }
-        .theme-toggle:hover { 
-            background-color: rgba(255, 255, 255, 0.1); 
-            border-color: rgba(255, 255, 255, 0.3);
-            transform: translateY(-1px);
-        }
         :root {
-            /* Colors matching Dark Mode Standard (#0a192f) */
+            /* Palette Dark/Blue FinSense */
             --bg-main: #0a192f;
+            --bg-card: rgba(16, 24, 41, 0.6);
             --bg-panel: #112240;
             --text-main: #e6f1ff;
             --text-muted: #8892b0;
-            --accent-primary: #64ffda;
-            --accent-secondary: #007bff; /* Vibrant Blue for buttons */
+            --accent-primary: #64ffda; /* Teal/Cyan */
+            --accent-blue: #007bff;
+            --accent-neon: #00f2ff;
+            --border-neon: rgba(0, 242, 255, 0.3);
+            --border-soft: rgba(255, 255, 255, 0.05);
             --danger-red: #ff5f56;
             --success-green: #2ecc71;
-            --border-color: rgba(255,255,255,0.1);
-            --gradient-blue: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+            --gradient-card: linear-gradient(145deg, rgba(17, 34, 64, 0.8), rgba(10, 25, 47, 0.9));
         }
 
         [data-theme="light"] {
             --bg-main: #f0f2f5;
+            --bg-card: rgba(255, 255, 255, 0.9);
             --bg-panel: #ffffff;
             --text-main: #1a1a1a;
             --text-muted: #666;
-            --border-color: #ddd;
+            --border-neon: rgba(0, 123, 255, 0.3);
+            --border-soft: rgba(0, 0, 0, 0.05);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Manrope', sans-serif; }
-        body { background-color: var(--bg-main); color: var(--text-main); transition: background-color 0.3s; min-height: 100vh; position: relative; }
+        body { background-color: var(--bg-main); color: var(--text-main); min-height: 100vh; overflow-x: hidden; }
 
-        /* --- Header --- */
+        /* --- Header (Prediction Style) --- */
         header {
             background-color: #0a192f;
             padding: 0 40px;
@@ -93,7 +82,7 @@
             min-width: 220px;
             box-shadow: 0 8px 16px rgba(0,0,0,0.2);
             z-index: 1001; border-radius: 8px;
-            overflow: hidden; border: 1px solid var(--border-color);
+            overflow: hidden; border: 1px solid var(--border-neon);
             top: 100%;
         }
         .dropdown-content.show { display: block; }
@@ -104,9 +93,53 @@
             display: block; margin-left: 0; font-size: 14px;
             white-space: nowrap;
         }
-        .dropdown-content a:hover { background-color: var(--bg-main); color: var(--accent-secondary); }
- 
-        /* Buttons */
+        .dropdown-content a:hover { background-color: var(--bg-main); color: var(--accent-primary); }
+
+        /* Theme Toggle */
+        .theme-toggle {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: rgba(255, 255, 255, 0.9);
+            cursor: pointer;
+            font-size: 16px; margin-left: 12px;
+            width: 50px; height: 32px; border-radius: 16px;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s ease;
+        }
+        .theme-toggle:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        /* Mobile Menu Btn */
+        .mobile-menu-btn { display: none; background: none; border: none; cursor: pointer; padding: 10px; }
+        .mobile-menu-btn span { display: block; width: 25px; height: 3px; margin: 5px 0; background-color: white; }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn { display: block; z-index: 1002; }
+            nav { display: none; }
+            nav.active {
+                display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
+                background-color: #020c1b; 
+                flex-direction: column; 
+                padding: 80px 20px;
+                align-items: center;
+                gap: 20px;
+                overflow-y: auto;
+            }
+            nav.active > * { margin: 0 !important; }
+            nav.active a { font-size: 18px; }
+            nav.active .dropdown { margin: 0; text-align: center; }
+            nav.active .nav-btn-drop { font-size: 18px; margin: 0; }
+            nav.active .dropdown-content { 
+                position: relative; background: transparent; box-shadow: none; border: none; text-align: center; float: none; top: 0;
+            }
+            nav.active .dropdown-content a { font-size: 16px; opacity: 0.7; padding: 10px; }
+            nav.active #theme-btn, nav.active #lang-toggle { width: 40px; height: 40px; margin: 5px !important; display: inline-flex; }
+        }
+
+        /* Standard Logout (from Predicao) */
         .btn-logout {
             margin-left: 10px;
             padding: 6px 16px;
@@ -127,742 +160,683 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
 
-        /* Container */
-        .container { max-width: 1200px; margin: 0 auto; padding: 100px 20px 40px 20px; }
-        
-        h1 { font-size: 28px; margin-bottom: 30px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
-        
-        /* Insight Cards (Updated to match Predicao) */
-        .insights-container {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 20px;
-        }
-        .insight-card {
-            background-color: var(--bg-panel); border: 1px solid var(--border-color);
-            border-radius: 12px; padding: 20px; display: flex; align-items: center; gap: 15px;
-            transition: transform 0.2s, box-shadow 0.2s; position: relative;
-        }
-        .insight-card:hover { transform: translateY(-3px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-        .icon-box {
-            width: 50px; height: 50px; border-radius: 10px; background: rgba(255,255,255,0.05);
-            display: flex; align-items: center; justify-content: center; font-size: 24px;
-        }
-        .insight-content h4 { font-size: 12px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; font-weight: 600; }
-        .insight-content .value { font-size: 20px; font-weight: 600; color: var(--text-main); }
-        
-        .alert-box {
-            background: rgba(0, 123, 255, 0.08); border-left: 4px solid var(--accent-secondary); color: var(--text-main);
-            padding: 15px 20px; border-radius: 4px; margin-bottom: 30px; font-size: 14px;
-            display: flex; align-items: center; gap: 15px;
+        /* --- Dashboard Layout --- */
+        .dashboard-container {
+            max-width: 1400px; margin: 0 auto; padding: 100px 20px 50px 20px;
+            display: grid; gap: 40px; /* Increased gap */
         }
 
-        /* Progress Bar */
-        .progress-container { margin-top: 10px; background: rgba(255,255,255,0.1); border-radius: 4px; height: 6px; width: 100%; overflow: hidden; }
-        .progress-bar { height: 100%; background: var(--success-green); width: 0%; transition: width 0.5s ease; }
-        .progress-bar.warning { background: #f39c12; }
-        .progress-bar.danger { background: var(--danger-red); }
-
-        /* Type Toggles */
-        .type-toggle { display: flex; gap: 10px; margin-bottom: 20px; }
-        .toggle-btn { 
-            flex: 1; padding: 10px; border: 1px solid var(--border-color); background: transparent; 
-            color: var(--text-muted); border-radius: 6px; cursor: pointer; transition: all 0.2s; font-weight: 600;
-        }
-        .toggle-btn.active.income { background: rgba(46, 204, 113, 0.2); color: var(--success-green); border-color: var(--success-green); }
-        .toggle-btn.active.expense { background: rgba(255, 95, 86, 0.2); color: var(--danger-red); border-color: var(--danger-red); }
-
-        /* AI Input */
-        .ai-input-section {
-            background: linear-gradient(90deg, rgba(0, 123, 255, 0.05) 0%, rgba(0, 86, 179, 0.05) 100%);
-            border: 1px solid var(--accent-secondary);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 30px;
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
-        .ai-input-wrapper { flex: 1; position: relative; }
-        .ai-input-wrapper input {
-            width: 100%; background: var(--bg-main); border: 1px solid var(--border-color);
-            padding: 12px 15px 12px 40px; border-radius: 8px; color: var(--text-main); font-size: 15px; outline: none;
-            transition: all 0.2s;
-        }
-        .ai-input-wrapper input:focus { border-color: var(--accent-secondary); box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2); }
-        .ai-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 18px; }
+        /* Page Header */
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .page-title h1 { font-size: 26px; font-weight: 700; color: var(--text-main); letter-spacing: -0.5px; }
         
-        .btn-ai {
-            background: var(--accent-secondary); color: white; border: none; padding: 12px 25px;
-            border-radius: 8px; font-weight: 700; cursor: pointer; transition: all 0.2s;
-            display: flex; align-items: center; gap: 8px;
-        }
-        .btn-ai:hover { background: #0069d9; transform: translateY(-1px); }
-
-        /* Content Grid */
-        .content-grid { display: grid; grid-template-columns: 350px 1fr; gap: 30px; }
-        
-        /* Form & Chart Panel */
-        .left-col { display: flex; flex-direction: column; gap: 20px; }
-
-        /* Transaction Form */
-        .form-card {
-            background-color: var(--bg-panel); border: 1px solid var(--border-color);
-            border-radius: 12px; padding: 25px; height: fit-content;
-        }
-        .chart-card {
-             background-color: var(--bg-panel); border: 1px solid var(--border-color);
-            border-radius: 12px; padding: 20px; height: 350px;
+        /* Date Picker Style */
+        .date-filter {
+            background: rgba(10, 25, 47, 0.8); /* Dark background */
+            border: 1px solid var(--accent-cyan); /* Neon border to ensure visibility */
+            padding: 8px 15px; border-radius: 8px; color: white;
+            font-size: 14px; outline: none; cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 242, 255, 0.1); /* Glow */
+            min-width: 150px;
         }
 
-        .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 8px; font-weight: 600; }
-        .form-control {
-            width: 100%; background: var(--bg-main); border: 1px solid var(--border-color);
-            padding: 10px 12px; border-radius: 6px; color: var(--text-main); font-size: 14px; outline: none;
-        }
-        .form-control:focus { border-color: var(--accent-secondary); }
-        
-        .btn-submit {
-            width: 100%; background: var(--accent-secondary); color: white; border: none;
-            padding: 12px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: all 0.2s;
-            margin-top: 10px;
-        }
-        .btn-submit:hover { background: #0069d9; transform: translateY(-1px); }
-
-        /* Table */
-        .table-card {
-            background-color: var(--bg-panel); border: 1px solid var(--border-color);
-            border-radius: 12px; padding: 20px; overflow: hidden; min-height: 400px;
-        }
-        table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; padding: 12px 15px; color: var(--text-muted); font-size: 12px; text-transform: uppercase; border-bottom: 1px solid var(--border-color); }
-        td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 14px; }
-        tr:last-child td { border-bottom: none; }
-        
-        .category-badge {
-            padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;
-            background: rgba(255,255,255,0.1); color: var(--text-main);
+        /* Top Grid - KPI Cards */
+        .kpi-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px;
+            min-height: 280px; /* Changed from fixed height to min-height */
         }
         
-        /* Logout Button Style from index2.html */
-        .btn-logout {
-            margin-left: 10px;
-            padding: 6px 16px;
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: rgba(255, 255, 255, 0.9);
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-neon);
+            border-radius: 16px;
+            padding: 30px; /* Increased padding as requested */
+            position: relative;
+            display: flex; flex-direction: column;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 8px 32px rgba(0, 242, 255, 0.05); /* Blue neon shadow */
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .card:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 12px 40px rgba(0, 242, 255, 0.15); /* Stronger glow on hover */
         }
 
-        .btn-logout:hover {
-            background-color: rgba(220, 53, 69, 0.15);
-            border-color: #ff5f56;
-            color: #ff5f56;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            text-decoration: none;
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; }
+        .card-title { font-size: 16px; font-weight: 600; color: var(--text-muted); }
+        .view-report-btn { font-size: 12px; color: var(--accent-primary); text-decoration: none; cursor: pointer; }
+
+        .chart-container { flex: 1; min-height: 0; width: 100%; position: relative; }
+
+        /* Bottom Grid - Transactions & Goals */
+        .bottom-grid {
+            display: grid; grid-template-columns: 3fr 1fr; gap: 40px;
+            min-height: 400px;
         }
 
-        /* Payment Method Icon */
-        .pay-icon { font-size: 16px; margin-right: 5px; vertical-align: middle; }
-
-        @media (max-width: 900px) {
-            .content-grid { grid-template-columns: 1fr; }
+        /* Transactions List */
+        .trans-list { display: flex; flex-direction: column; gap: 0; max-height: 100%; overflow-y: auto; }
+        .trans-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 15px 10px; border-bottom: 1px solid var(--border-soft);
+            transition: background 0.2s;
+        }
+        .trans-item:hover { background: rgba(255,255,255,0.02); }
+        .trans-item:last-child { border-bottom: none; }
+        
+        .trans-icon-wrapper {
+            width: 40px; height: 40px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; margin-right: 15px; flex-shrink: 0;
         }
         
-        /* Modal Styles */
+        .trans-info { flex: 1; }
+        .trans-desc { font-weight: 600; font-size: 15px; color: var(--text-main); margin-bottom: 4px; }
+        .trans-meta { font-size: 12px; color: var(--text-muted); }
+        
+        .trans-amount { font-weight: 700; font-size: 15px; text-align: right; }
+        .amount-pos { color: var(--success-green); }
+        .amount-neg { color: var(--text-main); } 
+
+        /* Saving Goal */
+        .goal-card {
+            display: flex; flex-direction: column; justify-content: center; gap: 20px;
+        }
+        .goal-progress {
+            background: rgba(255,255,255,0.05); height: 10px; border-radius: 5px; width: 100%; position: relative; overflow: hidden;
+        }
+        .goal-fill {
+            height: 100%; background: linear-gradient(90deg, #00d4ff, #0077b6);
+            width: 0%; border-radius: 5px; transition: width 1s ease;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.4);
+        }
+        .goal-values { display: flex; justify-content: space-between; font-size: 14px; color: var(--text-muted); margin-top: 5px; }
+        .goal-current { font-size: 32px; font-weight: 700; color: var(--text-main); }
+        
+        /* New Entry Widget */
+        .new-entry-widget {
+            background: linear-gradient(135deg, rgba(100, 255, 218, 0.1), rgba(0, 123, 255, 0.1));
+            border: 1px dashed var(--accent-primary);
+            cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 10px; transition: all 0.2s; min-height: 150px;
+        }
+        .new-entry-widget:hover { background: rgba(100, 255, 218, 0.15); border-style: solid; }
+        .plus-icon { font-size: 32px; color: var(--accent-primary); }
+
+        /* --- Modal --- */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 2000;
-            backdrop-filter: blur(5px);
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
+            display: none; align-items: center; justify-content: center; z-index: 2000;
         }
-        .modal-content {
-            background: var(--bg-panel); padding: 30px; border-radius: 12px; width: 90%; max-width: 600px;
-            position: relative; border: 1px solid var(--border-color);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        .modal-panel {
+            background: var(--bg-panel); width: 100%; max-width: 500px;
+            padding: 30px; border-radius: 20px; border: 1px solid var(--border-neon);
+            position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            animation: slideUp 0.3s ease;
         }
-        .modal-close {
-            position: absolute; top: 15px; right: 15px; background: none; border: none;
-            color: var(--text-muted); font-size: 24px; cursor: pointer;
-        }
+        @keyframes slideUp { from {opacity:0; transform:translateY(50px);} to {opacity:1; transform:translateY(0);} }
+
+        .modal-close { position: absolute; top: 20px; right: 20px; background: none; border: none; color: var(--text-muted); font-size: 24px; cursor: pointer; }
         
-        .btn-explore {
-            width: 100%; background: var(--accent-secondary);
-            color: white; border: none; padding: 15px; border-radius: 8px;
-            font-weight: 700; cursor: pointer; font-size: 16px; margin-bottom: 20px;
-            display: flex; align-items: center; justify-content: center; gap: 10px;
-            transition: transform 0.2s;
+        .form-label { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; display: block; font-weight: 600; }
+        .form-input {
+            width: 100%; background: rgba(255,255,255,0.03); border: 1px solid var(--border-soft);
+            padding: 12px; border-radius: 8px; color: white; font-size: 15px; outline: none; margin-bottom: 20px;
+            transition: border-color 0.2s;
         }
-        .btn-explore:hover { background: #0069d9; transform: translateY(-2px); }
+        .form-input:focus { border-color: var(--accent-primary); }
+        
+        .type-switcher { display: flex; background: rgba(255,255,255,0.05); padding: 5px; border-radius: 10px; margin-bottom: 25px; }
+        .type-btn {
+            flex: 1; background: none; border: none; padding: 10px; color: var(--text-muted);
+            border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s;
+        }
+        .type-btn.active.expense { background: rgba(255, 95, 86, 0.2); color: var(--danger-red); }
+        .type-btn.active.income { background: rgba(46, 204, 113, 0.2); color: var(--success-green); }
 
-        /* Negative Balance Card */
-        .card-negative {
-            background: linear-gradient(135deg, rgba(255, 95, 86, 0.2) 0%, rgba(200, 50, 50, 0.1) 100%) !important;
-            border-color: var(--danger-red) !important;
+        .btn-save {
+            width: 100%; background: var(--accent-blue); padding: 15px; border: none; border-radius: 10px;
+            font-weight: 700; color: white; font-size: 16px; cursor: pointer; transition: 0.2s;
+        }
+        .btn-save:hover { background: #0069d9; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,123,255,0.3); }
+
+        @media (max-width: 1024px) {
+            .kpi-grid { grid-template-columns: 1fr; height: auto; }
+            .card { min-height: 300px; }
+            .bottom-grid { grid-template-columns: 1fr; }
         }
 
+        /* Category Legend */
+        .legend-grid {
+            display: flex; flex-direction: column; gap: 8px;
+            margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border-soft);
+            max-height: 180px; overflow-y: auto;
+        }
+        .legend-item { 
+            display: flex; align-items: center; justify-content: space-between;
+            font-size: 14px; color: var(--text-main); /* Brighter */
+            padding: 6px 8px; border-radius: 6px;
+            transition: background 0.2s;
+        }
+        .legend-item:hover { background: rgba(255,255,255,0.03); }
+        
+        .legend-left { display: flex; align-items: center; gap: 10px; }
+        .legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; box-shadow: 0 0 5px rgba(0,0,0,0.5); }
+        .legend-val { font-weight: 700; color: var(--accent-cyan); }
     </style>
 </head>
 <body>
-    <header style="display: flex; justify-content: space-between; align-items: center; padding: 0 40px; height: 70px;">
+
+    <!-- Header -->
+    <header>
         <div class="logo">
             <img src="/static/assets/logo.png" alt="FinSense" style="height: 160px; margin-top: -50px; margin-bottom: -50px; margin-left: -40px; vertical-align: middle;">
         </div>
-        
-        <nav id="main-nav" style="display: flex; align-items: center;">
-            <a href="/" style="font-size: 16px; margin-left: 0; text-decoration: none; color: rgba(255,255,255,0.7);" data-i18n="nav_home">Início</a>
-            <a href="index2.html#dashboard" style="font-size: 16px; margin-left: 20px; text-decoration: none; color: rgba(255,255,255,0.7);" data-i18n="nav_platform">Plataforma</a>
-            <a href="index2.html#mercado" style="font-size: 16px; margin-left: 20px; text-decoration: none; color: rgba(255,255,255,0.7);" data-i18n="nav_market">Mercado</a>
-            <a href="financas" style="font-size: 16px; margin-left: 20px; text-decoration: none; color: white; font-weight: 600;" data-i18n="nav_fin_mng">Gestão de Finanças</a>
+
+        <button class="mobile-menu-btn" onclick="toggleMenu()">
+            <span></span><span></span><span></span>
+        </button>
+
+        <nav id="main-nav">
+            <a href="/" data-i18n="nav_home">Início</a>
+            <a href="index2.html#dashboard" data-i18n="nav_platform">Plataforma</a>
+            <a href="index2.html#mercado" data-i18n="nav_market">Mercado</a>
+
+            <a href="financas" style="color: white; font-weight: 600;">Gestão de Finanças</a>
 
             <div class="dropdown" style="margin-left: 20px;">
                 <button class="nav-btn-drop" onclick="this.nextElementSibling.classList.toggle('show')"><span data-i18n="nav_analysis">Análise</span> ▼</button>
                 <div class="dropdown-content">
-                    <a href="analise" data-i18n="analysis_title">Análise de Carteiras</a>
                     <a href="predicao" data-i18n="nav_prediction">Modelo de Predição</a>
+                    <a href="analise" data-i18n="nav_risk">Correlação & Risco</a>
                     <a href="simulacao" data-i18n="nav_simulations">Simulações</a>
-                    <a href="otimizacao" data-i18n="nav_optimization">Otimização</a>
-                    <a href="portfolio" data-i18n="nav_portfolio">Portfólio</a>
+                    <a href="otimizacao" data-i18n="nav_optimization">Otimização Markowitz</a>
+                    <a href="portfolio" data-i18n="nav_portfolio">Gerenciar Portfólio</a>
                 </div>
             </div>
 
-            <!-- Toggles (Moved BEFORE Auth to match predicao.html) -->
-            <button id="theme-btn" class="theme-toggle" onclick="toggleTheme()" title="Alternar Tema" style="margin-left: 12px;">🌙</button>
+            <button id="theme-btn" class="theme-toggle" onclick="toggleTheme()" title="Alternar Tema">☀️</button>
             <button id="lang-toggle" class="theme-toggle" onclick="toggleLanguage()" title="Switch Language" style="margin-left: 10px;">
                 <span style="font-weight:700; font-size:14px;">EN</span>
             </button>
-
-            <!-- Auth Section -->
-            <div style="display: flex; align-items: center; margin-left: 20px;">
-                <span id="user-display" style="color: white; font-size: 14px; margin-right: 15px;">Olá, <b>eurico</b></span>
+            <div id="nav-auth" style="display: flex; align-items: center; margin-left: 20px;">
+                <span id="user-display" style="color: white; font-weight: 500; font-size: 14px; margin-right: 15px;">Olá, {{ user.username }}</span>
                 <a href="#" class="btn-logout" onclick="logout()" data-i18n="nav_logout">Sair</a>
             </div>
         </nav>
     </header>
 
-    <div class="container">
-        <h1 data-i18n="fin_title">Gestão Financeira</h1>
+    <div class="dashboard-container">
         
-        <!-- Smart Input -->
-        <div class="ai-input-section">
-            <div class="ai-input-wrapper">
-                <span class="ai-icon">✨</span>
-                <input type="text" id="aiInput" data-i18n="fin_ai_ph" placeholder="Ex: Gastei 45 reais no almoço com cartão de crédito...">
+        <!-- Page Control -->
+        <div class="page-header">
+            <div class="page-title">
+                <h1>Frequência Financeira</h1>
+                <p style="color: var(--text-muted); font-size: 14px;">Visão geral de suas receitas e despesas</p>
             </div>
-            <button class="btn-ai" onclick="processLocalInput()" data-i18n="fin_btn_process">Processar</button>
+            <input type="month" id="dateFilter" class="date-filter" onchange="loadData()">
         </div>
 
-        <!-- Summaries -->
-        <!-- Insight Cards (Match Predicao) -->
-        <div class="insights-container">
-            <!-- Income -->
-            <div class="insight-card" style="border-bottom: 3px solid var(--success-green);">
-                <div class="icon-box" style="color: var(--success-green);">⬆️</div>
-                <div class="insight-content">
-                    <h4 data-i18n="fin_total_inc">Total de Receitas</h4>
-                    <div class="value" id="val-income">R$ 0,00</div>
+        <!-- KPI Row -->
+        <div class="kpi-grid">
+            <!-- Revenue Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">Receita Acumulada</div>
+                        <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Últimos 10 lançamentos</div>
+                    </div>
                 </div>
+                <div id="chart-revenue" class="chart-container"></div>
             </div>
-            <!-- Expense -->
-            <div class="insight-card" style="border-bottom: 3px solid var(--danger-red);">
-                <div class="icon-box" style="color: var(--danger-red);">⬇️</div>
-                <div class="insight-content">
-                    <h4 data-i18n="fin_total_exp">Total de Despesas</h4>
-                    <div class="value" id="val-expenses">R$ 0,00</div>
+
+            <!-- Daily Expenses Card -->
+            <div class="card">
+                <div class="card-header">
+                     <div class="card-title">Gastos Diários</div>
                 </div>
+                <div id="chart-daily" class="chart-container"></div>
             </div>
-            <!-- Balance -->
-            <div class="insight-card" id="card-balance" style="border-bottom: 3px solid var(--accent-secondary);">
-                <div class="icon-box" style="color: var(--accent-secondary);">💼</div>
-                <div class="insight-content">
-                    <h4 data-i18n="fin_balance">Saldo Líquido</h4>
-                    <div class="value" id="val-balance">R$ 0,00</div>
-                    <div class="progress-bar" id="balance-bar" style="display:none;"></div>
+
+            <!-- Category Summary Card -->
+            <div class="card">
+                 <div class="card-header">
+                     <div class="card-title">Categorias</div>
+                </div>
+                <div id="chart-donut" class="chart-container"></div>
+                <div style="position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%); text-align: center; pointer-events: none;">
+                    <div style="font-size: 24px; font-weight: 700;" id="total-expense-display">R$ 0</div>
+                    <div style="font-size: 12px; color: var(--text-muted);">Total Gasto</div>
+                </div>
+                <div id="category-legend" class="legend-grid">
+                    <!-- JS Injected -->
                 </div>
             </div>
         </div>
 
-        <!-- AI Alert -->
-        <!-- Local Features Area -->
-        <button class="btn-explore" onclick="openModal()">
-            <span>📊</span> Explorar Finanças
-        </button>
+        <!-- Operations Row -->
+        <div class="bottom-grid">
+            
+            <!-- Transactions List -->
+            <div class="card" style="padding: 0; overflow: hidden; max-height: 500px;">
+                <div style="padding: 20px; border-bottom: 1px solid var(--border-soft); display: flex; justify-content: space-between;">
+                    <h3 style="font-size: 18px;">Transações Recentes</h3>
+                    <button onclick="openModal()" style="background:none; border:none; color: var(--accent-primary); cursor:pointer;">+ Novo</button>
+                </div>
+                <div class="trans-list" id="transactionList">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
 
-        <div id="balance-alert" class="alert-box" style="display:none; background: rgba(255, 95, 86, 0.15); border-left-color: var(--danger-red);">
-             <div class="icon-box" style="width: 30px; height: 30px; background: none; font-size: 20px;">⚠️</div>
-             <div style="line-height: 1.4;"><strong>Atenção:</strong> Suas despesas superaram suas receitas este mês.</div>
-        </div>
-
-        <div class="content-grid">
-            <!-- Left Col: Form + Chart -->
-            <div class="left-col">
-                <div class="form-card">
-                    <h3 style="margin-bottom: 20px;" data-i18n="fin_new_entry">Novo Lançamento</h3>
-                    
-                    <div class="type-toggle">
-                        <button class="toggle-btn active expense" onclick="setType('expense')" data-i18n="fin_type_exp">Despesa</button>
-                        <button class="toggle-btn" onclick="setType('income')" data-i18n="fin_type_inc">Ganho</button>
+            <!-- Right Column -->
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+                
+                <!-- Saving Goal -->
+                <div class="card goal-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div class="card-title">Meta de Economia</div>
+                        <button onclick="openGoalModal()" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 14px;">✏️</button>
                     </div>
-
-                    <div class="form-group">
-                        <label data-i18n="fin_lbl_desc">Descrição</label>
-                        <input type="text" id="desc" class="form-control" data-i18n="fin_ph_desc" placeholder="Descrição...">
+                    <div class="goal-current" id="savings-val">R$ 0,00</div>
+                    <div>
+                        <div class="goal-progress">
+                            <div class="goal-fill" id="goal-bar" style="width: 0%;"></div>
+                        </div>
+                        <div class="goal-values">
+                            <span id="savings-pct">0% da meta</span>
+                            <span id="savings-target">Meta: R$ 2.000</span>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label data-i18n="fin_lbl_val">Valor (R$)</label>
-                        <input type="number" id="amount" class="form-control" placeholder="0.00" step="0.01">
-                    </div>
-                    <div class="form-group">
-                        <label data-i18n="fin_lbl_cat">Categoria</label>
-                        <select id="category" class="form-control">
-                            <!-- Filled by JS -->
-                        </select>
-                    </div>
-                    <!-- Payment Method (Conditional) -->
-                    <div class="form-group" id="payMethodGroup">
-                        <label data-i18n="fin_lbl_pay">Método de Pagamento</label>
-                        <select id="paymentMethod" class="form-control">
-                            <option value="Cartão de Crédito" data-i18n="pay_credit">Cartão de Crédito</option>
-                            <option value="Cartão de Débito" data-i18n="pay_debit">Cartão de Débito</option>
-                            <option value="Pix" data-i18n="pay_pix">Pix / Transferência</option>
-                            <option value="Dinheiro" data-i18n="pay_cash">Dinheiro</option>
-                            <option value="Outros" data-i18n="pay_others">Outros</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label data-i18n="fin_lbl_date">Data</label>
-                        <input type="date" id="date" class="form-control">
-                    </div>
-                    <button class="btn-submit" onclick="addTransaction()" data-i18n="fin_btn_save">Salvar Lançamento</button>
+                    <p style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">
+                        Economize pelo menos 20% da sua receita mensal para atingir a liberdade financeira.
+                    </p>
                 </div>
 
-                <!-- Static Chart Removed per user request -->
+                <!-- New Entry Widget (Big Button) -->
+                <div class="card new-entry-widget" onclick="openModal()">
+                    <div class="plus-icon">+</div>
+                    <div style="font-weight: 600;">Adicionar Lançamento</div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Transaction Modal -->
+    <div class="modal-overlay" id="entryModal">
+        <div class="modal-panel">
+            <button class="modal-close" onclick="closeModal()">×</button>
+            <h2 style="margin-bottom: 25px;">Novo Lançamento</h2>
+            
+            <div class="type-switcher">
+                <button class="type-btn active expense" onclick="setType('expense')">Despesa</button>
+                <button class="type-btn" onclick="setType('income')">Receita</button>
             </div>
 
-            <!-- Table -->
-            <div class="table-card">
-                <h3 style="margin-bottom: 20px;" data-i18n="fin_hist_title">Histórico Recente</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th data-i18n="fin_th_date">Data</th>
-                            <th data-i18n="fin_th_desc">Descrição</th>
-                            <th data-i18n="fin_th_cat">Categoria</th>
-                            <th data-i18n="fin_th_pay">Pagamento</th>
-                            <th data-i18n="fin_th_val">Valor</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody id="expenseTable">
-                        <!-- Rows -->
-                    </tbody>
-                </table>
-            </div>
+            <label class="form-label">Descrição</label>
+            <input type="text" id="desc" class="form-input" placeholder="Ex: Mercado, Uber, Salário...">
+            
+            <label class="form-label">Valor (R$)</label>
+            <input type="number" id="amount" class="form-input" placeholder="0.00" step="0.01">
+
+            <label class="form-label">Categoria</label>
+            <select id="category" class="form-input" style="background: rgba(255,255,255,0.03);">
+                <!-- Filled by JS -->
+            </select>
+
+            <label class="form-label">Data</label>
+            <input type="date" id="date" class="form-input">
+
+            <button class="btn-save" onclick="saveTransaction()">Salvar Lançamento</button>
         </div>
     </div>
 
-    <!-- Modal -->
-    <div class="modal-overlay" id="expenseModal">
-        <div class="modal-content">
-            <button class="modal-close" onclick="closeModal()">×</button>
-            <h3 style="margin-bottom: 20px;">Distribuição Financeira</h3>
+    <!-- Edit Goal Modal -->
+    <div class="modal-overlay" id="goalModal">
+        <div class="modal-panel" style="max-width: 400px;">
+            <button class="modal-close" onclick="closeGoalModal()">×</button>
+            <h2 style="margin-bottom: 25px;">Definir Meta</h2>
             
-            <div class="type-toggle" style="margin-bottom: 20px;">
-                <button id="modal-btn-exp" class="toggle-btn active expense" onclick="setModalType('expense')">Despesas</button>
-                <button id="modal-btn-inc" class="toggle-btn" onclick="setModalType('income')">Receitas</button>
-            </div>
-
-            <div id="modalChart" style="width:100%; height:400px;"></div>
+            <label class="form-label">Meta Mensal (R$)</label>
+            <input type="number" id="goalInput" class="form-input" placeholder="2000">
+            
+            <button class="btn-save" onclick="saveGoal()">Salvar Meta</button>
         </div>
     </div>
 
     <script>
         const API_BASE_URL = window.location.origin;
         let currentType = 'expense';
-        let expenseChart = null;
 
-        // --- AUTH ---
-        async function checkAuth() {
-            try {
-                const res = await fetch(`${API_BASE_URL}/api/me`);
-                const data = await res.json();
-                if(data.authenticated) {
-                    document.getElementById('user-display').innerText = `Olá, ${data.username}`;
-                } else {
-                    window.location.href = 'login.html';
-                }
-            } catch(e) { window.location.href = 'login.html'; }
-        }
-        async function logout() { await fetch(`${API_BASE_URL}/logout`); window.location.href='/'; }
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+             // Set default date to current month
+             const now = new Date();
+             const month = (now.getMonth() + 1).toString().padStart(2, '0');
+             document.getElementById('dateFilter').value = `${now.getFullYear()}-${month}`;
+             
+             // Set date input default
+             document.getElementById('date').value = now.toISOString().split('T')[0];
 
-        // --- UI LOGIC ---
-        function toggleTheme() {
-            const html = document.documentElement;
-            const current = html.getAttribute('data-theme');
-            const newTheme = current === 'light' ? 'dark' : 'light';
-            html.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            document.getElementById('theme-btn').innerText = newTheme === 'light' ? '☀️' : '🌙';
-        }
-        
-        function setType(type) {
-            currentType = type;
-            const btns = document.querySelectorAll('.toggle-btn');
-            btns.forEach(b => {
-                b.classList.remove('active', 'income', 'expense');
-            });
-            
-            // Activate clicked
-            const activeBtn = Array.from(btns).find(b => b.textContent.toLowerCase().includes(type === 'expense' ? 'despesa' : (type === 'expense' ? 'expense' : 'ganho')));
-            // Better selection based on data-i18n (but content might change) -> rely on click
-            // Actually relying on click logic in HTML "onclick" passing type, so just finding the button is tricky if text changes.
-            // Let's rely on class if possible, or just re-select based on index or logic.
-            // Simplified: The buttons call setType with 'expense' or 'income'. We can just use the index or add an ID.
-            if(type === 'expense') btns[0].classList.add('active', 'expense');
-            else btns[1].classList.add('active', 'income');
-
-            // Hide/Show Payment Method
-            document.getElementById('payMethodGroup').style.display = type === 'expense' ? 'block' : 'none';
-
-            updateCategories();
-        }
-
-        function updateCategories() {
-            const lang = window.currentLang || 'pt';
-            const t = window.translations[lang] || window.translations['pt'];
-            
-            const expenseCats = [
-                {val: "Alimentação", label: t.cat_food},
-                {val: "Transporte", label: t.cat_transport},
-                {val: "Lazer", label: t.cat_leisure},
-                {val: "Moradia", label: t.cat_housing},
-                {val: "Saúde", label: t.cat_health},
-                {val: "Educação", label: "Educação"},
-                {val: "Pessoal", label: "Pessoal / Beleza"},
-                {val: "Assinaturas", label: "Assinaturas"},
-                {val: "Pets", label: "Pets"},
-                {val: "Dívidas", label: "Dívidas"},
-                {val: "Impostos", label: "Impostos"},
-                {val: "Outros", label: t.cat_others}
-            ];
-            const incomeCats = [
-                {val: "Salário", label: t.cat_salary},
-                {val: "Dividendos", label: t.cat_divs},
-                {val: "Vendas", label: t.cat_sales},
-                {val: "Outros", label: t.cat_others}
-            ];
-            
-            const select = document.getElementById('category');
-            select.innerHTML = '';
-            const cats = currentType === 'expense' ? expenseCats : incomeCats;
-            
-            cats.forEach(c => {
-                const opt = document.createElement('option');
-                opt.value = c.val; // Keep value consistent for DB
-                opt.innerText = c.label;
-                select.appendChild(opt);
-            });
-        }
-        
-        window.addEventListener('languageChanged', (e) => {
              updateCategories();
-             if(window.lastData) {
-                 // renderChart(window.lastData[0]); // Static chart removed
-                 renderTable(window.lastData[2]); // AllTx
-             }
+             loadData();
         });
 
-        // --- DATA LOGIC ---
+        // --- Data Loading & Charts ---
         async function loadData() {
             try {
-                // Fetch Expenses and Incomes parallel
-                const [expRes, incRes, sumRes] = await Promise.all([
+                const [expRes, incRes] = await Promise.all([
                     fetch(`${API_BASE_URL}/api/expenses`),
-                    fetch(`${API_BASE_URL}/api/incomes`),
-                    fetch(`${API_BASE_URL}/api/financas/summary`)
+                    fetch(`${API_BASE_URL}/api/incomes`)
                 ]);
-
                 const expenses = await expRes.json();
                 const incomes = await incRes.json();
-                const summary = await sumRes.json();
 
-                // Merge for Table
+                // 1. Process Data
                 const allTx = [
-                    ...expenses.map(e => ({...e, type: 'expense'})), 
-                    ...incomes.map(i => ({...i, type: 'income'}))
+                    ...expenses.map(e => ({...e, type: 'expense', amount: parseFloat(e.amount)})),
+                    ...incomes.map(i => ({...i, type: 'income', amount: parseFloat(i.amount)}))
                 ].sort((a,b) => new Date(b.date) - new Date(a.date));
 
-                window.lastData = [expenses, incomes, allTx, summary]; // Cache for re-render
+                // Filter by month? User asked for Date Picker. For now, let's just use all data for trends, or filter if requested.
+                // Let's filter client-side based on the Date Picker
+                const filterVal = document.getElementById('dateFilter').value; // YYYY-MM
+                const filteredTx = allTx.filter(tx => tx.date.startsWith(filterVal));
+                
+                // 2. Render Charts
+                renderRevenueChart(incomes.filter(i => i.date.startsWith(filterVal)));
+                renderDailyExpensesChart(expenses.filter(e => e.date.startsWith(filterVal)));
+                renderDonutChart(expenses.filter(e => e.date.startsWith(filterVal)));
+                
+                // 3. Render List
+                renderTransactionList(filteredTx);
 
-                renderTable(allTx);
-                renderSummary(summary);
-                // Static chart removed
-                // renderChart(expenses);
+                // 4. Update Goals
+                updateGoal(incomes, expenses, filterVal);
 
-            } catch(e) { console.error(e); }
+            } catch(e) { console.error("Error loading data:", e); }
         }
 
-        function renderTable(data) {
-            const tbody = document.getElementById('expenseTable');
-            tbody.innerHTML = '';
-            const lang = window.currentLang || 'pt';
-            const t = window.translations[lang] || window.translations['pt'];
-            
-            data.forEach(item => {
-                const tr = document.createElement('tr');
-                const isExp = item.type === 'expense';
-                const color = isExp ? 'var(--danger-red)' : 'var(--success-green)';
-                const sign = isExp ? '-' : '+';
-                
-                // Translate Category & Payment Display if possible
-                // Map category value to key?
-                // Simplification: Try to match value to known keys, else show value.
-                let catLabel = item.category;
-                // Reverse lookup or map?
-                // For now, let's just display what's in DB (which is stored in PT). TODO: Map DB values to Keys if rigorous translation needed.
-                // Assuming "Alimentação" is stored.
-                
-                // Translate Payment Method
-                let payMethod = item.payment_method;
-                let methodIcon = '';
-                if(isExp && payMethod) {
-                     if(payMethod.includes('Crédito')) { methodIcon = '💳'; payMethod = t.pay_credit; }
-                     else if(payMethod.includes('Débito')) { methodIcon = '💳'; payMethod = t.pay_debit; }
-                     else if(payMethod.includes('Pix')) { methodIcon = '💠'; payMethod = t.pay_pix; }
-                     else if(payMethod.includes('Dinheiro')) { methodIcon = '💵'; payMethod = t.pay_cash; }
-                     else { methodIcon = '⚪'; payMethod = t.pay_others; }
-                }
-
-                tr.innerHTML = `
-                    <td>${new Date(item.date).toLocaleDateString(lang === 'pt' ? 'pt-BR' : 'en-US')}</td>
-                    <td>${item.description}</td>
-                    <td><span class="category-badge" style="background:${isExp ? 'rgba(255,95,86,0.1)' : 'rgba(46,204,113,0.1)'}; color:${color}">${catLabel}</span></td>
-                    <td style="font-size:13px; color:var(--text-muted);">${isExp ? methodIcon + ' ' + payMethod : '-'}</td>
-                    <td style="font-weight: 700; color: ${color};">${sign} R$ ${item.amount.toFixed(2).replace('.', ',')}</td>
-                    <td><button onclick="deleteTx(${item.id}, '${item.type}')" style="background:none; border:none; color:#ff5f56; cursor:pointer; font-size:16px;">×</button></td>
-                `;
-                tbody.appendChild(tr);
+        function renderRevenueChart(incomes) {
+            // Group by date
+            const grouped = {};
+            incomes.forEach(i => {
+                grouped[i.date] = (grouped[i.date] || 0) + i.amount;
             });
+            const dates = Object.keys(grouped).sort();
+            const values = dates.map(d => grouped[d]);
+
+            const trace = {
+                x: dates, y: values, 
+                type: 'scatter', mode: 'lines+markers',
+                line: { shape: 'spline', color: '#00d4ff', width: 3 },
+                fill: 'tozeroy', fillcolor: 'rgba(0, 212, 255, 0.1)'
+            };
+
+            const layout = {
+                paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+                margin: { t: 10, b: 30, l: 30, r: 10 },
+                xaxis: { showgrid: false, zeroline: false, showline: false, color: '#8892b0' },
+                yaxis: { showgrid: false, zeroline: false, showline: false, gridcolor: 'rgba(255,255,255,0.05)', color: '#8892b0', rangemode: 'nonnegative' },
+                height: 200,
+                hovermode: 'x unified',
+                hoverlabel: { bgcolor: '#0b1221', bordercolor: '#00f2ff', font: { color: 'white' } }
+            };
+
+            Plotly.newPlot('chart-revenue', [trace], layout, {displayModeBar: false});
         }
 
-        function renderSummary(data) {
-            document.getElementById('val-income').innerText = `R$ ${data.total_income.toFixed(2).replace('.', ',')}`;
-            document.getElementById('val-expenses').innerText = `R$ ${data.total_expenses.toFixed(2).replace('.', ',')}`;
-            document.getElementById('val-balance').innerText = `R$ ${data.balance.toFixed(2).replace('.', ',')}`;
+        function renderDailyExpensesChart(expenses) {
+            const grouped = {};
+            expenses.forEach(e => {
+                grouped[e.date] = (grouped[e.date] || 0) + e.amount;
+            });
+            const dates = Object.keys(grouped).sort().slice(-14); // Last 14 days active
+            const values = dates.map(d => grouped[d]);
             
-            // Remove Old Insight Logic
-            // Check Balance for Visual Alert
-            const balCard = document.getElementById('card-balance');
-            const alertBox = document.getElementById('balance-alert');
-
-            if(data.balance < 0) {
-                balCard.classList.add('card-negative');
-                alertBox.style.display = 'flex';
-            } else {
-                balCard.classList.remove('card-negative');
-                alertBox.style.display = 'none';
-            }
-
-            const bar = document.getElementById('balance-bar');
-            bar.className = 'progress-bar'; 
-            if(data.total_income > 0) {
-                const ratio = (data.total_expenses / data.total_income) * 100;
-                bar.style.width = Math.min(ratio, 100) + '%';
-                if(ratio > 90) bar.classList.add('danger');
-                else if(ratio > 70) bar.classList.add('warning');
-            } else {
-                bar.style.width = '0%';
-            }
-        }
-
-        // --- CHART OVERRIDE (Support ID & Type) ---
-        function renderChart(items, elemId = 'expenseChart', type = 'expense') {
-            const catMap = {};
-            items.forEach(e => {
-                catMap[e.category] = (catMap[e.category] || 0) + e.amount;
+            // Format dates "DD MMM"
+            const formattedDates = dates.map(d => {
+                const parts = d.split('-');
+                const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+                return `${parts[2]} ${monthNames[parseInt(parts[1])-1]}`;
             });
 
-            const labels = Object.keys(catMap);
-            const values = Object.values(catMap);
+            const trace = {
+                x: formattedDates, y: values, 
+                type: 'bar', 
+                marker: { color: values.map(v => '#00d4ff'), opacity: 0.8 } 
+            };
+            // Gradient effect by using array colors if needed, simpler is solid neon purple
             
-            // Translations (Simplified)
-            const lang = window.currentLang || 'pt';
+            const layout = {
+                paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+                margin: { t: 10, b: 30, l: 30, r: 10 },
+                xaxis: { type: 'category', showgrid: false, zeroline: false, showline: false, color: '#8892b0' },
+                yaxis: { showgrid: false, zeroline: false, showline: false, gridcolor: 'rgba(255,255,255,0.05)', color: '#8892b0' },
+                height: 200,
+                hovermode: 'x unified',
+                hoverlabel: { bgcolor: '#0b1221', bordercolor: '#00f2ff', font: { color: 'white' } }
+            };
 
-            if(values.length === 0) {
-                 const el = document.getElementById(elemId);
-                 if(el) el.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100%;color:var(--text-muted);">' + (lang==='pt'?'Sem dados':'No data') + '</div>';
-                 return;
-            }
+            Plotly.newPlot('chart-daily', [trace], layout, {displayModeBar: false});
+        }
+
+        function renderDonutChart(expenses) {
+            const grouped = {};
+            let total = 0;
+            expenses.forEach(e => {
+                grouped[e.category] = (grouped[e.category] || 0) + e.amount;
+                total += e.amount;
+            });
+
+            document.getElementById('total-expense-display').innerText = `R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits:0})}`;
+
+            const labels = Object.keys(grouped);
+            const values = Object.values(grouped);
+            
+            // Neon Blue Palette
+            const colors = ['#00d4ff', '#00b4d8', '#0096c7', '#0077b6', '#023e8a', '#03045e'];
 
             const data = [{
-                values: values,
-                labels: labels, // Use raw labels if translation missing, or map if needed
-                type: 'pie',
-                hole: 0.5,
-                textinfo: 'label+percent',
-                textposition: 'outside',
-                automargin: true,
-                marker: {
-                    colors: labels.map(l => {
-                        if(type === 'income') return '#2ecc71'; // Greenish base
-                        // Spending colors
-                        if(l==='Alimentação') return '#ff6384';
-                        if(l==='Transporte') return '#36a2eb';
-                        if(l==='Moradia') return '#4bc0c0';
-                        if(l==='Lazer') return '#ffce56';
-                        if(l==='Saúde') return '#9966ff';
-                        if(l==='Educação') return '#ff9f40';
-                        if(l==='Pessoal') return '#e7e9ed';
-                        if(l==='Assinaturas') return '#c9cbcf';
-                        if(l==='Pets') return '#fd79a8';
-                        if(l==='Dívidas') return '#d63031';
-                        if(l==='Impostos') return '#636e72';
-                        return '#8892b0';
-                    })
-                }
+                values: values, labels: labels,
+                type: 'pie', hole: 0.7,
+                marker: { colors: colors },
+                textinfo: 'none', // clean look
+                hoverinfo: 'label+value+percent'
             }];
 
             const layout = {
                 paper_bgcolor: 'rgba(0,0,0,0)',
-                plot_bgcolor: 'rgba(0,0,0,0)',
-                font: { color: document.documentElement.getAttribute('data-theme') === 'light' ? '#333' : '#e6f1ff', family: 'Manrope' },
-                margin: { t: 20, b: 20, l: 20, r: 20 },
-                showlegend: true, 
-                legend: { orientation: 'h', y: -0.1 }, 
-                height: elemId === 'modalChart' ? 350 : 300
+                margin: { t: 0, b: 0, l: 0, r: 0 },
+                showlegend: false,
+                height: 180 // Reduced height to fit legend
             };
 
-            Plotly.newPlot(elemId, data, layout, {displayModeBar: false, responsive: true});
+            Plotly.newPlot('chart-donut', data, layout, {displayModeBar: false});
+
+            // --- Generate Legend ---
+            const legendContainer = document.getElementById('category-legend');
+            legendContainer.innerHTML = ''; // Clear
+
+            labels.forEach((label, index) => {
+                const val = values[index];
+                const pct = total > 0 ? ((val / total) * 100).toFixed(1) : 0;
+                const color = colors[index % colors.length];
+
+                const item = document.createElement('div');
+                item.className = 'legend-item';
+                item.innerHTML = `
+                    <div class="legend-left">
+                        <div class="legend-dot" style="background: ${color}"></div>
+                        <span>${label}</span>
+                    </div>
+                    <span class="legend-val">${pct}%</span>
+                `;
+                legendContainer.appendChild(item);
+            });
         }
 
-        async function addTransaction() {
+        function renderTransactionList(transactions) {
+            const list = document.getElementById('transactionList');
+            list.innerHTML = '';
+
+            transactions.slice(0, 20).forEach(tx => {
+                const isExp = tx.type === 'expense';
+                const color = isExp ? 'white' : '#2ecc71'; // Expense white, Income Green for numbers
+                
+                // Icons color map
+                const catIcons = {
+                    'Alimentação': { icon: '🍔', color: '#ff9f43' },
+                    'Transporte': { icon: '🚗', color: '#54a0ff' },
+                    'Lazer': { icon: '🎉', color: '#f368e0' },
+                    'Moradia': { icon: '🏠', color: '#00d2d3' },
+                    'Salário': { icon: '💰', color: '#1dd1a1' }
+                };
+                const def = { icon: '📄', color: '#8395a7' };
+                const meta = catIcons[tx.category] || def;
+
+                const dateStr = new Date(tx.date).toLocaleDateString('pt-BR', {day:'2-digit', month:'short'});
+
+                const html = `
+                    <div class="trans-item">
+                        <div class="trans-icon-wrapper" style="background: ${meta.color}20; color: ${meta.color};">
+                            ${meta.icon}
+                        </div>
+                        <div class="trans-info">
+                            <div class="trans-desc">${tx.description}</div>
+                            <div class="trans-meta">${tx.category} • ${dateStr}</div>
+                        </div>
+                        <div class="trans-amount" style="color: ${color}">
+                            ${isExp ? '-' : '+'} R$ ${tx.amount.toFixed(2)}
+                        </div>
+                    </div>
+                `;
+                list.innerHTML += html;
+            });
+        }
+
+        function updateGoal(incomes, expenses, currentMonth) {
+            // Filter totals by month
+            const monthInc = incomes.filter(i => i.date.startsWith(currentMonth)).reduce((acc, c) => acc + c.amount, 0);
+            const monthExp = expenses.filter(e => e.date.startsWith(currentMonth)).reduce((acc, c) => acc + c.amount, 0);
+            
+            const saved = monthInc - monthExp;
+            const goal = parseInt(localStorage.getItem('monthlyGoal')) || 2000;
+            
+            // Allow negative saved but clamp pct
+            const pct = Math.min(Math.max((saved / goal) * 100, 0), 100);
+            
+            document.getElementById('savings-val').innerText = `R$ ${saved.toLocaleString('pt-BR')}`;
+            document.getElementById('savings-pct').innerText = `${pct.toFixed(0)}% da meta`;
+            document.getElementById('savings-target').innerText = `Meta: R$ ${goal.toLocaleString('pt-BR')}`;
+            
+            // Animate bar
+            setTimeout(() => {
+                document.getElementById('goal-bar').style.width = `${pct}%`;
+            }, 500);
+        }
+
+        // --- Goal Logic ---
+        function openGoalModal() {
+            document.getElementById('goalModal').style.display = 'flex';
+            document.getElementById('goalInput').value = localStorage.getItem('monthlyGoal') || 2000;
+        }
+        function closeGoalModal() { document.getElementById('goalModal').style.display = 'none'; }
+        
+        function saveGoal() {
+            const val = document.getElementById('goalInput').value;
+            if(val) {
+                localStorage.setItem('monthlyGoal', val);
+                loadData(); // Re-calc
+                closeGoalModal();
+            }
+        }
+
+        // --- Auth & Toggles ---
+        // --- Auth & Toggles ---
+        function toggleMenu() { document.getElementById('main-nav').classList.toggle('active'); }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const cur = html.getAttribute('data-theme');
+            const next = cur === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+            document.getElementById('theme-btn').innerText = next === 'dark' ? '☀️' : '🌙';
+        }
+
+        // toggleLanguage is handled by translations.js
+
+        async function logout() { 
+            await fetch(`${API_BASE_URL}/logout`); 
+            window.location.href = '/'; 
+        }
+
+        // --- Interaction ---
+        function openModal() {
+            document.getElementById('entryModal').style.display = 'flex';
+        }
+        function closeModal() {
+            document.getElementById('entryModal').style.display = 'none';
+        }
+
+        function setType(type) {
+            currentType = type;
+            const btns = document.querySelectorAll('.type-btn');
+            btns.forEach(b => b.classList.remove('active', 'income', 'expense'));
+            
+            const target = Array.from(btns).find(b => b.textContent.includes(type === 'expense' ? 'Despesa' : 'Receita'));
+            if(target) target.classList.add('active', type);
+            
+            updateCategories();
+        }
+
+        function updateCategories() {
+            const expenseCats = ["Alimentação", "Transporte", "Lazer", "Moradia", "Saúde", "Educação", "Pessoal", "Assinaturas", "Pets", "Dívidas", "Impostos", "Outros"];
+            const incomeCats = ["Salário", "Investimentos", "Vendas", "Outros"];
+            
+            const select = document.getElementById('category');
+            select.innerHTML = '';
+            
+            const cats = currentType === 'expense' ? expenseCats : incomeCats;
+            cats.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c; opt.innerText = c;
+                select.appendChild(opt);
+            });
+        }
+
+        async function saveTransaction() {
             const tx = {
                 description: document.getElementById('desc').value,
                 amount: document.getElementById('amount').value,
                 category: document.getElementById('category').value,
-                date: document.getElementById('date').value || new Date().toISOString().split('T')[0],
-                payment_method: document.getElementById('paymentMethod').value
+                date: document.getElementById('date').value,
+                payment_method: "Outros"
             };
-            
-            if(!tx.description || !tx.amount) return alert("Preencha todos os campos");
+
+            if(!tx.description || !tx.amount) return alert("Preencha os campos obrigatórios");
 
             const endpoint = currentType === 'expense' ? '/api/expenses' : '/api/incomes';
-
             await fetch(`${API_BASE_URL}${endpoint}`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(tx)
             });
-            
-            // Clear form (keep date)
+
+            closeModal();
+            // Clear
             document.getElementById('desc').value = '';
             document.getElementById('amount').value = '';
             loadData();
         }
 
-        async function deleteTx(id, type) {
-            if(!confirm('Deletar?')) return;
-            const endpoint = type === 'expense' ? `/api/expenses/${id}` : `/api/incomes/${id}`;
-            await fetch(`${API_BASE_URL}${endpoint}`, { method: 'DELETE' });
-            loadData();
-        }
-
-        // --- LOCAL FEATURES ---
-        // --- LOCAL FEATURES (Powered by Backend Class Engine) ---
-        async function processLocalInput() {
-            const input = document.getElementById('aiInput');
-            const text = input.value;
-            if(!text) return;
-
-            const btn = document.querySelector('.btn-ai');
-            const originalText = btn.innerText;
-            btn.innerText = '⏳';
-            btn.disabled = true;
-
-            try {
-                // Now we send to backend "Local Engine"
-                const res = await fetch(`${API_BASE_URL}/api/expenses/parse`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ text: text })
-                });
-
-                const data = await res.json();
-
-                if(res.ok && data.message === "Salvo com sucesso!") {
-                    // Success Feedback
-                    const icon = document.querySelector('.ai-icon');
-                    const originalIcon = icon.innerText;
-                    icon.innerText = '✅';
-                    setTimeout(() => icon.innerText = originalIcon, 2000);
-
-                    // Show Toast or Alert? User wanted "check"
-                    // Let's use a nice little toast logic or just the check above + console
-                    console.log(`Salvo: ${data.transaction.description}`);
-                    
-                    input.value = ''; // Clear
-                    loadData(); // Refresh Tables immediately
-                } else {
-                    alert(data.error || "Erro ao processar");
-                }
-
-            } catch(e) {
-                console.error(e);
-                alert("Erro de conexão");
-            } finally {
-                btn.innerText = originalText;
-                btn.disabled = false;
-            }
-        }
-
-        // Modal Logic
-        let currentModalType = 'expense';
-
-        function openModal() {
-            document.getElementById('expenseModal').style.display = 'flex';
-            setModalType('expense'); // Default to expense or keep last? Default expense is safer.
-        }
-        function closeModal() {
-            document.getElementById('expenseModal').style.display = 'none';
-        }
-
-        function setModalType(type) {
-            currentModalType = type;
-            // Update Buttons
-            document.getElementById('modal-btn-exp').className = type === 'expense' ? 'toggle-btn active expense' : 'toggle-btn';
-            document.getElementById('modal-btn-inc').className = type === 'income' ? 'toggle-btn active income' : 'toggle-btn';
-
-            // Render Chart
-            if(window.lastData) {
-                const data = type === 'expense' ? window.lastData[0] : window.lastData[1];
-                renderChart(data, 'modalChart', type);
-            }
-        }
-
-        // Init
-        // Restore Theme
-        const savedTheme = localStorage.getItem('theme') || 'dark';
-        document.documentElement.setAttribute('data-theme', savedTheme);
-        if(document.getElementById('theme-btn')) document.getElementById('theme-btn').innerText = savedTheme === 'light' ? '☀️' : '🌙';
-
-        checkAuth();
-        setType('expense'); // Init categories
-        loadData();
-        document.getElementById('date').valueAsDate = new Date();
-
-        // Close dropdown on click outside
-
-        window.onclick = function(e) {
-            if (!e.target.matches('.nav-btn-drop')) {
-                const dropdowns = document.getElementsByClassName("dropdown-content");
-                for (let d of dropdowns) {
-                    if (d.classList.contains('show')) d.classList.remove('show');
-                }
+        window.onclick = function(event) {
+            const modal = document.getElementById('entryModal');
+            if (event.target == modal) {
+                closeModal();
             }
         }
     </script>
