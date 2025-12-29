@@ -395,60 +395,114 @@ def delete_expense(id):
 @login_required
 def parse_expense():
     import re
-    from datetime import datetime
+    from datetime import datetime, timedelta
     
-    text = request.json.get('text', '')
+    data = request.json
+    text = data.get('text', '')
     if not text: return jsonify({"error": "No text provided"}), 400
 
-    # Smart Regex Logic
-    # Extract value (R$ 50,00 | 50 | 50.00)
-    amount = 0.0
-    amount_match = re.search(r'(?:R\$)?\s*(\d+(?:[.,]\d{2})?)', text)
-    if amount_match:
-        val_str = amount_match.group(1).replace(',', '.')
-        try: amount = float(val_str)
-        except: pass
-    
-    # Extract Type (default Expense) and Category
     text_lower = text.lower()
+
+    # 1. Extract Amount (Regex)
+    # Match: 70.50, 70,50, 70
+    amount_match = re.search(r'(\d+([.,]\d{1,2})?)', text)
+    if not amount_match:
+        return jsonify({"error": "Valor não encontrado na frase."}), 400
     
-    # Check for Income Keywords
-    is_income = any(x in text_lower for x in ['ganhei', 'recebi', 'salário', 'depósito', 'pix recebido', 'vendi'])
-    
+    amount_str = amount_match.group(1).replace(',', '.')
+    amount = float(amount_str)
+
+    # 2. Determine Type (Expense vs Income)
+    # Keywords for Income
+    # Keywords for Income
+    income_keywords = ['recebi', 'ganhei', 'salário', 'bônus', 'extra', 'venda', 'reembolso', 'dividendos', 'pix recebido', 'rendimento', '13º', 'comissão', 'receita', 'faturamento', 'lucro', 'depósito', 'deposito', 'entrada', 'caiu']
+    is_income = any(word in text_lower for word in income_keywords)
+    type_ = 'income' if is_income else 'expense'
+
+    # 3. Determine Category (Keyword Mapping)
     category = "Outros"
     
-    if is_income:
+    categories_map = {
+        'Alimentação': ['almoço', 'janta', 'lanche', 'pizza', 'burger', 'restaurante', 'ifood', 'rappi', 'mercado', 'supermercado', 'padaria', 'café', 'coxinha', 'buffet', 'sorvete', 'doceria', 'pão', 'churrasco', 'açougue', 'hortifruti', 'sobremesa', 'bebida', 'cerveja', 'vinho', 'drink', 'bar'],
+        'Transporte': ['uber', '99', 'táxi', 'gasolina', 'álcool', 'diesel', 'combustível', 'shell', 'ipiranga', 'estacionamento', 'pedágio', 'metrô', 'ônibus', 'trem', 'revisão', 'multa', 'mecânico', 'pneu', 'balanceamento', 'ipva', 'licenciamento'],
+        'Lazer': ['cinema', 'filme', 'jogo', 'game', 'show', 'balada', 'viagem', 'hotel', 'airbnb', 'passeio', 'praia', 'clube', 'festa', 'ingresso', 'steam', 'playstation', 'xbox', 'nintendo', 'twitch', 'bet'],
+        'Moradia': ['aluguel', 'condomínio', 'luz', 'energia', 'agua', 'água', 'internet', 'wi-fi', 'gás', 'faxina', 'diarista', 'reforma', 'móveis', 'decoração', 'leroy', 'telhanorte', 'cama', 'mesa', 'banho', 'iptu', 'manutenção'],
+        'Saúde': ['farmácia', 'remédio', 'médico', 'dentista', 'consulta', 'hospital', 'exame', 'academia', 'suplemento', 'creatina', 'whey', 'psicólogo', 'terapia', 'convênio', 'plano de saúde', 'ocular', 'óculos'],
+        'Educação': ['faculdade', 'escola', 'curso', 'udemy', 'alura', 'livro', 'mensalidade', 'pós-graduação', 'material escolar', 'papelaria', 'idiomas', 'inglês', 'bootcamp'],
+        'Pessoal': ['cabelo', 'barbeiro', 'manicure', 'unha', 'estética', 'cosmético', 'perfume', 'roupa', 'tênis', 'sapato', 'bolsa', 'acessório', 'renner', 'riachuelo', 'zara', 'shein', 'shopee', 'amazon', 'mercado livre'],
+        'Assinaturas': ['netflix', 'spotify', 'youtube', 'prime', 'disney', 'hbo', 'globoplay', 'icloud', 'google one', 'chatgpt', 'assinatura', 'vpn', 'antivírus'],
+        'Pets': ['ração', 'pet', 'veterinário', 'banho e tosa', 'gato', 'cachorro', 'areia', 'vacina pet', 'dog'],
+        'Dívidas': ['fatura', 'cartão', 'empréstimo', 'financiamento', 'juros', 'parcela', 'dívida', 'negociação', 'serasa'],
+        'Impostos': ['imposto', 'darf', 'nota fiscal', 'tributo', 'taxa'],
+        
         # Income Categories
-        if 'salário' in text_lower or 'pagamento' in text_lower: category = 'Salário'
-        elif 'dividendo' in text_lower: category = 'Dividendos'
-        elif 'vend' in text_lower: category = 'Vendas'
-        else: category = 'Outros'
+        'Salário': ['salário', 'bônus', '13º', 'adiantamento', 'férias', 'rescisão'],
+        'Investimentos': ['dividendos', 'rendimento', 'jcp', 'lucro', 'aporte', 'cdb', 'selic', 'tesouro'],
+        'Vendas': ['venda', 'comissão', 'faturamento', 'receita', 'vendi'],
+        'Presentes': ['presente', 'doação', 'aniversário', 'natal']
+    }
+    
+    # Priority for specific income categories if is_income
+    if is_income:
+        # Default income cat
+        category = 'Receitas' 
+        if any(w in text_lower for w in categories_map['Salário']): category = 'Salário'
+        elif any(w in text_lower for w in categories_map['Investimentos']): category = 'Investimentos'
+        elif any(w in text_lower for w in categories_map['Vendas']): category = 'Vendas'
     else:
-        # Expense Categories
-        categories = {
-            "Alimentação": ["comida", "restaurante", "almoço", "jantar", "lanche", "mercado", "food", "pizza", "burger", "ifood"],
-            "Transporte": ["uber", "taxi", "ônibus", "gasolina", "combustivel", "carro", "metrô", "passagem"],
-            "Lazer": ["cinema", "filme", "jogo", "game", "show", "ingresso", "netflix", "spotify", "bar"],
-            "Moradia": ["aluguel", "condominio", "luz", "agua", "internet", "casa"],
-            "Saúde": ["medico", "remedio", "farmacia", "hospital", "dentista", "exame"]
-        }
-        for cat, keywords in categories.items():
+        # Expense categories
+        for cat, keywords in categories_map.items():
+            if cat in ['Salário', 'Investimentos', 'Vendas']: continue # Skip income specific
             if any(k in text_lower for k in keywords):
                 category = cat
                 break
-            
-    # Extract Description
-    description = text
+
+    # 4. Smart Date
+    date_val = datetime.now()
+    if 'anteontem' in text_lower:
+        date_val = date_val - timedelta(days=2)
+    elif 'ontem' in text_lower:
+        date_val = date_val - timedelta(days=1)
     
-    date = datetime.now().strftime('%Y-%m-%d')
-    
-    return jsonify({
-        "type": "income" if is_income else "expense",
-        "amount": amount,
-        "category": category,
-        "description": description,
-        "date": date
-    })
+    date_str = date_val.strftime('%Y-%m-%d')
+
+    # 5. Auto-Save
+    try:
+        if type_ == 'expense':
+            new_tx = Expense(
+                user_id=current_user.id,
+                description=text, # Use full text as description
+                amount=amount,
+                date=date_str,
+                category=category
+            )
+        else:
+            new_tx = Income(
+                user_id=current_user.id,
+                description=text,
+                amount=amount,
+                date=date_str,
+                category=category
+            )
+        
+        db.session.add(new_tx)
+        db.session.commit()
+        
+        return jsonify({
+            "message": "Salvo com sucesso!",
+            "transaction": {
+                "id": new_tx.id,
+                "description": new_tx.description,
+                "amount": new_tx.amount,
+                "category": new_tx.category,
+                "date": new_tx.date,
+                "type": type_
+            }
+        })
+
+    except Exception as e:
+        logger.error(f"Save Error: {e}")
+        return jsonify({"error": f"Erro ao salvar: {str(e)}"}), 500
 
 # --- INCOME & SUMMARY API ---
 

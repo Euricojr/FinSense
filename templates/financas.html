@@ -104,7 +104,7 @@
             display: block; margin-left: 0; font-size: 14px;
             white-space: nowrap;
         }
-        .dropdown-content a:hover { background-color: var(--bg-main); color: var(--accent-primary); }
+        .dropdown-content a:hover { background-color: var(--bg-main); color: var(--accent-secondary); }
  
         /* Buttons */
         .btn-logout {
@@ -172,8 +172,8 @@
 
         /* AI Input */
         .ai-input-section {
-            background: linear-gradient(90deg, rgba(100, 255, 218, 0.05) 0%, rgba(0, 123, 255, 0.05) 100%);
-            border: 1px solid var(--accent-primary);
+            background: linear-gradient(90deg, rgba(0, 123, 255, 0.05) 0%, rgba(0, 86, 179, 0.05) 100%);
+            border: 1px solid var(--accent-secondary);
             border-radius: 12px;
             padding: 20px;
             margin-bottom: 30px;
@@ -187,11 +187,11 @@
             padding: 12px 15px 12px 40px; border-radius: 8px; color: var(--text-main); font-size: 15px; outline: none;
             transition: all 0.2s;
         }
-        .ai-input-wrapper input:focus { border-color: var(--accent-primary); box-shadow: 0 0 0 2px rgba(100,255,218,0.1); }
+        .ai-input-wrapper input:focus { border-color: var(--accent-secondary); box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2); }
         .ai-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 18px; }
         
         .btn-ai {
-            background: var(--accent-primary); color: #0a192f; border: none; padding: 12px 25px;
+            background: var(--accent-secondary); color: white; border: none; padding: 12px 25px;
             border-radius: 8px; font-weight: 700; cursor: pointer; transition: all 0.2s;
             display: flex; align-items: center; gap: 8px;
         }
@@ -273,6 +273,38 @@
         @media (max-width: 900px) {
             .content-grid { grid-template-columns: 1fr; }
         }
+        
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 2000;
+            backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            background: var(--bg-panel); padding: 30px; border-radius: 12px; width: 90%; max-width: 600px;
+            position: relative; border: 1px solid var(--border-color);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .modal-close {
+            position: absolute; top: 15px; right: 15px; background: none; border: none;
+            color: var(--text-muted); font-size: 24px; cursor: pointer;
+        }
+        
+        .btn-explore {
+            width: 100%; background: var(--gradient-blue);
+            color: white; border: none; padding: 15px; border-radius: 8px;
+            font-weight: 700; cursor: pointer; font-size: 16px; margin-bottom: 20px;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            transition: transform 0.2s;
+        }
+        .btn-explore:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0, 123, 255, 0.4); }
+
+        /* Negative Balance Card */
+        .card-negative {
+            background: linear-gradient(135deg, rgba(255, 95, 86, 0.2) 0%, rgba(200, 50, 50, 0.1) 100%) !important;
+            border-color: var(--danger-red) !important;
+        }
+
     </style>
 </head>
 <body>
@@ -321,7 +353,7 @@
                 <span class="ai-icon">✨</span>
                 <input type="text" id="aiInput" data-i18n="fin_ai_ph" placeholder="Ex: Gastei 45 reais no almoço com cartão de crédito...">
             </div>
-            <button class="btn-ai" onclick="parseAI()" data-i18n="fin_btn_process">Processar</button>
+            <button class="btn-ai" onclick="processLocalInput()" data-i18n="fin_btn_process">Processar</button>
         </div>
 
         <!-- Summaries -->
@@ -355,9 +387,14 @@
         </div>
 
         <!-- AI Alert -->
-        <div class="alert-box">
-             <div class="icon-box" style="width: 30px; height: 30px; background: none; font-size: 20px;">🤖</div>
-             <div id="val-insight" style="line-height: 1.4;">Analisando suas finanças...</div>
+        <!-- Local Features Area -->
+        <button class="btn-explore" onclick="openModal()">
+            <span>📊</span> Explorar Finanças
+        </button>
+
+        <div id="balance-alert" class="alert-box" style="display:none; background: rgba(255, 95, 86, 0.15); border-left-color: var(--danger-red);">
+             <div class="icon-box" style="width: 30px; height: 30px; background: none; font-size: 20px;">⚠️</div>
+             <div style="line-height: 1.4;"><strong>Atenção:</strong> Suas despesas superaram suas receitas este mês.</div>
         </div>
 
         <div class="content-grid">
@@ -404,10 +441,7 @@
                     <button class="btn-submit" onclick="addTransaction()" data-i18n="fin_btn_save">Salvar Lançamento</button>
                 </div>
 
-                <div class="chart-card">
-                    <h3 style="margin-bottom: 10px; font-size: 16px;" data-i18n="fin_chart_title">Gastos por Categoria</h3>
-                    <div id="expenseChart" style="width:100%; height:85%;"></div>
-                </div>
+                <!-- Static Chart Removed per user request -->
             </div>
 
             <!-- Table -->
@@ -429,6 +463,21 @@
                     </tbody>
                 </table>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="expenseModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">×</button>
+            <h3 style="margin-bottom: 20px;">Distribuição Financeira</h3>
+            
+            <div class="type-toggle" style="margin-bottom: 20px;">
+                <button id="modal-btn-exp" class="toggle-btn active expense" onclick="setModalType('expense')">Despesas</button>
+                <button id="modal-btn-inc" class="toggle-btn" onclick="setModalType('income')">Receitas</button>
+            </div>
+
+            <div id="modalChart" style="width:100%; height:400px;"></div>
         </div>
     </div>
 
@@ -493,6 +542,12 @@
                 {val: "Lazer", label: t.cat_leisure},
                 {val: "Moradia", label: t.cat_housing},
                 {val: "Saúde", label: t.cat_health},
+                {val: "Educação", label: "Educação"},
+                {val: "Pessoal", label: "Pessoal / Beleza"},
+                {val: "Assinaturas", label: "Assinaturas"},
+                {val: "Pets", label: "Pets"},
+                {val: "Dívidas", label: "Dívidas"},
+                {val: "Impostos", label: "Impostos"},
                 {val: "Outros", label: t.cat_others}
             ];
             const incomeCats = [
@@ -517,7 +572,7 @@
         window.addEventListener('languageChanged', (e) => {
              updateCategories();
              if(window.lastData) {
-                 renderChart(window.lastData[0]); // Expenses
+                 // renderChart(window.lastData[0]); // Static chart removed
                  renderTable(window.lastData[2]); // AllTx
              }
         });
@@ -546,7 +601,8 @@
 
                 renderTable(allTx);
                 renderSummary(summary);
-                renderChart(expenses);
+                // Static chart removed
+                // renderChart(expenses);
 
             } catch(e) { console.error(e); }
         }
@@ -599,15 +655,21 @@
             document.getElementById('val-expenses').innerText = `R$ ${data.total_expenses.toFixed(2).replace('.', ',')}`;
             document.getElementById('val-balance').innerText = `R$ ${data.balance.toFixed(2).replace('.', ',')}`;
             
-            document.getElementById('val-insight').innerText = data.advice;
-
+            // Remove Old Insight Logic
+            // Check Balance for Visual Alert
             const balCard = document.getElementById('card-balance');
-            balCard.classList.remove('positive-balance', 'negative-balance');
-            if(data.balance >= 0) balCard.classList.add('positive-balance');
-            else balCard.classList.add('negative-balance');
+            const alertBox = document.getElementById('balance-alert');
+
+            if(data.balance < 0) {
+                balCard.classList.add('card-negative');
+                alertBox.style.display = 'flex';
+            } else {
+                balCard.classList.remove('card-negative');
+                alertBox.style.display = 'none';
+            }
 
             const bar = document.getElementById('balance-bar');
-            bar.className = 'progress-bar'; // reset
+            bar.className = 'progress-bar'; 
             if(data.total_income > 0) {
                 const ratio = (data.total_expenses / data.total_income) * 100;
                 bar.style.width = Math.min(ratio, 100) + '%';
@@ -618,45 +680,48 @@
             }
         }
 
-        function renderChart(expenses) {
+        // --- CHART OVERRIDE (Support ID & Type) ---
+        function renderChart(items, elemId = 'expenseChart', type = 'expense') {
             const catMap = {};
-            expenses.forEach(e => {
+            items.forEach(e => {
                 catMap[e.category] = (catMap[e.category] || 0) + e.amount;
             });
 
             const labels = Object.keys(catMap);
             const values = Object.values(catMap);
             
-            // Translations
+            // Translations (Simplified)
             const lang = window.currentLang || 'pt';
-            const t = window.translations[lang] || window.translations['pt'];
-            const catKeys = {
-                "Alimentação": "cat_food", "Transporte": "cat_transport", "Lazer": "cat_leisure",
-                "Moradia": "cat_housing", "Saúde": "cat_health", "Salário": "cat_salary",
-                "Dividendos": "cat_divs", "Vendas": "cat_sales", "Outros": "cat_others"
-            };
-            
-            const displayLabels = labels.map(l => (catKeys[l] && t[catKeys[l]]) ? t[catKeys[l]] : l);
 
             if(values.length === 0) {
-                 document.getElementById('expenseChart').innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100%;color:var(--text-muted);">' + (lang==='pt'?'Sem dados':'No data') + '</div>';
+                 const el = document.getElementById(elemId);
+                 if(el) el.innerHTML = '<div style="display:flex;justify-content:center;align-items:center;height:100%;color:var(--text-muted);">' + (lang==='pt'?'Sem dados':'No data') + '</div>';
                  return;
             }
 
             const data = [{
                 values: values,
-                labels: displayLabels,
+                labels: labels, // Use raw labels if translation missing, or map if needed
                 type: 'pie',
-                hole: 0.6,
+                hole: 0.5,
                 textinfo: 'label+percent',
                 textposition: 'outside',
                 automargin: true,
                 marker: {
                     colors: labels.map(l => {
+                        if(type === 'income') return '#2ecc71'; // Greenish base
+                        // Spending colors
                         if(l==='Alimentação') return '#ff6384';
                         if(l==='Transporte') return '#36a2eb';
                         if(l==='Moradia') return '#4bc0c0';
                         if(l==='Lazer') return '#ffce56';
+                        if(l==='Saúde') return '#9966ff';
+                        if(l==='Educação') return '#ff9f40';
+                        if(l==='Pessoal') return '#e7e9ed';
+                        if(l==='Assinaturas') return '#c9cbcf';
+                        if(l==='Pets') return '#fd79a8';
+                        if(l==='Dívidas') return '#d63031';
+                        if(l==='Impostos') return '#636e72';
                         return '#8892b0';
                     })
                 }
@@ -666,12 +731,13 @@
                 paper_bgcolor: 'rgba(0,0,0,0)',
                 plot_bgcolor: 'rgba(0,0,0,0)',
                 font: { color: document.documentElement.getAttribute('data-theme') === 'light' ? '#333' : '#e6f1ff', family: 'Manrope' },
-                margin: { t: 10, b: 10, l: 10, r: 10 },
-                showlegend: false,
-                height: 300
+                margin: { t: 20, b: 20, l: 20, r: 20 },
+                showlegend: true, 
+                legend: { orientation: 'h', y: -0.1 }, 
+                height: elemId === 'modalChart' ? 350 : 300
             };
 
-            Plotly.newPlot('expenseChart', data, layout, {displayModeBar: false, responsive: true});
+            Plotly.newPlot(elemId, data, layout, {displayModeBar: false, responsive: true});
         }
 
         async function addTransaction() {
@@ -706,42 +772,75 @@
             loadData();
         }
 
-        // --- AI PARSER ---
-        async function parseAI() {
-            const text = document.getElementById('aiInput').value;
+        // --- LOCAL FEATURES ---
+        // --- LOCAL FEATURES (Powered by Backend Class Engine) ---
+        async function processLocalInput() {
+            const input = document.getElementById('aiInput');
+            const text = input.value;
             if(!text) return;
 
             const btn = document.querySelector('.btn-ai');
             const originalText = btn.innerText;
-            btn.innerText = 'Pensando...';
+            btn.innerText = '⏳';
+            btn.disabled = true;
 
             try {
+                // Now we send to backend "Local Engine"
                 const res = await fetch(`${API_BASE_URL}/api/expenses/parse`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ text })
+                    body: JSON.stringify({ text: text })
                 });
+
                 const data = await res.json();
-                
-                // Set Type
-                setType(data.type); 
-                
-                // Auto-fill form
-                document.getElementById('desc').value = data.description;
-                document.getElementById('amount').value = data.amount;
-                setTimeout(() => {
-                     document.getElementById('category').value = data.category;
-                }, 50);
-                document.getElementById('date').value = data.date;
-                
-                // Highlight form
-                document.querySelector('.form-card').style.borderColor = 'var(--accent-primary)';
-                setTimeout(() => document.querySelector('.form-card').style.borderColor = 'var(--border-color)', 2000);
+
+                if(res.ok && data.message === "Salvo com sucesso!") {
+                    // Success Feedback
+                    const icon = document.querySelector('.ai-icon');
+                    const originalIcon = icon.innerText;
+                    icon.innerText = '✅';
+                    setTimeout(() => icon.innerText = originalIcon, 2000);
+
+                    // Show Toast or Alert? User wanted "check"
+                    // Let's use a nice little toast logic or just the check above + console
+                    console.log(`Salvo: ${data.transaction.description}`);
+                    
+                    input.value = ''; // Clear
+                    loadData(); // Refresh Tables immediately
+                } else {
+                    alert(data.error || "Erro ao processar");
+                }
 
             } catch(e) {
-                alert("Erro ao processar");
+                console.error(e);
+                alert("Erro de conexão");
             } finally {
                 btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // Modal Logic
+        let currentModalType = 'expense';
+
+        function openModal() {
+            document.getElementById('expenseModal').style.display = 'flex';
+            setModalType('expense'); // Default to expense or keep last? Default expense is safer.
+        }
+        function closeModal() {
+            document.getElementById('expenseModal').style.display = 'none';
+        }
+
+        function setModalType(type) {
+            currentModalType = type;
+            // Update Buttons
+            document.getElementById('modal-btn-exp').className = type === 'expense' ? 'toggle-btn active expense' : 'toggle-btn';
+            document.getElementById('modal-btn-inc').className = type === 'income' ? 'toggle-btn active income' : 'toggle-btn';
+
+            // Render Chart
+            if(window.lastData) {
+                const data = type === 'expense' ? window.lastData[0] : window.lastData[1];
+                renderChart(data, 'modalChart', type);
             }
         }
 
