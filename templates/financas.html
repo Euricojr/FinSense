@@ -29,12 +29,13 @@
 
         [data-theme="light"] {
             --bg-main: #f0f2f5;
-            --bg-card: rgba(255, 255, 255, 0.9);
+            --bg-card: #ffffff;
             --bg-panel: #ffffff;
             --text-main: #1a1a1a;
-            --text-muted: #666;
+            --text-muted: #555;
             --border-neon: rgba(0, 123, 255, 0.3);
-            --border-soft: rgba(0, 0, 0, 0.05);
+            --border-soft: rgba(0, 0, 0, 0.08);
+            --accent-cyan: #007bff;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Manrope', sans-serif; }
@@ -220,12 +221,36 @@
             min-height: 400px;
         }
 
+        /* Smart Entry - Refined */
+        .smart-hero {
+            background: var(--bg-card); /* Match card style for consistency */
+            border: 1px solid var(--border-soft);
+            border-radius: 12px;
+            padding: 15px 25px;
+            display: flex; align-items: center; gap: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1); /* Softer shadow */
+        }
+        .smart-hero input {
+            flex: 1; background: transparent; border: none;
+            color: var(--text-main); font-size: 16px; outline: none;
+            font-family: inherit;
+        }
+        .smart-hero button {
+            background: var(--accent-cyan); color: #fff;
+            border: none; padding: 8px 20px; border-radius: 6px;
+            font-weight: 600; cursor: pointer; transition: all 0.2s;
+            font-size: 14px;
+        }
+        .smart-hero button:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2); }
+
+
         /* Transaction List */
-        .trans-list { display: flex; flex-direction: column; gap: 0; }
+        .trans-list { display: flex; flex-direction: column; gap: 0; max-height: 400px; overflow-y: auto; }
         .trans-item { 
             display: flex; align-items: center; padding: 18px 20px; 
             background: transparent;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            border-bottom: 1px solid var(--border-soft);
             transition: all 0.2s ease; cursor: pointer;
             position: relative;
             flex-wrap: wrap; /* Allow details to break to new line */
@@ -246,12 +271,12 @@
             font-size: 20px; margin-right: 15px;
         }
         .trans-info { flex: 1; min-width: 150px; }
-        .trans-desc { font-weight: 600; color: white; font-size: 16px; margin-bottom: 4px; }
+        .trans-desc { font-weight: 600; color: var(--text-main); font-size: 16px; margin-bottom: 4px; }
         .trans-meta { width: 100%; color: var(--text-muted); font-size: 13px; }
         .trans-amount { font-weight: 700; font-size: 16px; margin-left: auto; text-align: right; }
         
         .trans-details {
-            width: 100%; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.05);
+            width: 100%; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-soft);
             color: var(--accent-cyan); font-size: 14px; display: none;
         }
         .trans-item.active .trans-details { display: block; animation: fadeIn 0.3s ease; }
@@ -397,6 +422,13 @@
                 <p style="color: var(--text-muted); font-size: 14px;">Visão geral de suas receitas e despesas</p>
             </div>
             <input type="month" id="dateFilter" class="date-filter" onchange="loadData()">
+        </div>
+
+        <!-- Smart Entry Hero -->
+        <div class="smart-hero">
+            <span style="font-size: 20px;">✨</span>
+            <input type="text" id="smartInput" placeholder="Digite aqui: 'Hoje almoço 30 reais' ou 'Recebi 500 de vendas'..." onkeypress="if(event.key==='Enter') processSmartEntry()">
+            <button onclick="processSmartEntry()">Processar</button>
         </div>
 
         <!-- KPI Row -->
@@ -864,6 +896,29 @@
             document.getElementById('desc').value = '';
             document.getElementById('amount').value = '';
             loadData();
+            loadData();
+        }
+
+
+
+        async function processSmartEntry() {
+            const input = document.getElementById('smartInput');
+            const text = input.value;
+            if(!text) return;
+            
+            try {
+                const res = await fetch(`${API_BASE_URL}/smart-entry`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({text})
+                });
+                if(res.ok) {
+                    input.value = '';
+                    loadData(); // Refresh list
+                } else {
+                    alert("Não entendi... Tente: 'Gastei 50 em comida'");
+                }
+            } catch(e) { console.error(e); }
         }
 
         window.onclick = function(event) {
