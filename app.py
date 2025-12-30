@@ -420,8 +420,18 @@ def parse_expense():
         1. Categorias Permitidas (Despesa): Alimentação, Transporte, Lazer, Moradia, Saúde, Educação, Pessoal, Assinaturas, Pets, Dívidas, Impostos, Outros.
         2. Categorias Permitidas (Receita): Salário, Investimentos, Vendas, Presentes, Outros.
         3. Identifique 'Tipo' pelo contexto: 'recebi', 'ganhei', 'salário' -> Receita. Caso contrário -> Despesa.
-        4. Data: Se disser 'ontem', calcule a data baseada em hoje ({today_str}). Se não disser nada, use hoje.
+        4. Data:
+           - Se disser 'hoje', use {today_str}.
+           - Se disser 'ontem', calcule o dia anterior.
+           - Se disser 'dia X' (ex: 'dia 15', 'dia 29'), use o dia X do mês/ano atual.
+           - Se não citar data, use hoje.
         5. Formate "amount" como float puro (ex: 50.00).
+        
+        DICA DE CATEGORIAS:
+        - Higiene (shampoo, sabonete, pasta), Farmácia e Remédios -> "Saúde".
+        - Academia, Suplementos, Esportes, Equipmento Fitness -> "Saúde".
+        - Roupas, corte de cabelo, estética -> "Pessoal".
+        - Mercado (comida) -> "Alimentação".
         """
 
         chat_completion = groq_client.chat.completions.create(

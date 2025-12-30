@@ -912,7 +912,7 @@
         }
 
         async function deleteTransaction(id, type) {
-            if(!confirm("Tem certeza que deseja excluir?")) return;
+            // if(!confirm("Tem certeza que deseja excluir?")) return; // Removed by user request
             
             try {
                 const endpoint = type === 'expense' ? 'expenses' : 'incomes';
@@ -951,7 +951,10 @@
                 const def = { icon: '📄', color: '#8395a7' };
                 const meta = catIcons[tx.category] || def;
 
-                const dateStr = new Date(tx.date).toLocaleDateString('pt-BR', {day:'2-digit', month:'short'});
+                // Fix Date Timezone Issue: Parse manually YYYY-MM-DD
+                const [y, m, d] = tx.date.split('-');
+                const dateObj = new Date(y, m - 1, d);
+                const dateStr = dateObj.toLocaleDateString('pt-BR', {day:'2-digit', month:'short'});
 
                 // Stop propagation on delete button to prevent list expansion toggle if we placed it outside
                 // But here we place it inside details
