@@ -444,6 +444,7 @@ def parse_expense():
         )
 
         result_str = chat_completion.choices[0].message.content
+        logger.info(f"Groq Parse Result: {result_str}")
         result = json.loads(result_str)
         
         # Normalize Type to internal identifiers
@@ -563,13 +564,19 @@ def financas_summary():
         Não use markdown. Texto puro.
         """
 
-        chat_completion = groq_client.chat.completions.create(
-            messages=[{"role": "user", "content": prompt}],
-            model="llama-3.1-8b-instant",
-            temperature=0.7,
-            max_tokens=60
-        )
-        advice = chat_completion.choices[0].message.content.strip()
+        try:
+            logger.info("Sending request to Groq for Mentor Advice...")
+            chat_completion = groq_client.chat.completions.create(
+                messages=[{"role": "user", "content": prompt}],
+                model="llama-3.1-8b-instant",
+                temperature=0.7,
+                max_tokens=60
+            )
+            advice = chat_completion.choices[0].message.content.strip().strip('"')
+            logger.info(f"Groq Advice Received: {advice}")
+        except Exception as e:
+            logger.error(f"Groq API Error in Summary: {e}")
+            advice = "O Mentor está offline no momento."
 
         return jsonify({
             "total_income": total_income,
