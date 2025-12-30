@@ -391,15 +391,7 @@ def manage_expenses():
         except Exception as e:
             return jsonify({'error': str(e)}), 400
 
-@app.route('/api/expenses/<int:id>', methods=['DELETE'])
-@login_required
-def delete_expense(id):
-    exp = Expense.query.filter_by(id=id, user_id=current_user.id).first()
-    if exp:
-        db.session.delete(exp)
-        db.session.commit()
-        return jsonify({'message': 'Deleted'})
-    return jsonify({'error': 'Not found'}), 404
+
 
 @app.route('/api/expenses/parse', methods=['POST'])
 @login_required
@@ -522,6 +514,16 @@ def delete_income(id):
     inc = Income.query.filter_by(id=id, user_id=current_user.id).first()
     if inc:
         db.session.delete(inc)
+        db.session.commit()
+        return jsonify({'message': 'Deleted'})
+    return jsonify({'error': 'Not found'}), 404
+
+@app.route('/api/expenses/<int:id>', methods=['DELETE'])
+@login_required
+def delete_expense(id):
+    exp = Expense.query.filter_by(id=id, user_id=current_user.id).first()
+    if exp:
+        db.session.delete(exp)
         db.session.commit()
         return jsonify({'message': 'Deleted'})
     return jsonify({'error': 'Not found'}), 404

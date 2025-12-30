@@ -911,6 +911,27 @@
             });
         }
 
+        async function deleteTransaction(id, type) {
+            if(!confirm("Tem certeza que deseja excluir?")) return;
+            
+            try {
+                const endpoint = type === 'expense' ? 'expenses' : 'incomes';
+                const response = await fetch(`${API_BASE_URL}/api/${endpoint}/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if(response.ok) {
+                    loadData(); // Reload all
+                    loadAdvice(); // Update advice if balance changed significantly
+                } else {
+                    alert("Erro ao excluir.");
+                }
+            } catch(e) {
+                console.error(e);
+                alert("Erro de conexão.");
+            }
+        }
+
         function renderTransactionList(transactions) {
             const list = document.getElementById('transactionList');
             list.innerHTML = '';
@@ -932,6 +953,8 @@
 
                 const dateStr = new Date(tx.date).toLocaleDateString('pt-BR', {day:'2-digit', month:'short'});
 
+                // Stop propagation on delete button to prevent list expansion toggle if we placed it outside
+                // But here we place it inside details
                 const html = `
             <div class="trans-item" onclick="this.classList.toggle('active')">
                 <div class="trans-icon-wrapper" style="background: ${meta.color}20; color: ${meta.color};">
@@ -944,8 +967,13 @@
                 <div class="trans-amount" style="color: ${color}">
                     ${isExp ? '-' : '+'} R$ ${tx.amount.toFixed(2)}
                 </div>
-                <div class="trans-details">
-                    📄 ${tx.description}
+                <div class="trans-details" onclick="event.stopPropagation()">
+                    <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                        <span>📄 ${tx.description}</span>
+                        <button onclick="deleteTransaction(${tx.id}, '${tx.type}')" style="background:none; border:none; color:#ff5f56; cursor:pointer; font-size:12px; display:flex; align-items:center; gap:5px;">
+                            🗑️ Excluir
+                        </button>
+                    </div>
                 </div>
             </div>
         `;
