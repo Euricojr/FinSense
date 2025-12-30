@@ -46,6 +46,7 @@ groq_client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 # Cache for Heatmap
 CACHE_HEATMAP = {}
 CACHE_DURATION = 60  # seconds
+ADVICE_CACHE = {}
 
 
 # --- ASSETS AND TICKERS (Merged from Backend 3) ---
@@ -550,33 +551,44 @@ def financas_summary():
             cat_map[e.category] = cat_map.get(e.category, 0) + e.amount
         top_category = max(cat_map, key=cat_map.get) if cat_map else "Nenhuma"
 
-        # AI Advice via Groq
-        prompt = f"""
-        Você é um consultor financeiro "Mentor Estratégico".
-        Dados do Mês de {today.strftime('%B')}:
-        - Receita: R$ {total_income:.2f}
-        - Despesa: R$ {total_expenses:.2f}
-        - Saldo: R$ {balance:.2f}
-        - Maior gasto: {top_category}
+        # Cache Check (Daily)
+        cache_key = f"{current_user.id}_{today.strftime('%Y-%m-%d')}"
+        if cache_key in ADVICE_CACHE:
+            advice = ADVICE_CACHE[cache_key]
+        else:
+            # AI Advice via Groq
+            prompt = f"""
+            Você é um Mentor Financeiro de Elite, sábio e direto.
+            Dados do Mês de {today.strftime('%B')}:
+            - Receita: R$ {total_income:.2f}
+            - Despesa: R$ {total_expenses:.2f}
+            - Saldo: R$ {balance:.2f}
+            - Maior gasto: {top_category}
 
-        Instrução: Dê uma única frase de conselho financeiro direto e impactante (max 20 palavras).
-        Se o saldo for positivo, sugira investimento. Se negativo, sugira corte específico.
-        Não use markdown. Texto puro.
-        """
+            Missão: Dê um conselho de ouro, impactante e "fora da caixa" (max 25 palavras).
+            Use uma metáfora ou tom motivacional. Nada de "economize mais". Dê uma estratégia real.
+            Se saldo > 0: Foque em multiplicar patrimônio.
+            Se saldo < 0: Foque em estancar a sangria imediatamente.
+            Não use markdown, apenas texto puro.
+            """
 
-        try:
-            logger.info("Sending request to Groq for Mentor Advice...")
-            chat_completion = groq_client.chat.completions.create(
-                messages=[{"role": "user", "content": prompt}],
-                model="llama-3.1-8b-instant",
-                temperature=0.7,
-                max_tokens=60
-            )
-            advice = chat_completion.choices[0].message.content.strip().strip('"')
-            logger.info(f"Groq Advice Received: {advice}")
-        except Exception as e:
-            logger.error(f"Groq API Error in Summary: {e}")
-            advice = "O Mentor está offline no momento."
+            try:
+                logger.info("Sending request to Groq for Mentor Advice...")
+                chat_completion = groq_client.chat.completions.create(
+                    messages=[{"role": "user", "content": prompt}],
+                    model="llama-3.1-8b-instant",
+                    temperature=0.8, # More creative
+                    max_tokens=80
+                )
+                advice = chat_completion.choices[0].message.content.strip().strip('"')
+                logger.info(f"Groq Advice Received: {advice}")
+                
+                # Save to Cache
+                ADVICE_CACHE[cache_key] = advice
+                
+            except Exception as e:
+                logger.error(f"Groq API Error in Summary: {e}")
+                advice = "O Mentor está calibrando a bússola. Tente novamente em breve."
 
         return jsonify({
             "total_income": total_income,

@@ -429,8 +429,8 @@
 
             <button id="theme-btn" class="theme-toggle" onclick="toggleTheme()" title="Alternar Tema">☀️</button>
 
-            <div id="nav-auth" style="display: flex; align-items: center; margin-left: 20px;">
-                <span id="user-display" style="color: white; font-weight: 500; font-size: 14px; margin-right: 15px;">Olá, {{ user.username }}</span>
+            <div id="nav-auth" style="display: none; align-items: center; margin-left: 20px;">
+                <span id="user-display" style="color: white; font-weight: 500; font-size: 14px; margin-right: 15px;">Olá, ...</span>
                 <a href="#" class="btn-logout" onclick="logout()" data-i18n="nav_logout">Sair</a>
             </div>
         </nav>
@@ -610,11 +610,55 @@
     </div>
 
     <script>
-        const API_BASE_URL = window.location.origin;
+        // --- API & Auth Logic ---
+        function getBaseUrl() {
+            const hostname = window.location.hostname;
+            const port = window.location.port;
+            // If running on Live Server (ports 5500, 5501...) or file://
+            if ((hostname === '127.0.0.1' || hostname === 'localhost') && port !== '5000') {
+                return 'http://127.0.0.1:5000';
+            }
+            return window.location.origin;
+        }
+        const API_BASE_URL = getBaseUrl();
+
+        // Auth
+        async function checkAuth() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/me`);
+                const data = await response.json();
+                if (data.authenticated) {
+                    document.getElementById('nav-auth').style.display = 'flex';
+                    const userDisplay = document.getElementById('user-display');
+                    if (userDisplay) {
+                        userDisplay.innerText = `Olá, ${data.username || 'Investidor'}`;
+                    }
+                } else {
+                    redirectToLogin();
+                }
+            } catch (e) {
+                console.error("Auth check failed", e);
+                // redirectToLogin(); 
+            }
+        }
+
+        async function logout() {
+            await fetch(`${API_BASE_URL}/logout`);
+            redirectToLogin();
+        }
+
+        function redirectToLogin() {
+            // If on Live Server (static), go to login.html. If Flask, go to /login route
+            const isStatic = window.location.port !== '5000' && (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost');
+            window.location.href = isStatic ? 'login.html' : 'login';
+        }
+
         let currentType = 'expense';
 
         // Init
         document.addEventListener('DOMContentLoaded', () => {
+             checkAuth();
+
              // Set default date to current month
              const now = new Date();
              const month = (now.getMonth() + 1).toString().padStart(2, '0');
