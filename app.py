@@ -46,7 +46,21 @@ groq_client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 # Cache for Heatmap
 CACHE_HEATMAP = {}
 CACHE_DURATION = 60  # seconds
+
 ADVICE_CACHE = {}
+
+def clear_advice_cache(user_id):
+    """Invalidates the daily advice cache for a specific user."""
+    try:
+        from datetime import datetime
+        today_str = datetime.now().strftime('%Y-%m-%d')
+        key = f"{user_id}_{today_str}"
+        if key in ADVICE_CACHE:
+            del ADVICE_CACHE[key]
+            logger.info(f"Advice cache cleared for user {user_id}")
+    except Exception as e:
+        logger.error(f"Error clearing cache: {e}")
+
 
 
 # --- ASSETS AND TICKERS (Merged from Backend 3) ---
@@ -387,6 +401,7 @@ def manage_expenses():
             )
             db.session.add(new_exp)
             db.session.commit()
+            clear_advice_cache(current_user.id) # Invalidate advice
             return jsonify({'message': 'Expense added', 'id': new_exp.id})
         except Exception as e:
             return jsonify({'error': str(e)}), 400
@@ -474,6 +489,8 @@ def parse_expense():
         db.session.add(new_tx)
         db.session.commit()
         
+        clear_advice_cache(current_user.id) # Invalidate advice
+
         return jsonify({
             "message": "Salvo com sucesso!",
             "transaction": {
@@ -514,6 +531,7 @@ def manage_incomes():
             )
             db.session.add(new_inc)
             db.session.commit()
+            clear_advice_cache(current_user.id)
             return jsonify({'message': 'Income added', 'id': new_inc.id})
         except Exception as e:
             return jsonify({'error': str(e)}), 400
@@ -525,6 +543,7 @@ def delete_income(id):
     if inc:
         db.session.delete(inc)
         db.session.commit()
+        clear_advice_cache(current_user.id)
         return jsonify({'message': 'Deleted'})
     return jsonify({'error': 'Not found'}), 404
 
@@ -535,6 +554,7 @@ def delete_expense(id):
     if exp:
         db.session.delete(exp)
         db.session.commit()
+        clear_advice_cache(current_user.id)
         return jsonify({'message': 'Deleted'})
     return jsonify({'error': 'Not found'}), 404
 
