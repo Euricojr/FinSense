@@ -515,14 +515,15 @@
 
         <!-- KPI Row -->
         <div class="kpi-grid">
-            <!-- Revenue Card -->
+            <!-- Revenue Card -> Balance Evolution -->
             <div class="card">
                 <div class="card-header">
                     <div>
-                        <div class="card-title">Receita Acumulada</div>
-                        <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Últimos 10 lançamentos</div>
+                        <div class="card-title">Evolução do Saldo</div>
+                        <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Acumulado do Mês</div>
                     </div>
                 </div>
+                <!-- ID kept as chart-revenue to avoid big diffs, but logically it's balance now -->
                 <div id="chart-revenue" class="chart-container"></div>
             </div>
 
@@ -754,11 +755,14 @@
 
                 // Filter by month? User asked for Date Picker. For now, let's just use all data for trends, or filter if requested.
                 // Let's filter client-side based on the Date Picker
-                const filterVal = document.getElementById('dateFilter').value; // YYYY-MM
                 const filteredTx = allTx.filter(tx => tx.date.startsWith(filterVal));
                 
-                // 2. Render Charts
-                renderRevenueChart(incomes.filter(i => i.date.startsWith(filterVal)));
+                // 2. Fetch Summary & Render Charts
+                const monthParam = filterVal ? `?month=${filterVal}` : '';
+                const summaryRes = await fetch(`${API_BASE_URL}/api/financas/summary${monthParam}`);
+                const summaryData = await summaryRes.json();
+
+                renderRevenueChart(filteredTx, summaryData.initial_balance || 0, filterVal);
                 renderDailyExpensesChart(expenses.filter(e => e.date.startsWith(filterVal)));
                 renderDonutChart(expenses.filter(e => e.date.startsWith(filterVal)));
                 
@@ -766,14 +770,14 @@
                 renderTransactionList(filteredTx);
 
                 // 4. Update Goals
-                updateGoal(incomes, expenses, filterVal);
-
-                // 4. Update Goals
                 // 4. Update Goals
                 updateGoal(incomes, expenses, filterVal);
                 
-                // 5. Update Mentor Advice with selected month
-                loadAdvice(filterVal);
+                // 5. Update Mentor Advice
+                if(summaryData.advice) {
+                     const adviceEl = document.getElementById('mentor-advice');
+                     adviceEl.innerText = summaryData.advice;
+                }
 
             } catch(e) { console.error("Error loading data:", e); }
         }
@@ -847,28 +851,70 @@
             }
         }
 
-        function renderRevenueChart(incomes) {
-            // Group by date
-            const grouped = {};
-            incomes.forEach(i => {
-                grouped[i.date] = (grouped[i.date] || 0) + i.amount;
+        function renderRevenueChart(transactions, initialBalance, currentMonth) {
+            // "Evolução do Saldo"
+            // We need a daily series for the whole month (or up to today).
+            if(!transactions) transactions = [];
+            
+            // 1. Generate Days Array for the month
+            const [year, month] = currentMonth.split('-').map(Number);
+            const daysInMonth = new Date(year, month, 0).getDate();
+            const days = [];
+            for(let i=1; i<=daysInMonth; i++) {
+                days.push(`${year}-${String(month).padStart(2,'0')}-${String(i).padStart(2,'0')}`);
+            }
+
+            // 2. Build changes per day
+            const changes = {};
+            transactions.forEach(tx => {
+                // tx.amount already positive, type tells sign
+                const val = tx.type === 'income' ? tx.amount : -tx.amount;
+                // Accumulate per day
+                changes[tx.date] = (changes[tx.date] || 0) + val;
             });
-            const dates = Object.keys(grouped).sort();
-            const values = dates.map(d => grouped[d]);
+
+            // 3. Calculate Cumulative Balance
+            const balanceValues = [];
+            let currentBalance = initialBalance;
+            
+            // Prepend "Start" point? Optional. Let's start from Day 1.
+            
+            days.forEach(day => {
+                if(changes[day]) currentBalance += changes[day];
+                // Don't plot future days if it's current month?
+                // Logic: If day > today, maybe stop? Or just flat line?
+                // Let's just plot all month. Future days will be flat line.
+                balanceValues.push(currentBalance);
+            });
+
+            // If we want to cut off future dates for 'current month':
+            const now = new Date();
+            const isCurrentMonth = now.getFullYear() === year && (now.getMonth() + 1) === month;
+            let displayDays = days;
+            let displayValues = balanceValues;
+            
+            if(isCurrentMonth) {
+                const todayDate = now.getDate();
+                displayDays = days.slice(0, todayDate);
+                displayValues = balanceValues.slice(0, todayDate);
+            }
+
+            // Format dates for X Axis
+            const formattedDays = displayDays.map(d => d.split('-')[2]); // Just day number
 
             const trace = {
-                x: dates, y: values, 
+                x: formattedDays, y: displayValues, 
                 type: 'scatter', mode: 'lines+markers',
                 line: { shape: 'spline', color: '#00d4ff', width: 3 },
                 fill: 'tozeroy', fillcolor: 'rgba(0, 212, 255, 0.1)',
-                hovertemplate: '<b>%{x}</b><br>R$ %{y:,.2f}<extra></extra>'
+                hovertemplate: 'Dia %{x}<br>Saldo: R$ %{y:,.2f}<extra></extra>'
             };
 
             const layout = {
                 paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
-                margin: { t: 10, b: 30, l: 30, r: 10 },
-                xaxis: { showgrid: false, zeroline: false, showline: false, color: '#8892b0' },
-                yaxis: { showgrid: false, zeroline: false, showline: false, gridcolor: 'rgba(255,255,255,0.05)', color: '#8892b0', rangemode: 'nonnegative' },
+                margin: { t: 10, b: 30, l: 40, r: 10 },
+                xaxis: { showgrid: false, zeroline: false, showline: false, color: '#8892b0', title: 'Dias' },
+                yaxis: { showgrid: true, zeroline: true, showline: false, gridcolor: 'rgba(255,255,255,0.05)', color: '#8892b0' },
                 height: 200,
                 hovermode: 'x unified',
                 hoverlabel: { bgcolor: '#0b1221', bordercolor: '#00f2ff', font: { color: 'white' } }

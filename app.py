@@ -647,6 +647,7 @@ def financas_summary():
             "total_income": total_income,
             "total_expenses": total_expenses,
             "balance": balance,
+            "initial_balance": initial_balance,
             "top_category": top_category,
             "advice": advice,
             "month": current_month
