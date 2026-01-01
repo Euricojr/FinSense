@@ -562,11 +562,20 @@ def delete_expense(id):
 @login_required
 def financas_summary():
     try:
-        # Data aggregation
         from datetime import datetime
+        # Get requested month or default to current
+        req_month = request.args.get('month')
         today = datetime.now()
-        current_month = today.strftime('%Y-%m')
         
+        if req_month:
+            current_month = req_month
+            month_obj = datetime.strptime(req_month, '%Y-%m')
+            month_name = month_obj.strftime('%B de %Y')
+        else:
+            current_month = today.strftime('%Y-%m')
+            month_name = today.strftime('%B')
+        
+        # Filter by Month
         exps = Expense.query.filter_by(user_id=current_user.id).all()
         month_exps = [e for e in exps if e.date.startswith(current_month)]
         total_expenses = sum(e.amount for e in month_exps)
@@ -577,31 +586,43 @@ def financas_summary():
         
         balance = total_income - total_expenses
         
+        # Calculate Initial Balance (Previous History)
+        # Sum of all income/expenses with date < current_month-01
+        start_of_month_str = f"{current_month}-01"
+        
+        historic_expenses = sum(e.amount for e in exps if e.date < start_of_month_str)
+        historic_income = sum(i.amount for i in incs if i.date < start_of_month_str)
+        initial_balance = historic_income - historic_expenses
+
         # Determine Top Category
         cat_map = {}
         for e in month_exps:
             cat_map[e.category] = cat_map.get(e.category, 0) + e.amount
         top_category = max(cat_map, key=cat_map.get) if cat_map else "Nenhuma"
 
-        # Cache Check (Daily)
-        cache_key = f"{current_user.id}_{today.strftime('%Y-%m-%d')}"
+        # Cache Check (Unique per user + month + date to refresh daily but keep same advice for same data state ideally)
+        # Using simple date key so it refreshes if day changes or if cache cleared by new tx
+        cache_key = f"{current_user.id}_{current_month}_{today.strftime('%Y-%m-%d')}"
+        
         if cache_key in ADVICE_CACHE:
             advice = ADVICE_CACHE[cache_key]
         else:
             # AI Advice via Groq
             prompt = f"""
-            Você é um Mentor Financeiro de Elite, sábio e direto.
-            Dados do Mês de {today.strftime('%B')}:
+            Você é um Mentor Financeiro de Elite.
+            Analise os dados de {month_name}:
             - Receita: R$ {total_income:.2f}
             - Despesa: R$ {total_expenses:.2f}
             - Saldo: R$ {balance:.2f}
             - Maior gasto: {top_category}
 
-            Missão: Dê um conselho de ouro, impactante e "fora da caixa" (max 25 palavras).
-            Use uma metáfora ou tom motivacional. Nada de "economize mais". Dê uma estratégia real.
-            Se saldo > 0: Foque em multiplicar patrimônio.
-            Se saldo < 0: Foque em estancar a sangria imediatamente.
-            Não use markdown, apenas texto puro.
+            Missão: Dê um (1) único conselho de impacto (máximo 20 palavras).
+            Estilo: Direto, "punchy", sem enrolação. Use metáfora se couber.
+            
+            REGRAS CRÍTICAS DE FORMATAÇÃO:
+            1. NÃO coloque entre aspas.
+            2. NÃO assine (ex: nada de "Seu Mentor", "Atenciosamente").
+            3. Apenas a frase e nada mais.
             """
 
             try:
@@ -609,10 +630,10 @@ def financas_summary():
                 chat_completion = groq_client.chat.completions.create(
                     messages=[{"role": "user", "content": prompt}],
                     model="llama-3.1-8b-instant",
-                    temperature=0.8, # More creative
-                    max_tokens=80
+                    temperature=0.8,
+                    max_tokens=60
                 )
-                advice = chat_completion.choices[0].message.content.strip().strip('"')
+                advice = chat_completion.choices[0].message.content.strip().replace('"', '')
                 logger.info(f"Groq Advice Received: {advice}")
                 
                 # Save to Cache
@@ -620,7 +641,7 @@ def financas_summary():
                 
             except Exception as e:
                 logger.error(f"Groq API Error in Summary: {e}")
-                advice = "O Mentor está calibrando a bússola. Tente novamente em breve."
+                advice = "O Mentor está calibrando a bússola."
 
         return jsonify({
             "total_income": total_income,
