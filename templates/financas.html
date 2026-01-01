@@ -487,7 +487,14 @@
                 </button>
             </div>
             <div class="date-selector" style="display: flex; align-items: center; gap: 10px;">
-                <input type="month" id="dateFilter" class="form-input" style="width: auto; margin-bottom: 0; padding: 8px 12px; background: rgba(255,255,255,0.05);" onchange="/* Manual trigger only via button if preferred, or keep auto */">
+                <!-- Custom Localized Date Picker Wrapper -->
+                <div style="position: relative; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 8px; padding: 8px 12px; min-width: 150px; display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+                    <span id="date-label" style="font-size: 14px; color: white;">Carregando...</span>
+                    <!-- Icon -->
+                    <span style="font-size: 14px; opacity: 0.7;">📅</span>
+                    <!-- Hidden Input Trigger -->
+                    <input type="month" id="dateFilter" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 10; margin: 0; padding: 0;" onchange="updateDateLabel(this.value)" onclick="try{this.showPicker()}catch(e){}">
+                </div>
                 <button onclick="loadData()" style="
                     background: var(--accent-primary); 
                     border: none; 
@@ -741,10 +748,21 @@
             document.getElementById('dateText').innerText = formatted;
         }
 
+        // --- Date Label Logic ---
+        function updateDateLabel(val) {
+            if(!val) return;
+            const [year, month] = val.split('-');
+            const date = new Date(year, month - 1);
+            // Capitaize first letter
+            const monthName = date.toLocaleString('pt-BR', { month: 'long' });
+            const label = `${monthName.charAt(0).toUpperCase() + monthName.slice(1)} ${year}`;
+            document.getElementById('date-label').innerText = label;
+        }
+
         // --- Data Loading & Charts ---
         async function loadData() {
             const filterVal = document.getElementById('dateFilter').value;
-            // updateDateDisplay(filterVal); // No longer needed with native input visible
+            updateDateLabel(filterVal); // Update the visual label whenever we load/reload
 
             try {
                 const [expRes, incRes] = await Promise.all([
@@ -1238,8 +1256,14 @@
                 reportContainer.style.padding = '40px';
                 reportContainer.style.boxSizing = 'border-box';
                 
+                
                 // Get Current Data
-                const dateText = document.getElementById('dateText').innerText;
+                const dateVal = document.getElementById('dateFilter').value;
+                const [year, month] = dateVal.split('-');
+                const dateObj = new Date(year, month - 1);
+                const monthName = dateObj.toLocaleString('pt-BR', { month: 'long' });
+                const dateText = `${monthName.charAt(0).toUpperCase() + monthName.slice(1)} ${year}`;
+
                 const advice = document.getElementById('mentor-advice').innerText;
                 const totalRev = document.querySelector('#chart-revenue').parentElement.querySelector('.card-title') ? "Receita" : "Receita"; // Placeholder logic 
                 // Better to fetch actual values or DOM elements if available, but for now we iterate
@@ -1247,6 +1271,8 @@
                 // We need to calculate totals locally since they aren't easily valid as simple text in one place except donut
                 // Actually, let's grab the advice and the visual elements.
 
+                // --- 2. Construct Layout ---
+                
                 // --- 2. Construct Layout ---
                 
                 // HEADER
@@ -1274,16 +1300,43 @@
                     </div>
                 `;
 
-                // SUMMARY KPI ROW (calculated from data loaded)
-                // We can tap into the data displayed in the donut center for Expense, but Revenue is harder.
-                // Let's re-calculate quickly or grab from DOM if possible.
-                // Or easier: Re-use the arrays if we made them global? They are local in `loadData`.
-                // Alternative: Grab the images of the charts!
+                // PREPARE CHARTS FOR CAPTURE (SHOW VALUES)
+                const chartDaily = document.getElementById('chart-daily');
+                const chartDonut = document.getElementById('chart-donut');
+                
+                // 1. Daily Chart: Add numeric labels
+                if(chartDaily && chartDaily.data && chartDaily.data.length > 0) {
+                     const yVals = chartDaily.data[0].y;
+                     const textVals = yVals.map(v => 'R$ ' + v.toFixed(0));
+                     await Plotly.restyle(chartDaily, {
+                         text: [textVals],
+                         textposition: 'auto',
+                         textfont: { color: 'white' }
+                     });
+                }
+
+                // 2. Donut Chart: Add % labels
+                if(chartDonut) {
+                    await Plotly.restyle(chartDonut, {
+                        textinfo: 'label+percent',
+                        textposition: 'outside', 
+                        // insidetextorientation: 'horizontal', // Removed to avoid forcing inside
+                        textfont: { color: 'white', size: 10 }
+                    });
+                }
                 
                 // FETCH CHARTS AS IMAGES
                 const imgRev = await Plotly.toImage(document.getElementById('chart-revenue'), {format: 'png', width: 600, height: 300});
-                const imgDaily = await Plotly.toImage(document.getElementById('chart-daily'), {format: 'png', width: 600, height: 300});
-                const imgDonut = await Plotly.toImage(document.getElementById('chart-donut'), {format: 'png', width: 400, height: 300});
+                const imgDaily = await Plotly.toImage(chartDaily, {format: 'png', width: 600, height: 300});
+                const imgDonut = await Plotly.toImage(chartDonut, {format: 'png', width: 400, height: 300});
+
+                // REVERT CHARTS (CLEAN LOOK)
+                if(chartDaily) {
+                    await Plotly.restyle(chartDaily, { text: null, textposition: 'none' });
+                }
+                if(chartDonut) {
+                    await Plotly.restyle(chartDonut, { textinfo: 'none' });
+                }
                 
                 // Get the legend items HTML
                 const legendHTML = document.getElementById('category-legend').innerHTML;
@@ -1292,7 +1345,7 @@
                     <h3 style="color: white; border-left: 4px solid #64ffda; padding-left: 15px; margin-bottom: 20px;">Análise Gráfica</h3>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">
                         <div style="background: #112240; padding: 20px; border-radius: 10px;">
-                            <h4 style="margin: 0 0 15px 0; color: #a8b2d1;">Evolução da Receita</h4>
+                            <h4 style="margin: 0 0 15px 0; color: #a8b2d1;">Evolução do Saldo</h4>
                             <img src="${imgRev}" style="width: 100%; border-radius: 5px;">
                         </div>
                         <div style="background: #112240; padding: 20px; border-radius: 10px;">
