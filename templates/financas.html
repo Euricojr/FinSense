@@ -584,6 +584,13 @@
             <!-- Right Column -->
             <div style="display: flex; flex-direction: column; gap: 20px;">
                 
+                <!-- Cash on Hand (Total Balance) -->
+                <div class="card" style="border: 1px solid var(--accent-primary); background: linear-gradient(135deg, rgba(16, 24, 41, 0.9), rgba(10, 25, 47, 0.9));">
+                    <div class="card-title" style="color: var(--accent-primary);">Saldo em Caixa</div>
+                    <div id="cash-on-hand-val" style="font-size: 32px; font-weight: 700; color: white; margin-top: 10px;">R$ 0,00</div>
+                    <p style="font-size: 12px; color: var(--text-muted); margin-top: 5px;">Disponível (Histórico + Mês)</p>
+                </div>
+
                 <!-- Saving Goal -->
                 <div class="card goal-card">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -778,6 +785,11 @@
                      const adviceEl = document.getElementById('mentor-advice');
                      adviceEl.innerText = summaryData.advice;
                 }
+                
+                // 6. Update Cash on Hand (Initial + Current Month Balance)
+                const currentMonthBalance = summaryData.balance || 0;
+                const totalCash = (summaryData.initial_balance || 0) + currentMonthBalance;
+                document.getElementById('cash-on-hand-val').innerText = `R$ ${totalCash.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
 
             } catch(e) { console.error("Error loading data:", e); }
         }
