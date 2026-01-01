@@ -430,6 +430,23 @@
         .glow-active {
             animation: cyan-glow 1.5s ease-out;
         }
+
+        /* Custom Date Selectors */
+        .date-selector-group { display: flex; gap: 10px; align-items: center; }
+        .custom-select {
+            background: rgba(10, 25, 47, 0.9);
+            border: 1px solid var(--accent-primary);
+            color: var(--text-main);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 14px;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.3s;
+        }
+        .custom-select:hover { border-color: var(--accent-cyan); box-shadow: 0 0 10px rgba(100,255,218,0.1); }
+        .custom-select option { background: #0a192f; color: white; }
     </style>
     <!-- PDF Libs -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -486,13 +503,26 @@
                     📥 Premium PDF
                 </button>
             </div>
-            <div class="date-picker-wrapper">
-                <span id="dateDisplay" class="date-display">
-                    <span id="dateText">Carregando...</span>
-                    <!-- Icon -->
-                    <img src="https://cdn-icons-png.flaticon.com/512/2693/2693507.png" class="calendar-icon-styled" style="width:18px; height:18px;"> 
-                </span>
-                <input type="month" id="dateFilter" class="date-filter-real" onchange="loadData()">
+            
+            <!-- Custom Date Selector -->
+            <div class="date-selector-group">
+                <select id="filterMonth" class="custom-select" onchange="loadData()">
+                    <option value="01">Janeiro</option>
+                    <option value="02">Fevereiro</option>
+                    <option value="03">Março</option>
+                    <option value="04">Abril</option>
+                    <option value="05">Maio</option>
+                    <option value="06">Junho</option>
+                    <option value="07">Julho</option>
+                    <option value="08">Agosto</option>
+                    <option value="09">Setembro</option>
+                    <option value="10">Outubro</option>
+                    <option value="11">Novembro</option>
+                    <option value="12">Dezembro</option>
+                </select>
+                <select id="filterYear" class="custom-select" onchange="loadData()">
+                    <!-- Populated by JS -->
+                </select>
             </div>
         </div>
 
@@ -513,8 +543,8 @@
             <div class="card">
                 <div class="card-header">
                     <div>
-                        <div class="card-title">Receita Acumulada</div>
-                        <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Últimos 10 lançamentos</div>
+                        <div class="card-title">Evolução do Saldo</div>
+                        <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Considera Saldo Anterior + Movimentações</div>
                     </div>
                 </div>
                 <div id="chart-revenue" class="chart-container"></div>
@@ -699,52 +729,33 @@
 
         // Init
         // Init
+        // Init
         document.addEventListener('DOMContentLoaded', async () => {
              checkAuth();
-
-             // Set default date input for NEW entries to today (always)
+             
+             // Populate Year Select (Current -5 to +5)
              const now = new Date();
+             const currentYear = now.getFullYear();
+             const yearSelect = document.getElementById('filterYear');
+             for(let y = currentYear - 5; y <= currentYear + 5; y++) {
+                 const opt = document.createElement('option');
+                 opt.value = y; opt.innerText = y;
+                 if(y === currentYear) opt.selected = true;
+                 yearSelect.appendChild(opt);
+             }
+             
+             // Default Month
+             const currentMonth = (now.getMonth() + 1).toString().padStart(2, '0');
+             document.getElementById('filterMonth').value = currentMonth;
+
+             // New Entry Date default
              document.getElementById('date').value = now.toISOString().split('T')[0];
              updateCategories();
 
-             // Auto-detect best view month
-             try {
-                const [expRes, incRes] = await Promise.all([
-                    fetch(`${API_BASE_URL}/api/expenses`),
-                    fetch(`${API_BASE_URL}/api/incomes`)
-                ]);
-                const exp = await expRes.json();
-                const inc = await incRes.json();
-                
-                const allDates = [...exp.map(e => e.date), ...inc.map(i => i.date)].sort();
-                
-                let targetMonth = "";
-                if (allDates.length > 0) {
-                    // Use latest data date
-                    const latest = allDates[allDates.length - 1]; // "YYYY-MM-DD"
-                    targetMonth = latest.substring(0, 7); // "YYYY-MM"
-                } else {
-                    // Default to current
-                    const m = (now.getMonth() + 1).toString().padStart(2, '0');
-                    targetMonth = `${now.getFullYear()}-${m}`;
-                }
+             // Just Init Data
+             loadData(); 
+             loadAdvice();
 
-                document.getElementById('dateFilter').value = targetMonth;
-                
-                // Now load and render with this filter
-                // We pass the data we already fetched to avoid double network request? 
-                // loadData fetches again. For simplicity and consistency, let's just call loadData() 
-                // or refactor loadData to take data. Current loadData is simple enough to just call.
-                loadData(); 
-                loadAdvice(); // Advice also fetches its own summary.
-                
-             } catch (e) {
-                 console.error("Init Error", e);
-                 // Fallback
-                 const m = (now.getMonth() + 1).toString().padStart(2, '0');
-                 document.getElementById('dateFilter').value = `${now.getFullYear()}-${m}`;
-                 loadData();
-             }
         });
 
         function updateDateDisplay(dateStr) {
@@ -760,8 +771,12 @@
 
         // --- Data Loading & Charts ---
         async function loadData() {
-            const filterVal = document.getElementById('dateFilter').value;
-            updateDateDisplay(filterVal);
+            // Construct Filter Value from Selects
+            const year = document.getElementById('filterYear').value;
+            const month = document.getElementById('filterMonth').value;
+            const filterVal = `${year}-${month}`;
+            
+            // Note: updateDateDisplay is not needed updateDateDisplay(filterVal);
 
             try {
                 const [expRes, incRes] = await Promise.all([
@@ -806,7 +821,7 @@
                 updateBalanceUI(prevBalance, monthBalance, totalBalance);
 
                 // 2. Render Charts (Current Month Only)
-                renderRevenueChart(incomes.filter(i => i.date.startsWith(filterVal)));
+                renderBalanceChart(currentMonthTx, prevBalance, filterVal);
                 renderDailyExpensesChart(expenses.filter(e => e.date.startsWith(filterVal)));
                 renderDonutChart(expenses.filter(e => e.date.startsWith(filterVal)));
                 
@@ -946,28 +961,51 @@
             }
         }
 
-        function renderRevenueChart(incomes) {
-            // Group by date
-            const grouped = {};
-            incomes.forEach(i => {
-                grouped[i.date] = (grouped[i.date] || 0) + i.amount;
+        function renderBalanceChart(transactions, initialBalance, currentMonthStr) {
+            // Sort by date asc
+            const sorted = transactions.sort((a,b) => new Date(a.date) - new Date(b.date));
+            const daysInMonth = new Date(currentMonthStr.split('-')[0], currentMonthStr.split('-')[1], 0).getDate();
+            const dates = [];
+            const values = [];
+            
+            let currentBal = initialBalance;
+            
+            // Logic: Plot points for every transaction date to show evolution
+            // Start of Month
+            dates.push(`${currentMonthStr}-01`);
+            values.push(currentBal);
+            
+            // Map changes per date
+            const changes = {};
+            sorted.forEach(tx => {
+                const change = tx.type === 'income' ? tx.amount : -tx.amount;
+                changes[tx.date] = (changes[tx.date] || 0) + change;
             });
-            const dates = Object.keys(grouped).sort();
-            const values = dates.map(d => grouped[d]);
-
+            const uniqueDates = Object.keys(changes).sort();
+            
+            uniqueDates.forEach(d => {
+                currentBal += changes[d];
+                dates.push(d);
+                values.push(currentBal);
+            });
+            
+            // End of Month (Extend line)
+            // Optional: dates.push(`${currentMonthStr}-${daysInMonth}`); values.push(currentBal);
+            
             const trace = {
                 x: dates, y: values, 
                 type: 'scatter', mode: 'lines+markers',
-                line: { shape: 'spline', color: '#00d4ff', width: 3 },
+                line: { shape: 'hv', color: '#00d4ff', width: 3 }, // 'hv' step shape
+                marker: { size: 6 },
                 fill: 'tozeroy', fillcolor: 'rgba(0, 212, 255, 0.1)',
-                hovertemplate: '<b>%{x}</b><br>R$ %{y:,.2f}<extra></extra>'
+                hovertemplate: '<b>%{x}</b><br>Saldo: R$ %{y:,.2f}<extra></extra>'
             };
 
             const layout = {
                 paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
                 margin: { t: 10, b: 30, l: 30, r: 10 },
                 xaxis: { showgrid: false, zeroline: false, showline: false, color: '#8892b0' },
-                yaxis: { showgrid: false, zeroline: false, showline: false, gridcolor: 'rgba(255,255,255,0.05)', color: '#8892b0', rangemode: 'nonnegative' },
+                yaxis: { showgrid: false, zeroline: false, showline: false, gridcolor: 'rgba(255,255,255,0.05)', color: '#8892b0' },
                 height: 200,
                 hovermode: 'x unified',
                 hoverlabel: { bgcolor: '#0b1221', bordercolor: '#00f2ff', font: { color: 'white' } }
@@ -1304,30 +1342,51 @@
                 // --- 2. Generate PDF Specific Charts ---
                 // We create temporary divs inside our hidden report container to render these special charts
                 
-                // A. Revenue Chart (Line + Markers + Text)
+                // A. Balance Evolution Chart (Renamed from Revenue)
                 const revDiv = document.createElement('div');
                 reportContainer.appendChild(revDiv);
+
+                // Re-calculate PDF Balance Curve (Similar to renderBalanceChart)
+                // 1. Calculate Start Balance (Strictly before current month)
+                let pdfPrevBal = 0;
+                // Need full lists. allExpenses and allIncomes. 
+                // We fetched them at start of function: allExpenses, allIncomes
+                allExpenses.forEach(e => { if(e.date < `${filterVal}-01`) pdfPrevBal -= parseFloat(e.amount); });
+                allIncomes.forEach(i => { if(i.date < `${filterVal}-01`) pdfPrevBal += parseFloat(i.amount); });
+
+                const pdfDates = [`${filterVal}-01`];
+                const pdfValues = [pdfPrevBal];
+                let running = pdfPrevBal;
+
+                const currTxPdf = [...expenses.map(e => ({...e, type:'expense'})), ...incomes.map(i => ({...i, type:'income'}))]
+                                  .sort((a,b) => new Date(a.date) - new Date(b.date));
                 
-                const groupedInc = {};
-                incomes.forEach(i => groupedInc[i.date] = (groupedInc[i.date] || 0) + i.amount);
-                const incDates = Object.keys(groupedInc).sort();
-                const incValues = incDates.map(d => groupedInc[d]);
+                const changes = {};
+                currTxPdf.forEach(tx => {
+                     const chg = tx.type === 'income' ? parseFloat(tx.amount) : -parseFloat(tx.amount);
+                     changes[tx.date] = (changes[tx.date] || 0) + chg;
+                });
+                Object.keys(changes).sort().forEach(d => {
+                     running += changes[d];
+                     pdfDates.push(d);
+                     pdfValues.push(running);
+                });
 
                 await Plotly.newPlot(revDiv, [{
-                    x: incDates, y: incValues,
+                    x: pdfDates, y: pdfValues,
                     type: 'scatter', mode: 'lines+markers+text',
-                    text: incValues.map(v => `R$ ${v.toFixed(0)}`),
+                    text: pdfValues.map(v => `R$ ${v.toFixed(0)}`),
                     textposition: 'top center',
                     textfont: { color: '#64ffda', size: 16, weight: 700 }, // Larger font
-                    cliponaxis: false, // Prevent cutting off
-                    line: { shape: 'spline', color: '#00d4ff', width: 5 }, // Thicker line
-                    marker: { size: 10, color: '#00d4ff' }, // Larger dots
+                    cliponaxis: false, 
+                    line: { shape: 'hv', color: '#00d4ff', width: 5 }, // 'hv' for balance step
+                    marker: { size: 10, color: '#00d4ff' }, 
                     fill: 'tozeroy', fillcolor: 'rgba(0, 212, 255, 0.1)'
                 }], {
                     paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
-                    margin: { t: 40, b: 40, l: 40, r: 60 }, // Extra Right Margin for last label
+                    margin: { t: 40, b: 40, l: 40, r: 60 }, 
                     xaxis: { type: 'date', tickformat: '%d/%m', showgrid: false, zeroline: false, showline: false, color: '#8892b0', tickfont: {size: 14} },
-                    yaxis: { showgrid: false, zeroline: false, showline: false, color: '#8892b0', rangemode: 'nonnegative' },
+                    yaxis: { showgrid: false, zeroline: false, showline: false, color: '#8892b0' },
                     height: 400, width: 900 
                 }, {displayModeBar: false});
 
@@ -1418,7 +1477,7 @@
                     
                     <div style="display: grid; grid-template-columns: 1fr; gap: 30px; margin-bottom: 30px;">
                         <div style="background: #112240; padding: 20px; border-radius: 10px; text-align: center;">
-                            <h4 style="margin: 0 0 10px 0; color: #a8b2d1; text-align: left;">Evolução da Receita</h4>
+                            <h4 style="margin: 0 0 10px 0; color: #a8b2d1; text-align: left;">Evolução do Saldo</h4>
                             <img src="${imgRev}" style="width: 100%; max-width: 900px; border-radius: 5px;">
                         </div>
                         
