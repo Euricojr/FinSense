@@ -517,18 +517,30 @@
 
         /* --- Educational Widget --- */
         .edu-widget {
-            background: rgba(16, 24, 41, 0.6);
-            border: 1px solid rgba(0, 255, 255, 0.3);
+            background: var(--bg-panel);
+            border: 1px solid var(--border-color);
             border-radius: 12px;
             margin-bottom: 30px;
             overflow: hidden;
             transition: all 0.3s ease;
             cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Dark Mode Specific Styles for Widget to maintain Neon look */
+        [data-theme="dark"] .edu-widget {
+            background: rgba(16, 24, 41, 0.6);
+            border: 1px solid rgba(0, 255, 255, 0.3);
             backdrop-filter: blur(5px);
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
         .edu-widget:hover {
+            border-color: var(--accent-primary);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] .edu-widget:hover {
             border-color: #00ffff;
             box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
         }
@@ -538,8 +550,12 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            color: #00ffff;
+            color: var(--accent-primary);
             font-weight: 600;
+        }
+
+        [data-theme="dark"] .edu-header {
+            color: #00ffff;
         }
 
         .edu-title {
@@ -570,13 +586,21 @@
 
         .edu-inner {
             padding: 0 20px 20px 20px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        [data-theme="dark"] .edu-inner {
             border-top: 1px solid rgba(0, 255, 255, 0.1);
         }
 
         .edu-inner h3 {
-            color: #e6f1ff;
+            color: var(--text-main);
             font-size: 18px;
             margin: 15px 0 10px 0;
+        }
+
+        [data-theme="dark"] .edu-inner h3 {
+            color: #e6f1ff;
         }
 
         .edu-inner p {
@@ -587,6 +611,10 @@
         }
 
         .edu-inner strong {
+            color: var(--accent-primary);
+        }
+
+        [data-theme="dark"] .edu-inner strong {
             color: #00ffff;
         }
     </style>

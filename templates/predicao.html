@@ -368,6 +368,119 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
     </style>
+    <style>
+        /* --- Educational Widget (Prediction) --- */
+        .edu-widget {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            margin-bottom: 30px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Dark Mode Specific Styles for Widget to maintain Neon look */
+        [data-theme="dark"] .edu-widget {
+            background: rgba(16, 24, 41, 0.6);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .edu-widget:hover {
+            border-color: var(--accent-primary);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] .edu-widget:hover {
+            border-color: #00ffff;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+        }
+
+        .edu-header {
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: var(--accent-primary);
+            font-weight: 600;
+        }
+
+        [data-theme="dark"] .edu-header {
+            color: #00ffff;
+        }
+
+        .edu-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 16px;
+        }
+
+        .edu-icon {
+            font-size: 18px;
+        }
+
+        .edu-toggle-icon {
+            transition: transform 0.3s ease;
+        }
+
+        /* Generic Expanded State */
+        .edu-widget.expanded .edu-toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        .edu-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out;
+            color: var(--text-main);
+        }
+
+        .edu-inner {
+            padding: 25px 30px 30px 30px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 40px;
+        }
+
+        [data-theme="dark"] .edu-inner {
+            border-top: 1px solid rgba(0, 255, 255, 0.1);
+        }
+
+        .edu-topic {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            flex: 1 1 200px;
+            max-width: 400px; /* Prevent them from getting too wide on large screens */
+        }
+
+        .edu-topic h4 {
+            color: var(--text-main);
+            font-size: 14px;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        [data-theme="dark"] .edu-topic h4 {
+            color: #e6f1ff;
+        }
+
+        .edu-topic p {
+            font-size: 13px;
+            line-height: 1.6;
+            color: var(--text-muted);
+            margin: 0;
+            text-align: justify;
+        }
+    </style>
 </head>
 <body>
 
@@ -416,6 +529,40 @@
     <div class="container">
         <h1 data-i18n="pred_title">Modelo de Predição</h1>
         <p class="subtitle" data-i18n="pred_subtitle">Projeção avançada de preços utilizando Machine Learning. O algoritmo analisa padrões históricos e indicadores técnicos para estimar tendências futuras com base nos parâmetros selecionados.</p>
+
+        <!-- Educational Widget -->
+        <div class="edu-widget" id="predEduWidget" onclick="toggleEduWidget()">
+            <div class="edu-header">
+                <div class="edu-title">
+                    <span data-i18n="edu_pred_title">Inteligência Algorítmica: Machine Learning</span>
+                </div>
+                <div class="edu-toggle-icon">▼</div>
+            </div>
+            <div class="edu-content" id="predEduContent">
+                <div class="edu-inner">
+                    <div class="edu-topic">
+                        <h4 data-i18n="edu_pred_engine_title">🌲 O Motor</h4>
+                        <p data-i18n="edu_pred_engine_desc">Usamos uma "Floresta Aleatória" de 100 árvores de decisão que votam entre si para reduzir erros e evitar overfitting.</p>
+                    </div>
+                    <div class="edu-topic">
+                        <h4 data-i18n="edu_pred_features_title">📊 Os Ingredientes</h4>
+                        <p data-i18n="edu_pred_features_desc">A IA analisa Tendência (Médias Móveis), Força (RSI), Volatilidade e Retornos Passados.</p>
+                    </div>
+                    <div class="edu-topic">
+                        <h4 data-i18n="edu_pred_train_title">🎓 O Treinamento</h4>
+                        <p data-i18n="edu_pred_train_desc">O sistema estuda 2 anos de dados e se avalia em um teste de 20% antes de mostrar a precisão.</p>
+                    </div>
+                    <div class="edu-topic">
+                        <h4 data-i18n="edu_pred_snowball_title">🔮 O Efeito Neve</h4>
+                        <p data-i18n="edu_pred_snowball_desc">Para prever 7 dias, a IA prevê o amanhã e usa essa previsão para prever o dia seguinte recursivamente.</p>
+                    </div>
+                    <div class="edu-topic">
+                        <h4 data-i18n="edu_pred_funnel_title">🛡️ O Funil</h4>
+                        <p data-i18n="edu_pred_funnel_desc">A faixa azul é a incerteza (95%). Quanto mais longe o dia, maior o funil.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <div class="control-panel">
             <div class="input-group" style="flex: 2;">
@@ -817,9 +964,23 @@
                 margin: { t: 40, r: 20, l: 40, b: 40 }
             };
 
-            Plotly.newPlot('chartDiv', [traceHistory, traceLower, traceUpper, traceGlow, tracePred], layout, {responsive: true, displayModeBar: false});
+            const config = {responsive: true, displayModeBar: false};
+            Plotly.newPlot('chartDiv', [traceHistory, traceLower, traceUpper, traceGlow, tracePred], layout, config);
         }
 
+        // --- Widget Toggle ---
+        function toggleEduWidget() {
+            const widget = document.getElementById('predEduWidget');
+            const content = document.getElementById('predEduContent');
+            
+            widget.classList.toggle('expanded');
+            
+            if (widget.classList.contains('expanded')) {
+                content.style.maxHeight = content.scrollHeight + "px";
+            } else {
+                content.style.maxHeight = null;
+            }
+        }
 
 
     </script>
