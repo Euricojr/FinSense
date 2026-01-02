@@ -514,6 +514,81 @@
         }
 
         #suggestions li strong { color: var(--text-main); }
+
+        /* --- Educational Widget --- */
+        .edu-widget {
+            background: rgba(16, 24, 41, 0.6);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 12px;
+            margin-bottom: 30px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .edu-widget:hover {
+            border-color: #00ffff;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+        }
+
+        .edu-header {
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: #00ffff;
+            font-weight: 600;
+        }
+
+        .edu-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 16px;
+        }
+
+        .edu-icon {
+            font-size: 18px;
+        }
+
+        .edu-toggle-icon {
+            transition: transform 0.3s ease;
+        }
+
+        .edu-widget.expanded .edu-toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        .edu-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out;
+            color: var(--text-main);
+        }
+
+        .edu-inner {
+            padding: 0 20px 20px 20px;
+            border-top: 1px solid rgba(0, 255, 255, 0.1);
+        }
+
+        .edu-inner h3 {
+            color: #e6f1ff;
+            font-size: 18px;
+            margin: 15px 0 10px 0;
+        }
+
+        .edu-inner p {
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--text-muted);
+            margin-bottom: 15px;
+        }
+
+        .edu-inner strong {
+            color: #00ffff;
+        }
     </style>
 </head>
 <body>
@@ -564,6 +639,36 @@
 
     <div class="container">
         <h1 data-i18n="sim_title">Simulação de Monte Carlo</h1>
+
+        <!-- Educational Widget -->
+        <div class="edu-widget" id="monteCarloEdu" onclick="toggleEduWidget()">
+            <div class="edu-header">
+                <div class="edu-title">
+                    <span data-i18n="edu_widget_title">Entenda a Simulação</span>
+                </div>
+                <div class="edu-toggle-icon">▼</div>
+            </div>
+            <div class="edu-content" id="eduContent">
+                <div class="edu-inner">
+                    <h3 data-i18n="edu_inner_title">Navegando pela Incerteza do Mercado</h3>
+                    
+                    <p>
+                        <strong data-i18n="edu_def_label">O que é:</strong> 
+                        <span data-i18n="edu_def_text">Uma técnica matemática que usa amostragem aleatória massiva para prever a probabilidade de diferentes resultados quando há intervenção do acaso.</span>
+                    </p>
+                    
+                    <p>
+                        <strong data-i18n="edu_how_label">Como funciona:</strong> 
+                        <span data-i18n="edu_how_text">Em vez de prever apenas um futuro, o algoritmo gera milhares de "futuros possíveis" baseados na volatilidade histórica e tendências passadas do ativo.</span>
+                    </p>
+                    
+                    <p style="margin-bottom: 0;">
+                        <strong data-i18n="edu_value_label">Por que usar:</strong> 
+                        <span data-i18n="edu_value_text">Ajuda a "testar o futuro" e entender não apenas o retorno esperado, mas os riscos extremos (bons e ruins), permitindo decisões muito mais robustas que modelos estáticos.</span>
+                    </p>
+                </div>
+            </div>
+        </div>
 
         <div class="control-panel">
             <!-- Asset Selection -->
@@ -666,6 +771,20 @@
             return '';
         }
         const API_BASE_URL = getBaseUrl();
+
+        // --- Educational Widget Logic ---
+        function toggleEduWidget() {
+            const widget = document.getElementById('monteCarloEdu');
+            const content = document.getElementById('eduContent');
+            
+            widget.classList.toggle('expanded');
+            
+            if (widget.classList.contains('expanded')) {
+                content.style.maxHeight = content.scrollHeight + "px";
+            } else {
+                content.style.maxHeight = null;
+            }
+        }
 
         // --- Header Functions ---
         function toggleMenu() {

@@ -211,6 +211,16 @@ const translations = {
     sim_loading: "Processando Simulações...",
     sim_error: "Erro na simulação",
 
+    // Monte Carlo Education
+    edu_widget_title: "Entenda a Simulação",
+    edu_inner_title: "Navegando pela Incerteza do Mercado",
+    edu_def_label: "O que é:",
+    edu_def_text: "Uma técnica matemática que usa amostragem aleatória massiva para prever a probabilidade de diferentes resultados quando há intervenção do acaso.",
+    edu_how_label: "Como funciona:",
+    edu_how_text: "Em vez de prever apenas um futuro, o algoritmo gera milhares de \"futuros possíveis\" baseados na volatilidade histórica e tendências passadas do ativo.",
+    edu_value_label: "Por que usar:",
+    edu_value_text: "Ajuda a \"testar o futuro\" e entender não apenas o retorno esperado, mas os riscos extremos (bons e ruins), permitindo decisões muito mais robustas que modelos estáticos.",
+
     // Optimization
     opt_title: "Otimização de Portfólio (Markowitz)",
     opt_input_label: "Ativos para Otimização (Mín. 2)",
@@ -529,6 +539,16 @@ const translations = {
     sim_limit_alert: "Maximum of 10 assets.",
     sim_loading: "Processing Simulations...",
     sim_error: "Simulation Error",
+
+    // Monte Carlo Education
+    edu_widget_title: "Understand the Simulation",
+    edu_inner_title: "Navigating Market Uncertainty",
+    edu_def_label: "What it is:",
+    edu_def_text: "A mathematical technique that uses massive random sampling to predict the probability of different outcomes when chance is involved.",
+    edu_how_label: "How it works:",
+    edu_how_text: "Instead of predicting just one future, the algorithm generates thousands of \"possible futures\" based on the asset's historical volatility and past trends.",
+    edu_value_label: "Why use it:",
+    edu_value_text: "It helps to \"test the future\" and understand not only the expected return but also extreme risks (good and bad), allowing for much more robust decisions than static models.",
 
     // Optimization
     opt_title: "Portfolio Optimization (Markowitz)",
