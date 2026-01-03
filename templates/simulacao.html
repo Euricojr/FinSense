@@ -530,7 +530,7 @@
         /* Dark Mode Specific Styles for Widget to maintain Neon look */
         [data-theme="dark"] .edu-widget {
             background: rgba(16, 24, 41, 0.6);
-            border: 1px solid rgba(0, 255, 255, 0.3);
+            border: 1px solid var(--accent-primary);
             backdrop-filter: blur(5px);
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
@@ -554,25 +554,6 @@
             font-weight: 600;
         }
 
-        [data-theme="dark"] .edu-header {
-            color: #00ffff;
-        }
-
-        .edu-title {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 16px;
-        }
-
-        .edu-icon {
-            font-size: 18px;
-        }
-
-        .edu-toggle-icon {
-            transition: transform 0.3s ease;
-        }
-
         .edu-widget.expanded .edu-toggle-icon {
             transform: rotate(180deg);
         }
@@ -584,38 +565,53 @@
             color: var(--text-main);
         }
 
+        /* Removed manual header color override to inherit from var(--accent-primary) */
+        
         .edu-inner {
-            padding: 0 20px 20px 20px;
+            padding: 24px;
             border-top: 1px solid var(--border-color);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
         }
 
         [data-theme="dark"] .edu-inner {
             border-top: 1px solid rgba(0, 255, 255, 0.1);
         }
 
-        .edu-inner h3 {
+        /* New Card Style */
+        .edu-card {
+            background: rgba(16, 24, 41, 0.6);
+            border: 1px solid var(--accent-primary);
+            padding: 20px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 0 10px rgba(77, 163, 255, 0.05);
+        }
+
+        .edu-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px rgba(77, 163, 255, 0.2);
+        }
+
+        .edu-card h4 {
             color: var(--text-main);
-            font-size: 18px;
-            margin: 15px 0 10px 0;
+            font-size: 15px;
+            font-weight: 700;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        [data-theme="dark"] .edu-inner h3 {
-            color: #e6f1ff;
-        }
-
-        .edu-inner p {
+        .edu-card p {
             font-size: 14px;
             line-height: 1.6;
             color: var(--text-muted);
-            margin-bottom: 15px;
-        }
-
-        .edu-inner strong {
-            color: var(--accent-primary);
-        }
-
-        [data-theme="dark"] .edu-inner strong {
-            color: #00ffff;
+            margin: 0;
         }
     </style>
 </head>
@@ -678,22 +674,20 @@
             </div>
             <div class="edu-content" id="eduContent">
                 <div class="edu-inner">
-                    <h3 data-i18n="edu_inner_title">Navegando pela Incerteza do Mercado</h3>
-                    
-                    <p>
-                        <strong data-i18n="edu_def_label">O que é:</strong> 
-                        <span data-i18n="edu_def_text">Uma técnica matemática que usa amostragem aleatória massiva para prever a probabilidade de diferentes resultados quando há intervenção do acaso.</span>
-                    </p>
-                    
-                    <p>
-                        <strong data-i18n="edu_how_label">Como funciona:</strong> 
-                        <span data-i18n="edu_how_text">Em vez de prever apenas um futuro, o algoritmo gera milhares de "futuros possíveis" baseados na volatilidade histórica e tendências passadas do ativo.</span>
-                    </p>
-                    
-                    <p style="margin-bottom: 0;">
-                        <strong data-i18n="edu_value_label">Por que usar:</strong> 
-                        <span data-i18n="edu_value_text">Ajuda a "testar o futuro" e entender não apenas o retorno esperado, mas os riscos extremos (bons e ruins), permitindo decisões muito mais robustas que modelos estáticos.</span>
-                    </p>
+                    <div class="edu-card">
+                        <h4><span class="edu-icon">🤔</span> <span data-i18n="edu_def_label">O que é</span></h4>
+                        <p data-i18n="edu_def_text">Uma técnica matemática que usa amostragem aleatória massiva para prever a probabilidade de diferentes resultados quando há intervenção do acaso.</p>
+                    </div>
+
+                    <div class="edu-card">
+                        <h4><span class="edu-icon">⚙️</span> <span data-i18n="edu_how_label">Como funciona</span></h4>
+                        <p data-i18n="edu_how_text">Em vez de prever apenas um futuro, o algoritmo gera milhares de "futuros possíveis" baseados na volatilidade histórica e tendências passadas do ativo.</p>
+                    </div>
+
+                    <div class="edu-card">
+                        <h4><span class="edu-icon">💎</span> <span data-i18n="edu_value_label">Por que usar</span></h4>
+                        <p data-i18n="edu_value_text">Ajuda a "testar o futuro" e entender não apenas o retorno esperado, mas os riscos extremos (bons e ruins), permitindo decisões muito mais robustas que modelos estáticos.</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1284,6 +1278,20 @@
         
         // Init with default
         checkAuth();
+        // --- Widget Toggle ---
+        function toggleEduWidget() {
+            const widget = document.getElementById('monteCarloEdu');
+            const content = document.getElementById('eduContent');
+            
+            widget.classList.toggle('expanded');
+            
+            if (widget.classList.contains('expanded')) {
+                content.style.maxHeight = content.scrollHeight + "px";
+            } else {
+                content.style.maxHeight = null;
+            }
+        }
+
         // runSimulation(); // Auto-run optional
     </script>
 </body>

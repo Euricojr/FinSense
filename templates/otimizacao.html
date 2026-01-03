@@ -744,7 +744,7 @@
             .math-title {
                 font-size: 18px;
                 font-weight: 700;
-                color: var(--text-main);
+                color: var(--accent-primary);
                 display: flex;
                 align-items: center;
                 gap: 12px;
@@ -791,15 +791,16 @@
             }
             
             .math-card {
-                background: rgba(255, 255, 255, 0.03);
-                border: 1px solid rgba(255, 255, 255, 0.1);
+                background: rgba(16, 24, 41, 0.6);
+                border: 1px solid var(--accent-primary);
                 padding: 16px;
                 border-radius: 8px;
-                transition: transform 0.2s, border-color 0.2s;
+                transition: transform 0.2s, box-shadow 0.2s;
+                box-shadow: 0 0 10px rgba(77, 163, 255, 0.05);
             }
             .math-card:hover {
                 transform: translateY(-2px);
-                border-color: var(--accent-primary);
+                box-shadow: 0 0 15px rgba(77, 163, 255, 0.2);
             }
             
             .math-topic-title {
@@ -836,7 +837,6 @@
         <div class="math-accordion" id="mathAccordion">
             <div class="math-header" onclick="toggleMathAccordion()">
                 <div class="math-title">
-                    <span class="math-icon">⚙️</span>
                     <span data-i18n="math_title">A Matemática por trás da Otimização</span>
                 </div>
                 <span class="math-arrow">▼</span>

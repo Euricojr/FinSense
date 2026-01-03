@@ -384,7 +384,7 @@
         /* Dark Mode Specific Styles for Widget to maintain Neon look */
         [data-theme="dark"] .edu-widget {
             background: rgba(16, 24, 41, 0.6);
-            border: 1px solid rgba(0, 255, 255, 0.3);
+            border: 1px solid var(--accent-primary);
             backdrop-filter: blur(5px);
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
@@ -408,9 +408,7 @@
             font-weight: 600;
         }
 
-        [data-theme="dark"] .edu-header {
-            color: #00ffff;
-        }
+
 
         .edu-title {
             display: flex;
@@ -452,9 +450,20 @@
         }
 
         .edu-topic {
+            background: rgba(16, 24, 41, 0.6);
+            border: 1px solid var(--accent-primary);
+            padding: 20px;
+            border-radius: 8px;
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            gap: 10px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 0 10px rgba(77, 163, 255, 0.05);
+        }
+        
+        .edu-topic:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px rgba(77, 163, 255, 0.2);
         }
 
         .edu-topic h4 {
@@ -553,7 +562,7 @@
                         <h4 data-i18n="edu_pred_snowball_title">🔮 O Efeito Neve</h4>
                         <p data-i18n="edu_pred_snowball_desc">Para prever 7 dias, a IA prevê o amanhã e usa essa previsão para prever o dia seguinte recursivamente.</p>
                     </div>
-                    <div class="edu-topic">
+                    <div class="edu-topic" style="grid-column: 1 / -1;">
                         <h4 data-i18n="edu_pred_funnel_title">🛡️ O Funil</h4>
                         <p data-i18n="edu_pred_funnel_desc">A faixa azul é a incerteza (95%). Quanto mais longe o dia, maior o funil.</p>
                     </div>
