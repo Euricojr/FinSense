@@ -849,33 +849,33 @@
 
                     <div class="math-grid">
                         <div class="math-card">
-                            <div class="math-topic-title">📈 Ingestão de Dados (<span class="math-latex">μ</span> e <span class="math-latex">S</span>)</div>
+                            <div class="math-topic-title">Ingestão de Dados (<span class="math-latex">μ</span> e <span class="math-latex">S</span>)</div>
                             <p>Calculamos o <strong>Retorno Esperado Anualizado (<span class="math-latex">μ</span>)</strong> e a <strong>Matriz de Covariância (<span class="math-latex">S</span>)</strong> de todos os ativos. Isso transforma o histórico de preços em um modelo probabilístico de como os ativos se comportam e se correlacionam entre si.</p>
                         </div>
 
                         <div class="math-card">
-                            <div class="math-topic-title">⚖️ Otimização Restrita (SLSQP)</div>
+                            <div class="math-topic-title">Otimização Restrita (SLSQP)</div>
                             <p>Utilizamos o algoritmo de programação não-linear <em>Sequential Least Squares Programming</em>. Ele resolve o problema matemático com restrições rígidas: alocação total de 100% e proibição de posições vendidas (long-only).</p>
                         </div>
 
                         <div class="math-card">
-                            <div class="math-topic-title">🎯 Índice de Sharpe (Otimista)</div>
+                            <div class="math-topic-title">Índice de Sharpe (Otimista)</div>
                             <p>Este modo busca maximizar a eficiência. Matematicamente, minimizamos o valor negativo de: <br> <span class="math-latex">(Retorno - Taxa Livre de Risco) / Volatilidade</span>. <br>O resultado é a carteira que oferece o <strong>maior ganho por unidade de risco assumido</strong>.</p>
                         </div>
 
                         <div class="math-card">
-                            <div class="math-topic-title">🛡️ Volatilidade Mínima (Conservador)</div>
+                            <div class="math-topic-title">Volatilidade Mínima (Conservador)</div>
                             <p>Neste cenário, a matemática ignora o retorno alvo e foca exclusivamente em <strong>minimizar o Desvio Padrão</strong> (<span class="math-latex">σ</span>) da carteira combinada, encontrando o "porto seguro" estatístico entre os ativos.</p>
                         </div>
                         
                         <div class="math-card" style="grid-column: 1 / -1;">
-                            <div class="math-topic-title">☁️ Fronteira Eficiente (A Nuvem de Pontos)</div>
+                            <div class="math-topic-title">Fronteira Eficiente (A Nuvem de Pontos)</div>
                             <p>Simulamos <strong>500 portfólios aleatórios</strong> (os pontos coloridos no gráfico) para mapear o espaço de possibilidades. A "borda superior" dessa nuvem é a Fronteira Eficiente: o limite matemático onde é impossível obter mais retorno sem assumir mais risco. Se sua carteira está abaixo dessa linha, ela é sub-ótima.</p>
                         </div>
                     </div>
 
                     <div class="glossary-box">
-                        <strong style="display:block; margin-bottom:10px; color:var(--text-main);">📚 Glossário Rápido</strong>
+                        <strong style="display:block; margin-bottom:10px; color:var(--text-main);">Glossário Rápido</strong>
                         <ul style="list-style: none; padding: 0;">
                             <li style="margin-bottom: 8px;"><strong>Covariância:</strong> Medida estatística de como dois ativos se movem em relação ao outro. Essencial para diversificação real.</li>
                             <li><strong>Sharpe Ratio:</strong> A "nota" da carteira. Quanto maior, melhor a recompensa para o risco corrido. Carteiras profissionais buscam Sharpe > 1.0.</li>

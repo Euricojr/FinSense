@@ -541,8 +541,8 @@
         }
 
         [data-theme="dark"] .edu-widget:hover {
-            border-color: #00ffff;
-            box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 15px rgba(77, 163, 255, 0.2);
         }
 
         .edu-header {
@@ -612,6 +612,7 @@
             line-height: 1.6;
             color: var(--text-muted);
             margin: 0;
+            text-align: justify;
         }
     </style>
 </head>
@@ -675,17 +676,17 @@
             <div class="edu-content" id="eduContent">
                 <div class="edu-inner">
                     <div class="edu-card">
-                        <h4><span class="edu-icon">🤔</span> <span data-i18n="edu_def_label">O que é</span></h4>
+                        <h4><span data-i18n="edu_def_label">O que é</span></h4>
                         <p data-i18n="edu_def_text">Uma técnica matemática que usa amostragem aleatória massiva para prever a probabilidade de diferentes resultados quando há intervenção do acaso.</p>
                     </div>
 
                     <div class="edu-card">
-                        <h4><span class="edu-icon">⚙️</span> <span data-i18n="edu_how_label">Como funciona</span></h4>
+                        <h4><span data-i18n="edu_how_label">Como funciona</span></h4>
                         <p data-i18n="edu_how_text">Em vez de prever apenas um futuro, o algoritmo gera milhares de "futuros possíveis" baseados na volatilidade histórica e tendências passadas do ativo.</p>
                     </div>
 
                     <div class="edu-card">
-                        <h4><span class="edu-icon">💎</span> <span data-i18n="edu_value_label">Por que usar</span></h4>
+                        <h4><span data-i18n="edu_value_label">Por que usar</span></h4>
                         <p data-i18n="edu_value_text">Ajuda a "testar o futuro" e entender não apenas o retorno esperado, mas os riscos extremos (bons e ruins), permitindo decisões muito mais robustas que modelos estáticos.</p>
                     </div>
                 </div>

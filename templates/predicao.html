@@ -395,8 +395,8 @@
         }
 
         [data-theme="dark"] .edu-widget:hover {
-            border-color: #00ffff;
-            box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 15px rgba(77, 163, 255, 0.2); /* Matching the card glow */
         }
 
         .edu-header {
@@ -547,23 +547,23 @@
             <div class="edu-content" id="predEduContent">
                 <div class="edu-inner">
                     <div class="edu-topic">
-                        <h4 data-i18n="edu_pred_engine_title">🌲 O Motor</h4>
+                        <h4 data-i18n="edu_pred_engine_title">O Motor</h4>
                         <p data-i18n="edu_pred_engine_desc">Usamos uma "Floresta Aleatória" de 100 árvores de decisão que votam entre si para reduzir erros e evitar overfitting.</p>
                     </div>
                     <div class="edu-topic">
-                        <h4 data-i18n="edu_pred_features_title">📊 Os Ingredientes</h4>
+                        <h4 data-i18n="edu_pred_features_title">Os Ingredientes</h4>
                         <p data-i18n="edu_pred_features_desc">A IA analisa Tendência (Médias Móveis), Força (RSI), Volatilidade e Retornos Passados.</p>
                     </div>
                     <div class="edu-topic">
-                        <h4 data-i18n="edu_pred_train_title">🎓 O Treinamento</h4>
+                        <h4 data-i18n="edu_pred_train_title">O Treinamento</h4>
                         <p data-i18n="edu_pred_train_desc">O sistema estuda 2 anos de dados e se avalia em um teste de 20% antes de mostrar a precisão.</p>
                     </div>
                     <div class="edu-topic">
-                        <h4 data-i18n="edu_pred_snowball_title">🔮 O Efeito Neve</h4>
+                        <h4 data-i18n="edu_pred_snowball_title">O Efeito Neve</h4>
                         <p data-i18n="edu_pred_snowball_desc">Para prever 7 dias, a IA prevê o amanhã e usa essa previsão para prever o dia seguinte recursivamente.</p>
                     </div>
                     <div class="edu-topic" style="grid-column: 1 / -1;">
-                        <h4 data-i18n="edu_pred_funnel_title">🛡️ O Funil</h4>
+                        <h4 data-i18n="edu_pred_funnel_title">O Funil</h4>
                         <p data-i18n="edu_pred_funnel_desc">A faixa azul é a incerteza (95%). Quanto mais longe o dia, maior o funil.</p>
                     </div>
                 </div>
@@ -595,15 +595,15 @@
                 <input type="range" id="forecastHorizon" min="5" max="30" value="7" oninput="document.getElementById('horizonValue').innerText = this.value">
             </div>
 
-            <button class="btn-predict" onclick="runPrediction()" data-i18n="pred_btn_analyze">🤖 Gerar Análise</button>
+            <button class="btn-predict" onclick="runPrediction()" data-i18n="pred_btn_analyze">Gerar Análise</button>
         </div>
 
         <div class="result-tabs" id="resultTabs"></div>
 
         <div class="insights-container">
             <!-- Tendência -->
+            <!-- Tendência -->
             <div class="insight-card">
-                <div class="icon-box" id="icon-trend">📊</div>
                 <div class="insight-content">
                     <h4 data-i18n="pred_trend">Tendência (7 Dias)</h4>
                     <div class="value" id="val-trend">---</div>
@@ -611,7 +611,6 @@
             </div>
             <!-- Score -->
             <div class="insight-card">
-                <div class="icon-box" style="color: var(--neon-purple);">🎯</div>
                 <div class="insight-content">
                     <h4 data-i18n="pred_accuracy">Precisão do Modelo</h4>
                     <div class="value" id="val-score">---</div>
@@ -619,7 +618,6 @@
             </div>
              <!-- Volatilidade -->
              <div class="insight-card">
-                <div class="icon-box">⚡</div>
                 <div class="insight-content">
                     <h4 data-i18n="pred_volatility">Volatilidade Recente</h4>
                     <div class="value" id="val-vol">---</div>
