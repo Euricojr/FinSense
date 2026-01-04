@@ -558,11 +558,87 @@ def delete_expense(id):
         return jsonify({'message': 'Deleted'})
     return jsonify({'error': 'Not found'}), 404
 
+import requests
+from datetime import timedelta
+
+# Cache for Market Data to prevent rate limiting
+MARKET_CACHE = {
+    "data": None,
+    "timestamp": 0
+}
+MARKET_CACHE_DURATION = 3600 * 4 # 4 Hours
+
+def get_market_data():
+    """Fetches real-time market data: Selic (BCB), Dolar (Yahoo), IPCA (BCB/Proj)."""
+    global MARKET_CACHE
+    import time
+    
+    # Check Cache
+    if MARKET_CACHE["data"] and (time.time() - MARKET_CACHE["timestamp"] < MARKET_CACHE_DURATION):
+        return MARKET_CACHE["data"]
+
+    try:
+        # 1. Dolar via yfinance
+        try:
+            ticker = yf.Ticker("USDBRL=X")
+            hist = ticker.history(period="1d")
+            if not hist.empty:
+                dolar_val = hist['Close'].iloc[-1]
+                dolar_str = f"R$ {dolar_val:.2f}"
+            else:
+                dolar_str = "R$ 5.55" # Fallback
+        except Exception as e:
+            logger.error(f"Error fetching Dolar: {e}")
+            dolar_str = "R$ 5.55"
+
+        # 2. Selic via BCB API (Series 432 - Meta Selic defined by Copom)
+        try:
+            # Get last 1 value
+            url_selic = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.432/dados/ultimos/1?formato=json"
+            r = requests.get(url_selic, timeout=5)
+            if r.status_code == 200:
+                selic_val = r.json()[0]['valor']
+                selic_str = f"{selic_val}% a.a."
+            else:
+                selic_str = "13.25% a.a." # Fallback closer to reality
+        except Exception as e:
+            logger.error(f"Error fetching Selic: {e}")
+            selic_str = "13.25% a.a."
+
+        # 3. IPCA via BCB API
+        try:
+            url_ipca = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.13522/dados/ultimos/1?formato=json"
+            r_ipca = requests.get(url_ipca, timeout=5)
+            if r_ipca.status_code == 200:
+                ipca_val = r_ipca.json()[0]['valor']
+                ipca_str = f"{ipca_val}% (12m)"
+            else:
+                 ipca_str = "4.5% (Proj.)"
+        except Exception as e:
+            logger.error(f"Error fetching IPCA: {e}")
+            ipca_str = "4.5% (Proj.)"
+
+        data = {
+            "selic": selic_str,
+            "ipca": ipca_str,
+            "dolar": dolar_str
+        }
+        
+        # Update Cache
+        MARKET_CACHE["data"] = data
+        MARKET_CACHE["timestamp"] = time.time()
+        
+        return data
+
+    except Exception as e:
+        logger.error(f"Critical Market Data Error: {e}")
+        return {"selic": "13.25% a.a.", "ipca": "4.5%", "dolar": "R$ 5.55"} # Failsafe
+
 @app.route('/api/financas/summary')
 @login_required
 def financas_summary():
     try:
-        from datetime import datetime
+        from datetime import datetime, timedelta
         # Get requested month or default to current
         req_month = request.args.get('month')
         today = datetime.now()
@@ -587,61 +663,100 @@ def financas_summary():
         balance = total_income - total_expenses
         
         # Calculate Initial Balance (Previous History)
-        # Sum of all income/expenses with date < current_month-01
         start_of_month_str = f"{current_month}-01"
-        
         historic_expenses = sum(e.amount for e in exps if e.date < start_of_month_str)
         historic_income = sum(i.amount for i in incs if i.date < start_of_month_str)
         initial_balance = historic_income - historic_expenses
 
-        # Determine Top Category
+        # Market Data (Real-Time)
+        market = get_market_data()
+
+        # Top 3 Categories
         cat_map = {}
         for e in month_exps:
             cat_map[e.category] = cat_map.get(e.category, 0) + e.amount
-        top_category = max(cat_map, key=cat_map.get) if cat_map else "Nenhuma"
+        
+        # Sort and get top 3
+        sorted_cats = sorted(cat_map.items(), key=lambda item: item[1], reverse=True)
+        top_3_cats = sorted_cats[:3]
+        
+        # Top Category Logic for prompt
+        top_category = top_3_cats[0][0] if top_3_cats else "Nenhuma"
+        top_category_amount = top_3_cats[0][1] if top_3_cats else 0
+        top_cat_percent = (top_category_amount / total_expenses * 100) if total_expenses > 0 else 0
+        
+        # 24h Variation Logic
+        today_str = today.strftime('%Y-%m-%d')
+        yesterday_str = (today - timedelta(days=1)).strftime('%Y-%m-%d')
+        
+        today_expenses = sum(e.amount for e in exps if e.date == today_str)
+        yesterday_expenses = sum(e.amount for e in exps if e.date == yesterday_str)
+        
+        # Avoid division by zero
+        if yesterday_expenses > 0:
+            variation_pct = ((today_expenses - yesterday_expenses) / yesterday_expenses) * 100
+            diff_str = f"{variation_pct:+.1f}%"
+        else:
+            diff_str = "N/A" # First day or no spending yesterday
 
-        # Cache Check (Unique per user + month + date to refresh daily but keep same advice for same data state ideally)
-        # Using simple date key so it refreshes if day changes or if cache cleared by new tx
-        cache_key = f"{current_user.id}_{current_month}_{today.strftime('%Y-%m-%d')}"
+        # Meta de Economia (Simulação 20% da Receita)
+        meta_valor = total_income * 0.20
+        meta_progresso = (balance / meta_valor * 100) if meta_valor > 0 else 0
+        
+        # Cache Key (Version 5 for CIO Real-Time - No Emojis + Fixed Selic)
+        cache_key = f"{current_user.id}_{current_month}_{today.strftime('%Y-%m-%d')}_CIO_RT_v2"
         
         if cache_key in ADVICE_CACHE:
             advice = ADVICE_CACHE[cache_key]
         else:
-            # AI Advice via Groq
+            # AI Advice via Groq (CIO Mega-Prompt)
             prompt = f"""
-            Você é um Mentor Financeiro de Elite.
-            Analise os dados de {month_name}:
-            - Receita: R$ {total_income:.2f}
-            - Despesa: R$ {total_expenses:.2f}
-            - Saldo: R$ {balance:.2f}
-            - Maior gasto: {top_category}
-
-            Missão: Dê um (1) único conselho de impacto (máximo 20 palavras).
-            Estilo: Direto, "punchy", sem enrolação. Use metáfora se couber.
+            Você é o Assessor FinSense (Financial Advisor Premium).
             
-            REGRAS CRÍTICAS DE FORMATAÇÃO:
-            1. NÃO coloque entre aspas.
-            2. NÃO assine (ex: nada de "Seu Mentor", "Atenciosamente").
-            3. Apenas a frase e nada mais.
+            BANCO DE DADOS:
+            - Saldo Atual: R$ {balance:.2f}
+            - Meta de Economia: R$ {meta_valor:.2f} (Progresso: {meta_progresso:.1f}%)
+            - Top Gasto: {top_category} (R$ {top_category_amount:.2f} | {top_cat_percent:.1f}%)
+            - Gasto 24h: R$ {today_expenses:.2f} (Var: {diff_str})
+            - Contexto de Mercado: Selic {market['selic']}, IPCA {market['ipca']}, Dolar {market['dolar']}
+
+            TAREFA: Escreva um Relatório Executivo em MARKDOWN ESTRUTURADO.
+            
+            ESTRUTURA OBRIGATÓRIA (SEM EMOJIS NOS TÍTULOS):
+            ### Raio-X das Contas
+            (Breve parágrafo sobre o maior gasto e o progresso da meta. Seja direto e crítico se necessário.)
+
+            ### Contexto de Mercado
+            (Relacione o saldo do usuário com a Selic {market['selic']} e a Inflação. Explique o custo de oportunidade.)
+
+            ### Plano de Ação
+            (Lista com 2 ou 3 tópicos curtos e acionáveis).
+
+            REGRAS VISUAIS:
+            - PROIBIDO USAR EMOJIS em qualquer lugar.
+            - NUNCA use parágrafos com mais de 3 linhas.
+            - Use > (blockquotes) para frases de impacto ou alertas.
+            - Use **negrito** para números e dados críticos.
+            - DESTAQUE em negrito qualquer menção a taxas (ex: **13.25% a.a.**).
             """
 
             try:
-                logger.info("Sending request to Groq for Mentor Advice...")
+                logger.info("Sending request to Groq for CIO Advice...")
                 chat_completion = groq_client.chat.completions.create(
                     messages=[{"role": "user", "content": prompt}],
                     model="llama-3.1-8b-instant",
-                    temperature=0.8,
-                    max_tokens=60
+                    temperature=0.7,
+                    max_tokens=400 # Increased for ~150 words+
                 )
-                advice = chat_completion.choices[0].message.content.strip().replace('"', '')
-                logger.info(f"Groq Advice Received: {advice}")
+                advice = chat_completion.choices[0].message.content.strip()
+                logger.info(f"Groq CIO Advice Received")
                 
                 # Save to Cache
                 ADVICE_CACHE[cache_key] = advice
                 
             except Exception as e:
                 logger.error(f"Groq API Error in Summary: {e}")
-                advice = "O Mentor está calibrando a bússola."
+                advice = "<b>CIO Offline:</b> Estamos reconectando aos terminais da Bloomberg."
 
         return jsonify({
             "total_income": total_income,
@@ -650,18 +765,20 @@ def financas_summary():
             "initial_balance": initial_balance,
             "top_category": top_category,
             "advice": advice,
-            "month": current_month
+            "month": current_month,
+            "market": market # Sending market data to frontend
         })
 
     except Exception as e:
         logger.error(f"Summary Error: {e}")
-        # Fail gracefully without AI
+        # Fail gracefully
         return jsonify({
             "total_income": total_income if 'total_income' in locals() else 0,
             "total_expenses": total_expenses if 'total_expenses' in locals() else 0,
             "balance": balance if 'balance' in locals() else 0,
-            "advice": "Sem conexão com o mentor no momento.",
-            "month": current_month if 'current_month' in locals() else ""
+            "advice": "Sem conexão com o CIO.",
+            "month": current_month if 'current_month' in locals() else "",
+            "market": get_market_data() # Return safe default
         })
 
 @app.route('/<path:filename>')

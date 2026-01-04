@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FinSense - Dashboard Financeiro</title>
     <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="/static/js/translations.js"></script>
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -229,6 +230,130 @@
             min-height: 280px; /* Changed from fixed height to min-height */
         }
         
+        /* Bento Grid CIO Style */
+        .bento-card {
+            min-height: 250px;
+            background: linear-gradient(160deg, #0a192f 0%, #112240 100%);
+            border: 1px solid #3399ff; /* Neon Blue Border */
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(51, 153, 255, 0.1);
+        }
+
+        .bento-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(51, 153, 255, 0.2);
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+        }
+
+        .bento-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #3399ff; /* Neon Blue Title */
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .live-dot {
+            width: 6px;
+            height: 6px;
+            background-color: #3399ff; /* Neon Blue Dot */
+            border-radius: 50%;
+            animation: blink 2s infinite;
+            box-shadow: 0 0 8px #3399ff;
+        }
+
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+
+        .market-pills {
+            display: flex;
+            gap: 10px;
+        }
+
+        .pill {
+            font-size: 11px;
+            background: rgba(51, 153, 255, 0.1); /* Blue Tint */
+            color: #3399ff; /* Neon Blue Text */
+            padding: 4px 10px;
+            border-radius: 6px;
+            border: 1px solid rgba(51, 153, 255, 0.4); /* Blue Border */
+            font-weight: 700;
+            box-shadow: 0 0 5px rgba(51, 153, 255, 0.1);
+        }
+
+        .advice-content {
+            font-size: 15px;
+            line-height: 1.8; /* Increased spacing */
+            color: #e6f1ff;
+            opacity: 0;
+            transition: opacity 0.5s ease-in;
+            margin-top: 15px;
+        }
+
+        /* Markdown Styles - Predicao Theme (Neon Blue) */
+        .advice-content h3 {
+            color: #3399ff; /* Neon Blue (Predicao) */
+            font-size: 16px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            border-left: 3px solid #3399ff;
+            padding-left: 10px;
+            text-shadow: 0 0 10px rgba(51, 153, 255, 0.3);
+        }
+
+        .advice-content p {
+            margin-bottom: 15px;
+            color: #ccd6f6; /* Text Muted */
+        }
+
+        .advice-content blockquote {
+            background: rgba(51, 153, 255, 0.1); /* Blue Tint */
+            border-left: 3px solid #3399ff; /* Blue Border */
+            margin: 15px 0;
+            padding: 10px 15px;
+            font-style: italic;
+            color: #e6f1ff;
+            box-shadow: 0 4px 15px rgba(51, 153, 255, 0.1);
+        }
+
+        .advice-content strong {
+            color: #3399ff; /* Neon Blue Highlight */
+            font-weight: 800;
+        }
+
+        .advice-content ul {
+            padding-left: 20px;
+            margin-bottom: 15px;
+        }
+
+        .advice-content li {
+            margin-bottom: 5px;
+            marker: #3399ff; /* Blue Bullets (supported in modern browsers) */
+        }
+        
+        .advice-content li::marker {
+            color: #3399ff;
+        }
+
+        .advice-content.visible {
+            opacity: 1;
+        }
+
+        .loading-text {
+            color: var(--text-muted);
+            font-style: italic;
+            animation: pulsetext 1.5s infinite;
+        }
+
+        @keyframes pulsetext { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+
         .card {
             background: var(--bg-card);
             border: 1px solid var(--border-neon);
@@ -509,13 +634,23 @@
             </div>
         </div>
 
-        <!-- Mentor AI Banner -->
-        <div class="card" id="mentor-card" style="margin-bottom: 30px; border: 1px solid var(--accent-primary); background: linear-gradient(90deg, rgba(10, 25, 47, 0.9), rgba(17, 34, 64, 0.9));">
-            <div style="display: flex; gap: 20px; align-items: center;">
-                <div style="flex: 1;">
-                    <h3 style="color: var(--accent-primary); font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">Mentor Estratégico</h3>
-                    <p id="mentor-advice" style="font-size: 18px; font-weight: 500; color: white;">Conectando ao cérebro financeiro...</p>
+        <!-- Mentor AI Banner (CIO Bento) -->
+        <div class="card bento-card" id="mentor-card" style="margin-bottom: 30px;">
+            <!-- Header with Market Pills -->
+            <div class="bento-header">
+                <div class="bento-title">
+                    ASSESSOR FINSENSE <div class="live-dot"></div>
                 </div>
+                <div class="market-pills">
+                    <div class="pill" title="Taxa Selic">SELIC <span id="val-selic">--%</span></div>
+                    <div class="pill" title="Inflação (IPCA)">IPCA <span id="val-ipca">--%</span></div>
+                    <div class="pill" title="Cotação Dólar">USD <span id="val-dolar">R$ --</span></div>
+                </div>
+            </div>
+            
+            <!-- Report Content -->
+            <div class="advice-content" id="mentor-advice">
+                 <p class="loading-text">Conectando aos terminais de mercado...</p>
             </div>
         </div>
 
@@ -794,13 +929,28 @@
                 renderTransactionList(filteredTx);
 
                 // 4. Update Goals
-                // 4. Update Goals
                 updateGoal(incomes, expenses, filterVal);
                 
-                // 5. Update Mentor Advice
+                // 5. Update Mentor Advice & Market Data (CIO Logic)
+                if(summaryData.market) {
+                    const selicEl = document.getElementById('val-selic');
+                    const ipcaEl = document.getElementById('val-ipca');
+                    const dolarEl = document.getElementById('val-dolar');
+                    
+                    if(selicEl) selicEl.innerText = summaryData.market.selic;
+                    if(ipcaEl) ipcaEl.innerText = summaryData.market.ipca;
+                    if(dolarEl) dolarEl.innerText = summaryData.market.dolar;
+                }
+
                 if(summaryData.advice) {
                      const adviceEl = document.getElementById('mentor-advice');
-                     adviceEl.innerText = summaryData.advice;
+                     // Parse Markdown using marked.js
+                     if (typeof marked !== 'undefined') {
+                        adviceEl.innerHTML = marked.parse(summaryData.advice);
+                     } else {
+                        adviceEl.innerHTML = summaryData.advice;
+                     }
+                     adviceEl.classList.add('visible');
                 }
                 
                 // 6. Update Cash on Hand (Initial + Current Month Balance)
@@ -817,13 +967,31 @@
                 const url = month ? `${API_BASE_URL}/api/financas/summary?month=${month}` : `${API_BASE_URL}/api/financas/summary`;
                 const res = await fetch(url);
                 const data = await res.json();
+                
+                // Update Market Pills
+                if(data.market) {
+                    const selicEl = document.getElementById('val-selic');
+                    const ipcaEl = document.getElementById('val-ipca');
+                    const dolarEl = document.getElementById('val-dolar');
+                    
+                    if(selicEl) selicEl.innerText = data.market.selic;
+                    if(ipcaEl) ipcaEl.innerText = data.market.ipca;
+                    if(dolarEl) dolarEl.innerText = data.market.dolar;
+                }
+
                 if (data.advice) {
                     const adviceEl = document.getElementById('mentor-advice');
-                    adviceEl.style.opacity = 0;
+                    adviceEl.classList.remove('visible');
+                    // Remove loading text if present
+                    
                     setTimeout(() => {
-                        // Quotes removed here as requested by plan
-                        adviceEl.innerText = data.advice; 
-                        adviceEl.style.opacity = 1;
+                        // Parse Markdown using marked.js
+                        if (typeof marked !== 'undefined') {
+                            adviceEl.innerHTML = marked.parse(data.advice);
+                        } else {
+                            adviceEl.innerHTML = data.advice; // Fallback
+                        }
+                        adviceEl.classList.add('visible');
                     }, 300);
                 }
             } catch(e) { console.error("Advice Error", e); }
