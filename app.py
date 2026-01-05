@@ -703,8 +703,10 @@ def financas_summary():
         meta_valor = total_income * 0.20
         meta_progresso = (balance / meta_valor * 100) if meta_valor > 0 else 0
         
-        # Cache Key (Version 5 for CIO Real-Time - No Emojis + Fixed Selic)
-        cache_key = f"{current_user.id}_{current_month}_{today.strftime('%Y-%m-%d')}_CIO_RT_v2"
+        # Cache Key (Version 6 - Dynamic based on transaction count)
+        # We include the number of transactions to bust cache on new entries
+        tx_count = len(month_exps) + len(month_incs)
+        cache_key = f"{current_user.id}_{current_month}_{today.strftime('%Y-%m-%d')}_cnt{tx_count}_CIO_RT_v3"
         
         if cache_key in ADVICE_CACHE:
             advice = ADVICE_CACHE[cache_key]
