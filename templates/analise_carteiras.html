@@ -330,127 +330,34 @@
         }
 
         /* Mobile Responsive */
+
+        /* Consolidated Mobile Styles */
         @media (max-width: 768px) {
-            header {
-                padding: 0 20px;
-            }
-
-            .logo img {
-                height: 110px !important;
-                margin-top: -30px !important;
-                margin-bottom: -30px !important;
-                margin-left: -20px !important;
-            }
-
-            .mobile-menu-btn {
-                display: block;
-            }
-
-            /* Nav Menu - Hidden by default */
-            nav {
-                display: none !important;
-                position: absolute;
-                top: 70px;
-                left: 0;
-                width: 100%;
-                background-color: var(--hero-bg);
-                flex-direction: column;
-                align-items: center !important;
-                padding: 20px 0;
-                box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            }
-
-            nav.active {
-                display: flex !important;
-            }
-
-            nav a, .dropdown, .theme-toggle, .btn-logout {
-                margin: 10px 0 !important;
-            }
-
+            header { padding: 0 10px; }
+            .mobile-menu-btn { display: block; z-index: 1002; }
+            nav { display: none !important; position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background-color: var(--hero-bg); flex-direction: column; padding: 110px 20px; align-items: center; overflow-y: auto; gap: 20px; }
+            nav.active { display: flex !important; }
+            nav.active > * { margin: 0 !important; }
             nav a { font-size: 18px !important; }
             .nav-btn-drop { font-size: 18px !important; }
+            .dropdown { width: 100%; text-align: center; margin-left: 0 !important; }
+            .dropdown-content { position: relative; background: transparent; box-shadow: none; border: none; text-align: center; float: none; top: 0; }
+            .dropdown-content a { font-size: 16px; opacity: 0.7; padding: 10px; color: var(--text-muted); }
+            #theme-btn, #lang-toggle { width: 40px; height: 40px; margin: 5px !important; display: inline-flex; }
+            #nav-auth { flex-direction: column; gap: 15px; margin-top: 20px !important; }
+            #nav-auth span { margin: 0 !important; font-size: 18px !important; }
+            .btn-logout { font-size: 16px; padding: 10px 25px; }
 
-            .dropdown {
-                width: 100%;
-                text-align: center;
-                margin-left: 0 !important;
-            }
-
-            .dropdown-content {
-                display: none; /* Collapsible */
-                position: static;
-                background: transparent;
-                box-shadow: none;
-                border: none;
-                text-align: center;
-                width: 100%;
-            }
-
-            .dropdown-content.show {
-                display: block;
-            }
-            
-            .dropdown-content a {
-                color: var(--text-muted);
-                padding: 10px;
-                display: block;
-            }
-
-            .content-container {
-                padding: 15px; /* Reduced padding */
-            }
-
-            h1 {
-                font-size: 24px;
-            }
-
-            /* Stack Columns */
-            .config-grid, .footer-grid {
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
-
-            /* Larger Touch Targets */
-            input, select, #asset-search {
-                padding: 10px;
-                font-size: 13px; /* Reduced further to 13px */
-                height: 38px; /* Compact height */
-            }
-
-            .asset-row {
-                padding: 15px;
-                background: var(--bg-main);
-                margin-bottom: 10px;
-                border-radius: 8px;
-            }
+            .content-container { padding: 110px 15px 15px 15px; }
+            h1 { font-size: 24px; }
+            .config-grid, .footer-grid { grid-template-columns: 1fr; gap: 20px; }
+            input, select, #asset-search { padding: 10px; font-size: 13px; height: 38px; }
+            .asset-row { padding: 15px; background: var(--bg-main); margin-bottom: 10px; border-radius: 8px; }
             .asset-row span { font-size: 13px !important; }
-
-            /* Fix Summary Text Size */
-            #summary-text, .card h3 {
-                font-size: 14px !important;
-                line-height: 1.5 !important;
-            }
-
-            .cta-button {
-                width: 100%;
-                justify-content: center;
-                padding: 12px;
-                font-size: 14px;
-            }
-            
-            /* Footer Stacking */
-            .action-group {
-                flex-direction: column;
-                align-items: stretch !important;
-                gap: 15px;
-            }
-            .action-group.bordered {
-                border-left: none !important;
-                border-top: 1px solid var(--border-color);
-                padding-left: 0 !important;
-                padding-top: 20px;
-            }
+            #summary-text, .card h3 { font-size: 14px !important; line-height: 1.5 !important; }
+            .cta-button { width: 100%; justify-content: center; padding: 12px; font-size: 14px; }
+            .action-group { flex-direction: column; align-items: stretch !important; gap: 15px; }
+            .action-group.bordered { border-left: none !important; border-top: 1px solid var(--border-color); padding-left: 0 !important; padding-top: 20px; }
             .action-group > div { padding-right: 0 !important; }
             .action-group select { width: 100% !important; margin-bottom: 10px; }
         }

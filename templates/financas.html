@@ -210,85 +210,8 @@
         background-color: white;
       }
 
-      @media (max-width: 768px) {
-        .mobile-menu-btn {
-          display: block;
-          z-index: 1002;
-        }
-        nav {
-          display: none;
-        }
-        nav.active {
-          display: flex;
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100vh;
-          background-color: #020c1b;
-          flex-direction: column;
-          padding: 80px 20px;
-          align-items: center;
-          gap: 20px;
-          overflow-y: auto;
-        }
-        nav.active > * {
-          margin: 0 !important;
-        }
-        nav.active a {
-          font-size: 18px;
-        }
-        nav.active .dropdown {
-          margin: 0;
-          text-align: center;
-        }
-        nav.active .nav-btn-drop {
-          font-size: 18px;
-          margin: 0;
-        }
-        nav.active .dropdown-content {
-          position: relative;
-          background: transparent;
-          box-shadow: none;
-          border: none;
-          text-align: center;
-          float: none;
-          top: 0;
-        }
-        nav.active .dropdown-content a {
-          font-size: 16px;
-          opacity: 0.7;
-          padding: 10px;
-        }
-        nav.active #theme-btn,
-        nav.active #lang-toggle {
-          width: 40px;
-          height: 40px;
-          margin: 5px !important;
-          display: inline-flex;
-        }
-      }
 
       /* FinSense Mobile Optimization V2 (Consolidated) */
-      @media (max-width: 1024px) {
-        /* Header Fixes */
-        .dashboard-container { padding: 80px 15px 30px 15px; }
-        .page-header { display: flex !important; flex-direction: column !important; align-items: flex-start !important; gap: 20px; }
-        .page-title { width: 100%; margin-bottom: 0 !important; }
-        .page-title h1 { font-size: 24px; }
-        .date-selector { width: 100%; justify-content: space-between; background: rgba(16, 24, 41, 0.4); padding: 5px; border-radius: 8px; }
-        .date-selector > div:first-child { flex: 1; margin-right: 10px; }
-        .bento-header { flex-direction: column; align-items: flex-start; gap: 15px; }
-        .market-pills { flex-wrap: wrap; gap: 10px; width: 100%; }
-        .pill { flex: 1; text-align: center; min-width: 80px; }
-        .advice-content { text-align: justify; }
-        .bottom-grid { grid-template-columns: 1fr; gap: 30px; }
-
-        /* Chart Optimization (Vertical Stack) */
-        .donut-row { flex-direction: column !important; height: auto !important; gap: 20px; }
-        .chart-wrapper { width: 100%; height: 280px; }
-        .legend-sidebar { width: 100%; border-left: none; border-top: 1px solid var(--border-soft); padding-left: 0; padding-top: 15px; max-height: none; display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-      }
 
       /* Standard Logout (from Predicao) */
       .btn-logout {
@@ -888,18 +811,6 @@
         box-shadow: 0 5px 15px rgba(0, 123, 255, 0.3);
       }
 
-      @media (max-width: 1024px) {
-        .kpi-grid {
-          grid-template-columns: 1fr;
-          height: auto;
-        }
-        .card {
-          min-height: 300px;
-        }
-        .bottom-grid {
-          grid-template-columns: 1fr;
-        }
-      }
 
       /* Category Legend (Sidebar) */
       .donut-row {
@@ -977,63 +888,45 @@
       }
 
       /* --- FinSense Mobile Optimization --- */
-      @media (max-width: 1024px) {
+
+      /* Consolidated Mobile Styles */
+      @media (max-width: 768px) {
+        header { padding: 0 10px; }
+        .mobile-menu-btn { display: block; z-index: 1002; }
+        nav { display: none; }
+        nav.active {
+          display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
+          background-color: var(--bg-main); flex-direction: column; padding: 110px 20px; align-items: center; overflow-y: auto; gap: 20px;
+        }
+        nav.active > * { margin: 0 !important; }
+        nav.active a { font-size: 18px; }
+        nav.active .dropdown { margin: 0; text-align: center; }
+        nav.active .nav-btn-drop { font-size: 18px; margin: 0; }
+        nav.active .dropdown-content { position: relative; background: transparent; box-shadow: none; border: none; text-align: center; float: none; top: 0; }
+        nav.active .dropdown-content a { font-size: 16px; opacity: 0.7; padding: 10px; }
+        nav.active #theme-btn, nav.active #lang-toggle { width: 40px; height: 40px; margin: 5px !important; display: inline-flex; }
+        nav.active #nav-auth { flex-direction: column; gap: 15px; margin-top: 20px !important; }
+        nav.active #nav-auth div { margin: 0 !important; font-size: 18px !important; }
+        nav.active .btn-logout { font-size: 16px; padding: 10px 25px; }
+
         .dashboard-container {
-          padding: 80px 15px 30px 15px; /* Reduced padding */
+          padding: 110px 15px 30px 15px;
         }
-
-        .page-header {
-          display: flex !important;
-          flex-direction: column !important; /* Force stack */
-          align-items: flex-start !important;
-          gap: 20px; /* Separation */
-        }
-
-        .page-title {
-          width: 100%;
-          margin-bottom: 0 !important;
-        }
-
-        .page-title h1 {
-          font-size: 24px; /* Adjust size */
-        }
-
-        .date-selector {
-          width: 100%;
-          justify-content: space-between;
-          background: rgba(16, 24, 41, 0.4); /* Slight bg contrast */
-          padding: 5px;
-          border-radius: 8px;
-        }
-
-        /* Ensure wrapper grows */
-        .date-selector > div:first-child {
-          flex: 1;
-          margin-right: 10px;
-        }
-
-        /* Stack Bento Header pills */
-        .bento-header {
-          flex-direction: column;
-          align-items: flex-start;
-          gap: 15px;
-        }
-        .market-pills {
-          flex-wrap: wrap;
-          gap: 10px;
-          width: 100%;
-        }
-        .pill {
-          flex: 1;
-          text-align: center;
-          min-width: 80px;
-        }
-
-        /* Bottom Grid Stack */
-        .bottom-grid {
-          grid-template-columns: 1fr;
-          gap: 30px;
-        }
+        .page-header { display: flex !important; flex-direction: column !important; align-items: flex-start !important; gap: 20px; }
+        .page-title { width: 100%; margin-bottom: 0 !important; }
+        .page-title h1 { font-size: 24px; }
+        .date-selector { width: 100%; justify-content: space-between; background: rgba(16, 24, 41, 0.4); padding: 5px; border-radius: 8px; }
+        .date-selector > div:first-child { flex: 1; margin-right: 10px; }
+        .bento-header { flex-direction: column; align-items: flex-start; gap: 15px; }
+        .market-pills { flex-wrap: wrap; gap: 10px; width: 100%; }
+        .pill { flex: 1; text-align: center; min-width: 80px; }
+        .advice-content { text-align: justify; }
+        .bottom-grid { grid-template-columns: 1fr; gap: 30px; }
+        .kpi-grid { grid-template-columns: 1fr; height: auto; }
+        .card { min-height: 300px; }
+        .donut-row { flex-direction: column !important; height: auto !important; gap: 20px; }
+        .chart-wrapper { width: 100%; height: 280px; }
+        .legend-sidebar { width: 100%; border-left: none; border-top: 1px solid var(--border-soft); padding-left: 0; padding-top: 15px; max-height: none; display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
       }
     </style>
     <!-- PDF Libs -->

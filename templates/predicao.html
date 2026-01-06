@@ -126,28 +126,6 @@
         .mobile-menu-btn { display: none; background: none; border: none; cursor: pointer; padding: 10px; }
         .mobile-menu-btn span { display: block; width: 25px; height: 3px; margin: 5px 0; background-color: white; }
 
-        @media (max-width: 768px) {
-            .mobile-menu-btn { display: block; z-index: 1002; }
-            nav { display: none; }
-            nav.active {
-                display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
-                background-color: var(--hero-bg); 
-                flex-direction: column; 
-                padding: 80px 20px;
-                align-items: center;
-                gap: 20px;
-                overflow-y: auto;
-            }
-            nav.active > * { margin: 0 !important; }
-            nav.active a { font-size: 18px; }
-            nav.active .dropdown { margin: 0; text-align: center; }
-            nav.active .nav-btn-drop { font-size: 18px; margin: 0; }
-            nav.active .dropdown-content { 
-                position: relative; background: transparent; box-shadow: none; border: none; text-align: center; float: none; top: 0;
-            }
-            nav.active .dropdown-content a { font-size: 16px; opacity: 0.7; padding: 10px; }
-            nav.active #theme-btn, nav.active #lang-toggle { width: 40px; height: 40px; margin: 5px !important; display: inline-flex; }
-        }
 
         /* --- Layout --- */
         .container {
@@ -485,6 +463,33 @@
             color: var(--text-muted);
             margin: 0;
             text-align: justify;
+        }
+
+        /* Consolidated Mobile Styles */
+        @media (max-width: 768px) {
+            header { padding: 0 10px; }
+            .mobile-menu-btn { display: block; z-index: 1002; }
+            nav { display: none; }
+            nav.active {
+                display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
+                background-color: var(--hero-bg); flex-direction: column; padding: 110px 20px; align-items: center; gap: 20px; overflow-y: auto;
+            }
+            .container {
+                padding: 110px 20px 40px 20px;
+            }
+            nav.active > * { margin: 0 !important; }
+            nav.active a { font-size: 18px; }
+            nav.active .dropdown { margin: 0; text-align: center; }
+            nav.active .nav-btn-drop { font-size: 18px; margin: 0; }
+            nav.active .dropdown-content { 
+                position: relative; background: transparent; box-shadow: none; border: none; text-align: center; float: none; top: 0;
+            }
+            nav.active .dropdown-content a { font-size: 16px; opacity: 0.7; padding: 10px; }
+            nav.active #theme-btn, nav.active #lang-toggle { width: 40px; height: 40px; margin: 5px !important; display: inline-flex; }
+            nav.active #nav-auth { flex-direction: column; gap: 15px; margin-top: 20px !important; }
+            nav.active #nav-auth div { margin: 0 !important; font-size: 18px !important; }
+            nav.active .btn-logout { font-size: 16px; padding: 10px 25px; }
+            nav.active #nav-public { margin-top: 20px !important; }
         }
     </style>
 </head>
