@@ -607,8 +607,8 @@
 
         <div class="insights-container">
             <!-- Tendência -->
-            <!-- Tendência -->
             <div class="insight-card">
+                <div class="icon-box" id="icon-trend">--</div>
                 <div class="insight-content">
                     <h4 data-i18n="pred_trend">Tendência (7 Dias)</h4>
                     <div class="value" id="val-trend">---</div>
@@ -616,6 +616,7 @@
             </div>
             <!-- Score -->
             <div class="insight-card">
+                <div class="icon-box">🎯</div>
                 <div class="insight-content">
                     <h4 data-i18n="pred_accuracy">Precisão do Modelo</h4>
                     <div class="value" id="val-score">---</div>
@@ -623,6 +624,7 @@
             </div>
              <!-- Volatilidade -->
              <div class="insight-card">
+                <div class="icon-box">📊</div>
                 <div class="insight-content">
                     <h4 data-i18n="pred_volatility">Volatilidade Recente</h4>
                     <div class="value" id="val-vol">---</div>
@@ -798,19 +800,27 @@
                 const data = await res.json();
                 
                 if(data.error) {
-                    alert("Erro: " + data.error);
+                    alert("Erro do Servidor: " + data.error);
                 } else if(data.results) {
                     resultsCache = data.results;
                     renderTabs(Object.keys(resultsCache));
                     // Auto-select first
                     const first = Object.keys(resultsCache)[0];
                     if(first) switchTab(first);
+                } else {
+                    console.error("Unexpected response format", data);
                 }
             } catch(e) {
-                alert("Erro de conexão.");
-                console.error(e);
+                console.error("Prediction execution failed:", e);
+                // Differentiate between fetch errors and JS errors
+                if (e instanceof TypeError && e.message.includes('fetch')) {
+                    alert("Erro de conexão com o servidor. Verifique sua internet.");
+                } else {
+                    alert("Ocorreu um erro interno na aplicação. Veja o console para detalhes.");
+                }
             } finally {
-                document.getElementById('loader').style.display = 'none';
+                const loader = document.getElementById('loader');
+                if (loader) loader.style.display = 'none';
             }
         }
 
@@ -863,18 +873,20 @@
 
 
             // Trend Styling
-            if(data.metrics.trend === 'Alta') {
-                trendEl.style.color = 'var(--card-trend-up)';
-                iconTrend.style.color = 'var(--card-trend-up)';
-                iconTrend.innerText = '📈';
-            } else if (data.metrics.trend === 'Baixa') {
-                trendEl.style.color = 'var(--card-trend-down)';
-                iconTrend.style.color = 'var(--card-trend-down)';
-                iconTrend.innerText = '📉';
-            } else {
-                trendEl.style.color = 'var(--card-trend-neutral)';
-                iconTrend.style.color = 'var(--card-trend-neutral)';
-                iconTrend.innerText = '➡️';
+            if (iconTrend) {
+                if(data.metrics.trend === 'Alta') {
+                    trendEl.style.color = 'var(--card-trend-up)';
+                    iconTrend.style.color = 'var(--card-trend-up)';
+                    iconTrend.innerText = '📈';
+                } else if (data.metrics.trend === 'Baixa') {
+                    trendEl.style.color = 'var(--card-trend-down)';
+                    iconTrend.style.color = 'var(--card-trend-down)';
+                    iconTrend.innerText = '📉';
+                } else {
+                    trendEl.style.color = 'var(--card-trend-neutral)';
+                    iconTrend.style.color = 'var(--card-trend-neutral)';
+                    iconTrend.innerText = '➡️';
+                }
             }
 
             // Chart
