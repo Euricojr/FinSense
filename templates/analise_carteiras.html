@@ -335,7 +335,7 @@
         @media (max-width: 768px) {
             header { padding: 0 10px; }
             .mobile-menu-btn { display: block; z-index: 1002; }
-            nav { display: none !important; position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background-color: var(--hero-bg); flex-direction: column; padding: 110px 20px; align-items: center; overflow-y: auto; gap: 20px; }
+            nav { display: none !important; position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background-color: #0a192f; flex-direction: column; padding: 110px 20px; align-items: center; overflow-y: auto; gap: 20px; z-index: 1001; }
             nav.active { display: flex !important; }
             nav.active > * { margin: 0 !important; }
             nav a { font-size: 18px !important; }
@@ -397,9 +397,12 @@
 
             <button id="theme-btn" class="theme-toggle" onclick="toggleTheme()" title="Alternar Tema">🌙</button>
             <button id="lang-toggle" class="theme-toggle" onclick="toggleLanguage()" title="Switch Language" style="margin-left: 10px;"><span style="font-weight:700; font-size:14px;">EN</span></button>
-            <div id="nav-auth" style="display: flex; align-items: center; margin-left: 20px;">
-                <span id="user-display" style="color: white; font-weight: 500; font-size: 14px; margin-right: 15px;">Olá, eurico</span>
+            <div id="nav-auth" style="display: none; align-items: center; margin-left: 20px;">
+                <span id="username-display" style="color: white; font-weight: 500; font-size: 14px; margin-right: 15px;">Olá, eurico</span>
                 <a href="#" class="btn-logout" onclick="logout()" data-i18n="nav_logout">Sair</a>
+            </div>
+            <div id="nav-public" style="display: none; align-items: center; margin-left: 20px;">
+                <a href="login" class="cta-button" style="padding: 8px 16px; font-size: 14px; margin-left: 15px;" data-i18n="nav_login_reg">Entrar / Registrar</a>
             </div>
         </nav>
     </header>
@@ -1064,7 +1067,11 @@
                 const response = await fetch(`${API_BASE_URL}/api/me`);
                 const data = await response.json();
                 if (data.authenticated) {
-                    const userDisplay = document.getElementById('user-display');
+                    const navAuth = document.getElementById('nav-auth');
+                    const navPublic = document.getElementById('nav-public');
+                    const userDisplay = document.getElementById('username-display');
+                    if (navAuth) navAuth.style.display = 'flex';
+                    if (navPublic) navPublic.style.display = 'none';
                     if (userDisplay) {
                         userDisplay.innerText = `Olá, ${data.username || 'Investidor'}`;
                     }
@@ -1073,6 +1080,7 @@
                 }
             } catch (e) {
                 console.error("Auth check failed", e);
+                window.location.href = 'login.html';
             }
         }
         

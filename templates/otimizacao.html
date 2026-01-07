@@ -507,7 +507,8 @@
         nav { display: none; }
         nav.active {
           display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
-          background-color: var(--hero-bg); flex-direction: column; padding: 110px 20px; align-items: center; overflow-y: auto; gap: 20px;
+          background-color: #0a192f; flex-direction: column; padding: 110px 20px; align-items: center; overflow-y: auto; gap: 20px;
+          z-index: 1001;
         }
         nav.active > * { margin: 0 !important; }
         nav.active a { font-size: 18px; }
@@ -607,10 +608,10 @@
 
         <div
           id="nav-auth"
-          style="display: flex; align-items: center; margin-left: 20px"
+          style="display: none; align-items: center; margin-left: 20px"
         >
           <span
-            id="user-display"
+            id="username-display"
             style="
               color: white;
               font-weight: 500;
@@ -1016,17 +1017,20 @@
         try {
           const response = await fetch(`${API_BASE_URL}/api/me`);
           const data = await response.json();
+          const navAuth = document.getElementById("nav-auth");
+          const navPublic = document.getElementById("nav-public");
+          const userDisplay = document.getElementById("user-display");
+
           if (data.authenticated) {
-            document.getElementById("nav-auth").style.display = "flex";
-            document.getElementById("nav-public").style.display = "none";
-            const userDisplay = document.getElementById("user-display");
+            if (navAuth) navAuth.style.display = "flex";
+            if (navPublic) navPublic.style.display = "none";
+            const userDisplay = document.getElementById("username-display");
             if (userDisplay) {
               userDisplay.innerText = `Olá, ${data.username || "Investidor"}`;
             }
           } else {
-            document.getElementById("nav-auth").style.display = "none";
-            document.getElementById("nav-public").style.display = "flex";
-            // Optional: redirect protected page
+            if (navAuth) navAuth.style.display = "none";
+            if (navPublic) navPublic.style.display = "flex";
             window.location.href = "login.html";
           }
         } catch (e) {

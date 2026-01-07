@@ -550,12 +550,13 @@
             nav { display: none; }
             nav.active {
                 display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
-                background-color: var(--hero-bg); 
+                background-color: #0a192f; 
                 flex-direction: column; 
                 padding: 110px 20px;
                 align-items: center;
                 overflow-y: auto;
                 gap: 20px;
+                z-index: 1001;
             }
             nav.active > * { margin: 0 !important; }
             nav.active a { font-size: 18px; }
@@ -618,8 +619,8 @@
             <button id="lang-toggle" class="theme-toggle" onclick="toggleLanguage()" title="Switch Language" style="margin-left: 10px;"><span style="font-weight:700; font-size:14px;">EN</span></button>
 
             <!-- Auth Section -->
-            <div id="nav-auth" style="display: flex; align-items: center; margin-left: 20px;">
-                <span id="user-display" style="color: white; font-weight: 500; font-size: 14px; margin-right: 15px;">Olá, eurico</span>
+            <div id="nav-auth" style="display: none; align-items: center; margin-left: 20px;">
+                <span id="username-display" style="color: white; font-weight: 500; font-size: 14px; margin-right: 15px;">Olá, eurico</span>
                 <a href="#" class="btn-logout" onclick="logout()" data-i18n="nav_logout">Sair</a>
             </div>
             
@@ -813,13 +814,16 @@
                 const response = await fetch(`${API_BASE_URL}/api/me`);
                 if (response.ok) {
                     const data = await response.json();
+                    const navAuth = document.getElementById('nav-auth');
+                    const navPublic = document.getElementById('nav-public');
+                    const usernameDisplay = document.getElementById('username-display');
+
                     if (data.authenticated) {
-                         // Update UI for logged in user
-                         document.getElementById('nav-public').style.display = 'none';
-                         document.getElementById('nav-auth').style.display = 'flex';
-                         document.getElementById('username-display').textContent = data.username;
+                         if (navPublic) navPublic.style.display = 'none';
+                         if (navAuth) navAuth.style.display = 'flex';
+                         if (usernameDisplay) usernameDisplay.textContent = data.username;
                     } else {
-                        window.location.href = 'index2.html'; // Redirect if not logged in
+                        window.location.href = 'index2.html'; 
                     }
                 } else {
                     window.location.href = 'index2.html';

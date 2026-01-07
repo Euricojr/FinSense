@@ -893,21 +893,26 @@
 
       /* Consolidated Mobile Styles */
       @media (max-width: 768px) {
-        header { padding: 0 10px; }
+        header { padding: 0 20px; }
         .mobile-menu-btn { display: block; z-index: 1002; }
         nav { display: none; }
         nav.active {
           display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
-          background-color: var(--bg-main); flex-direction: column; padding: 110px 20px; align-items: center; overflow-y: auto; gap: 20px;
+          background-color: #0a192f; flex-direction: column; padding: 110px 20px; align-items: center; overflow-y: auto; gap: 20px;
+          z-index: 1001;
         }
-        nav.active > * { margin: 0 !important; }
-        nav.active a { font-size: 18px; }
-        nav.active .dropdown { margin: 0; text-align: center; }
-        nav.active .nav-btn-drop { font-size: 18px; margin: 0; }
+        nav.active a, nav.active .nav-btn-drop { 
+          font-size: 18px !important; 
+          margin: 0 !important; 
+          width: 100%; 
+          text-align: center;
+          display: block;
+        }
+        nav.active .dropdown { width: 100%; text-align: center; margin-left: 0 !important; }
         nav.active .dropdown-content { position: relative; background: transparent; box-shadow: none; border: none; text-align: center; float: none; top: 0; }
-        nav.active .dropdown-content a { font-size: 16px; opacity: 0.7; padding: 10px; }
+        nav.active .dropdown-content a { font-size: 16px; opacity: 0.7; padding: 10px; width: 100%; display: block; }
         nav.active #theme-btn, nav.active #lang-toggle { width: 40px; height: 40px; margin: 5px !important; display: inline-flex; }
-        nav.active #nav-auth { flex-direction: column; gap: 15px; margin-top: 20px !important; }
+        nav.active #nav-auth { flex-direction: column; gap: 15px; margin-top: 20px !important; width: 100%; align-items: center; }
         nav.active #nav-auth div { margin: 0 !important; font-size: 18px !important; }
         nav.active .btn-logout { font-size: 16px; padding: 10px 25px; }
 
@@ -961,11 +966,9 @@
         <a href="index2.html#dashboard" data-i18n="nav_platform">Plataforma</a>
         <a href="index2.html#mercado" data-i18n="nav_market">Mercado</a>
 
-        <a href="financas" style="color: white; font-weight: 600"
-          >Gestão de Finanças</a
-        >
+        <a href="financas" class="protected-link" onclick="closeMenu()">Gestão de Finanças</a>
 
-        <div class="dropdown" style="margin-left: 20px">
+        <div class="dropdown">
           <button
             class="nav-btn-drop"
             onclick="this.nextElementSibling.classList.toggle('show')"
@@ -991,7 +994,7 @@
           onclick="toggleTheme()"
           title="Alternar Tema"
         >
-          ☀️
+          🌙
         </button>
 
         <div
@@ -1015,6 +1018,9 @@
             data-i18n="nav_logout"
             >Sair</a
           >
+        </div>
+        <div id="nav-public" style="display: none; align-items: center; margin-left: 20px;">
+          <a href="login" class="cta-button" style="padding: 8px 16px; font-size: 14px; margin-left: 15px;" data-i18n="nav_login_reg">Entrar / Registrar</a>
         </div>
       </nav>
     </header>

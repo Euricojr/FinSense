@@ -1107,12 +1107,12 @@ input[type="checkbox"]:checked::after {
     left: 0;
     width: 100%;
     height: 100vh;
-    background-color: var(--hero-bg);
+    background-color: #0a192f;
     flex-direction: column;
     align-items: center;
     padding: 110px 20px;
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
-    z-index: 999;
+    z-index: 1001;
     overflow-y: auto;
     gap: 20px;
   }
@@ -1172,7 +1172,6 @@ input[type="checkbox"]:checked::after {
     margin-top: 20px;
     flex-direction: column;
     width: 100% !important;
-    display: flex !important;
     justify-content: center;
   }
 

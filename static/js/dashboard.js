@@ -71,13 +71,12 @@
                 const response = await fetch(`${API_BASE_URL}/api/me`);
                 if (response.ok) {
                     const data = await response.json();
+                    const navPublic = document.getElementById('nav-public');
+                    const navAuth = document.getElementById('nav-auth');
+                    const usernameDisplay = document.getElementById('username-display');
 
                     if (data.authenticated) {
                         isUserAuthenticated = true;
-                        const navPublic = document.getElementById('nav-public');
-                        const navAuth = document.getElementById('nav-auth');
-                        const usernameDisplay = document.getElementById('username-display');
-                        
                         if(navPublic) navPublic.style.display = 'none';
                         if(navAuth) navAuth.style.display = 'flex';
                         if(usernameDisplay) usernameDisplay.textContent = data.username;
