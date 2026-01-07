@@ -726,13 +726,13 @@ def financas_summary():
             
             ESTRUTURA OBRIGATÓRIA (SEM EMOJIS NOS TÍTULOS):
             ### Raio-X das Contas
-            (Breve parágrafo sobre o maior gasto e o progresso da meta. Seja direto e crítico se necessário.)
+            (Breve parágrafo sobre o maior gasto e o progresso da meta. Seja direto e crítico se necessário. Justifique suas observações com base nos valores apresentados.)
 
             ### Contexto de Mercado
-            (Relacione o saldo do usuário com a Selic {market['selic']} e a Inflação. Explique o custo de oportunidade.)
+            (Relacione o saldo do usuário com a Selic {market['selic']} e a Inflação. Explique o custo de oportunidade e a lógica econômica por trás da sua análise.)
 
             ### Plano de Ação
-            (Lista com 2 ou 3 tópicos curtos e acionáveis).
+            (Lista com 2 ou 3 tópicos curtos e acionáveis. Cada tópico deve conter uma breve justificativa do porquê essa ação é recomendada no momento.)
 
             REGRAS VISUAIS:
             - PROIBIDO USAR EMOJIS em qualquer lugar.
@@ -740,6 +740,7 @@ def financas_summary():
             - Use > (blockquotes) para frases de impacto ou alertas.
             - Use **negrito** para números e dados críticos.
             - DESTAQUE em negrito qualquer menção a taxas (ex: **13.25% a.a.**).
+            - SEJA EXPLICATIVO: O usuário deve entender a "razão" por trás de cada conselho dado.
             """
 
             try:

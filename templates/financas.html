@@ -37,6 +37,7 @@
         /* Dynamic Elements */
         --scrollbar-thumb: rgba(255, 255, 255, 0.1);
         --bg-input: rgba(10, 25, 47, 0.6);
+        --gradient-bento: linear-gradient(160deg, #0a192f 0%, #112240 100%);
         --color-scheme: dark;
       }
 
@@ -52,6 +53,7 @@
         /* Dynamic Elements Light */
         --scrollbar-thumb: rgba(0, 0, 0, 0.2);
         --bg-input: rgba(255, 255, 255, 0.8);
+        --gradient-bento: linear-gradient(160deg, #ffffff 0%, #f0f2f5 100%);
         --color-scheme: light;
       }
 
@@ -300,7 +302,7 @@
       /* Bento Grid CIO Style */
       .bento-card {
         min-height: 250px;
-        background: linear-gradient(160deg, #0a192f 0%, #112240 100%);
+        background: var(--gradient-bento);
         border: 1px solid #3399ff; /* Neon Blue Border */
         position: relative;
         overflow: hidden;
@@ -368,7 +370,7 @@
       .advice-content {
         font-size: 15px;
         line-height: 1.8; /* Increased spacing */
-        color: #e6f1ff;
+        color: var(--text-main);
         opacity: 0;
         transition: opacity 0.5s ease-in;
         margin-top: 15px;
@@ -388,7 +390,7 @@
 
       .advice-content p {
         margin-bottom: 15px;
-        color: #ccd6f6; /* Text Muted */
+        color: var(--text-muted);
       }
 
       .advice-content blockquote {
@@ -397,7 +399,7 @@
         margin: 15px 0;
         padding: 10px 15px;
         font-style: italic;
-        color: #e6f1ff;
+        color: var(--text-main);
         box-shadow: 0 4px 15px rgba(51, 153, 255, 0.1);
       }
 
@@ -1064,7 +1066,7 @@
               cursor: pointer;
             "
           >
-            <span id="date-label" style="font-size: 14px; color: white"
+            <span id="date-label" style="font-size: 14px; color: var(--text-main)"
               >Carregando...</span
             >
             <!-- Icon -->
@@ -1266,11 +1268,7 @@
             class="card"
             style="
               border: 1px solid var(--accent-primary);
-              background: linear-gradient(
-                135deg,
-                rgba(16, 24, 41, 0.9),
-                rgba(10, 25, 47, 0.9)
-              );
+              background: var(--gradient-card);
             "
           >
             <div class="card-title" style="color: var(--accent-primary)">
@@ -1281,7 +1279,7 @@
               style="
                 font-size: 32px;
                 font-weight: 700;
-                color: white;
+                color: var(--text-main);
                 margin-top: 10px;
               "
             >
