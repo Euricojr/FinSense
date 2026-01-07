@@ -560,7 +560,7 @@
             nav.active > * { margin: 0 !important; }
             nav.active a { font-size: 18px; }
             nav.active .dropdown { margin: 0; text-align: center; }
-            nav.active .nav-btn-drop { font-size: 18px; margin: 0; }
+            nav.active .nav-btn-drop { font-size: 18px; margin: 0 !important; }
             nav.active .dropdown-content { 
                 position: relative; background: transparent; box-shadow: none; border: none; text-align: center; float: none; top: 0;
             }
@@ -603,7 +603,7 @@
             <a href="index2.html#mercado" style="font-size: 16px;" data-i18n="nav_market">Mercado</a>
             <a href="financas" class="protected-link" style="font-size: 16px; margin-left: 20px;">Gestão de Finanças</a>
 
-            <div class="dropdown" style="margin-left: 20px;">
+            <div class="dropdown">
                 <button class="nav-btn-drop" onclick="this.nextElementSibling.classList.toggle('show')"><span data-i18n="nav_analysis">Análise</span> ▼</button>
                 <div class="dropdown-content">
                     <a href="predicao" class="protected-link">Modelo de Predição</a>

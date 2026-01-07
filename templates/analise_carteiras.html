@@ -339,7 +339,7 @@
             nav.active { display: flex !important; }
             nav.active > * { margin: 0 !important; }
             nav a { font-size: 18px !important; }
-            .nav-btn-drop { font-size: 18px !important; }
+            .nav-btn-drop { font-size: 18px !important; margin: 0 !important; }
             .dropdown { width: 100%; text-align: center; margin-left: 0 !important; }
             .dropdown-content { position: relative; background: transparent; box-shadow: none; border: none; text-align: center; float: none; top: 0; }
             .dropdown-content a { font-size: 16px; opacity: 0.7; padding: 10px; color: var(--text-muted); }
@@ -385,7 +385,7 @@
             <a href="financas" class="protected-link" style="font-size: 16px;">Gestão de Finanças</a>
 
             <div class="dropdown">
-                <button class="nav-btn-drop" onclick="this.nextElementSibling.classList.toggle('show')" style="color: white; font-weight: 700; font-size: 16px;"><span data-i18n="nav_analysis">Análise</span> ▼</button>
+                <button class="nav-btn-drop" onclick="this.nextElementSibling.classList.toggle('show')"><span data-i18n="nav_analysis">Análise</span> ▼</button>
                 <div class="dropdown-content">
                     <a href="predicao" class="protected-link">Modelo de Predição</a>
                     <a href="analise" class="protected-link" data-i18n="nav_risk">Correlação & Risco</a>

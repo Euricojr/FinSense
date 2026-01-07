@@ -1090,10 +1090,10 @@ input[type="checkbox"]:checked::after {
   }
 
   .logo img {
-    height: 110px !important;
-    margin-top: -30px !important;
-    margin-bottom: -30px !important;
-    margin-left: -20px !important;
+    height: 160px !important;
+    margin-top: -50px !important;
+    margin-bottom: -50px !important;
+    margin-left: -40px !important;
   }
 
   .mobile-menu-btn {
@@ -1102,17 +1102,19 @@ input[type="checkbox"]:checked::after {
 
   nav {
     display: none; /* Hidden by default */
-    position: absolute;
-    top: 70px;
+    position: fixed;
+    top: 0;
     left: 0;
     width: 100%;
+    height: 100vh;
     background-color: var(--hero-bg);
     flex-direction: column;
     align-items: center;
-    padding: 20px 0;
+    padding: 110px 20px;
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
     z-index: 999;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    overflow-y: auto;
+    gap: 20px;
   }
 
   nav.active {
@@ -1124,8 +1126,8 @@ input[type="checkbox"]:checked::after {
 
   nav a,
   .nav-btn-drop {
-    margin: 10px 0;
-    font-size: 16px;
+    margin: 0;
+    font-size: 18px !important;
     display: block;
     width: 100%;
     text-align: center; /* Enforce text centering */
