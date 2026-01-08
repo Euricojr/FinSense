@@ -7,7 +7,7 @@
     <title>FinSense - Análise de Carteiras</title>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root {
+               :root {
             /* Light Mode (Default) */
             --bg-main: #f0f2f5;
             --bg-panel: #f8f9fa;
@@ -21,6 +21,18 @@
             --hero-bg: #0a192f;
             --chart-bg: #ffffff;
             --chart-grid: #e0e0e0;
+            
+            /* Glassmorphism Variables */
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(0, 86, 179, 0.1);
+            --glass-shadow: rgba(0, 0, 0, 0.05);
+            --asset-card-bg: rgba(255, 255, 255, 0.9);
+            --asset-card-border: rgba(0, 0, 0, 0.08);
+            --inner-box-bg: rgba(0, 0, 0, 0.05);
+            --inner-text: #1a1a1a;
+            --ticker-bg: rgba(0, 86, 179, 0.05);
+            --ticker-text: #0056b3;
+            --ticker-price: #1a1a1a;
         }
 
         [data-theme="dark"] {
@@ -37,6 +49,18 @@
             --hero-bg: #020c1b;
             --chart-bg: #112240;
             --chart-grid: #233554;
+
+            /* Glassmorphism Variables - Dark */
+            --glass-bg: rgba(16, 24, 41, 0.6);
+            --glass-border: rgba(0, 212, 255, 0.2);
+            --glass-shadow: rgba(0, 0, 0, 0.4);
+            --asset-card-bg: rgba(255, 255, 255, 0.05);
+            --asset-card-border: rgba(255, 255, 255, 0.1);
+            --inner-box-bg: rgba(0, 0, 0, 0.3);
+            --inner-text: #e6f1ff;
+            --ticker-bg: rgba(0, 212, 255, 0.05);
+            --ticker-text: #00d4ff;
+            --ticker-price: #ffffff;
         }
 
         * {
@@ -266,23 +290,6 @@
             background-color: rgba(0, 86, 179, 0.05);
         }
 
-        .asset-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 8px 12px;
-            background: transparent;
-            border-bottom: 1px solid var(--border-color);
-            transition: background 0.2s;
-        }
-
-        .asset-row:last-child {
-            border-bottom: none;
-        }
-
-        .asset-row:hover {
-            background: var(--bg-main);
-        }
 
         .section-title {
             font-size: 14px;
@@ -365,20 +372,20 @@
         }
 
         .glass-card {
-            background: rgba(16, 24, 41, 0.5);
+            background: var(--glass-bg);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(0, 212, 255, 0.2);
+            border: 1px solid var(--glass-border);
             border-radius: 16px;
             padding: 24px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            box-shadow: 0 8px 32px 0 var(--glass-shadow);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
         .glass-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.45);
-            border-color: rgba(0, 212, 255, 0.4);
+            box-shadow: 0 12px 40px 0 var(--glass-shadow);
+            border-color: var(--accent-primary);
         }
 
         /* --- Asset Cards Grid --- */
@@ -387,27 +394,28 @@
             flex-wrap: wrap;
             gap: 12px;
             padding: 15px;
-            border: 1px solid rgba(0, 212, 255, 0.1);
+            border: 1px solid var(--border-color);
             border-radius: 12px;
-            background: rgba(0, 0, 0, 0.2);
+            background: var(--inner-box-bg);
             min-height: 120px;
             transition: all 0.3s ease;
         }
 
         .asset-card {
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--asset-card-bg);
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--asset-card-border);
             border-radius: 10px;
             padding: 10px 14px;
             display: flex;
             flex-direction: column;
             gap: 8px;
-            min-width: 140px;
+            flex: 1 1 140px;
+            max-width: 200px;
             position: relative;
             animation: card-enter 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 6px var(--glass-shadow);
         }
 
         @keyframes card-enter {
@@ -422,7 +430,7 @@
 
         .asset-card .ticker {
             font-weight: 800;
-            color: #00d4ff;
+            color: var(--ticker-text);
             font-size: 14px;
             letter-spacing: 0.5px;
         }
@@ -431,7 +439,7 @@
             display: flex;
             align-items: center;
             gap: 5px;
-            background: rgba(0, 0, 0, 0.2);
+            background: var(--inner-box-bg);
             padding: 4px 8px;
             border-radius: 6px;
             font-size: 12px;
@@ -442,7 +450,7 @@
             width: 40px;
             background: transparent;
             border: none;
-            color: white;
+            color: var(--inner-text);
             font-weight: 700;
             text-align: right;
             outline: none;
@@ -474,8 +482,8 @@
         .ticker-container {
             width: 100%;
             overflow: hidden;
-            background: rgba(0, 212, 255, 0.05);
-            border: 1px solid rgba(0, 212, 255, 0.1);
+            background: var(--ticker-bg);
+            border: 1px solid var(--border-color);
             border-radius: 8px;
             padding: 10px 0;
             margin-bottom: 25px;
@@ -494,11 +502,11 @@
             margin-right: 50px;
             font-size: 14px;
             font-weight: 600;
-            color: #00d4ff;
+            color: var(--ticker-text);
         }
 
         .ticker-price {
-            color: white;
+            color: var(--ticker-price);
             margin-left: 8px;
         }
 
@@ -592,33 +600,27 @@
             .card-assets {
                 grid-row: auto;
             }
-            header { padding: 0 10px; }
+            .asset-card {
+                flex: 1 1 100%;
+                max-width: none;
+            }
+            header { padding: 0 15px; }
             .mobile-menu-btn { display: block; z-index: 1002; }
-            nav { display: none !important; position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background-color: #0a192f; flex-direction: column; padding: 110px 20px; align-items: center; overflow-y: auto; gap: 20px; z-index: 1001; }
+            nav { display: none !important; position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background-color: var(--hero-bg); flex-direction: column; padding: 110px 20px; align-items: center; overflow-y: auto; gap: 20px; z-index: 1001; }
             nav.active { display: flex !important; }
-            nav.active > * { margin: 0 !important; }
-            nav a { font-size: 18px !important; }
-            .nav-btn-drop { font-size: 18px !important; margin: 0 !important; }
-            .dropdown { width: 100%; text-align: center; margin-left: 0 !important; }
-            .dropdown-content { position: relative; background: transparent; box-shadow: none; border: none; text-align: center; float: none; top: 0; }
-            .dropdown-content a { font-size: 16px; opacity: 0.7; padding: 10px; color: var(--text-muted); }
-            #theme-btn, #lang-toggle { width: 40px; height: 40px; margin: 5px !important; display: inline-flex; }
-            #nav-auth { flex-direction: column; gap: 15px; margin-top: 20px !important; }
-            #nav-auth span { margin: 0 !important; font-size: 18px !important; }
-            .btn-logout { font-size: 16px; padding: 10px 25px; }
+            
+            .content-container { padding: 90px 15px 30px 15px; }
+            h1 { font-size: 24px; text-align: center; }
+            .subtitle { text-align: center; }
 
-            .content-container { padding: 110px 15px 15px 15px; }
-            h1 { font-size: 24px; }
             .config-grid, .footer-grid { grid-template-columns: 1fr; gap: 20px; }
-            input, select, #asset-search { padding: 10px; font-size: 13px; height: 38px; }
-            .asset-row { padding: 15px; background: var(--bg-main); margin-bottom: 10px; border-radius: 8px; }
-            .asset-row span { font-size: 13px !important; }
-            #summary-text, .card h3 { font-size: 14px !important; line-height: 1.5 !important; }
-            .cta-button { width: 100%; justify-content: center; padding: 12px; font-size: 14px; }
+            input, select, #asset-search { padding: 12px; font-size: 14px; height: 44px; }
+            
+            #summary-text, .card h3 { font-size: 14px !important; line-height: 1.6 !important; }
+            .cta-button { width: 100%; padding: 14px; font-size: 15px; }
+            
             .action-group { flex-direction: column; align-items: stretch !important; gap: 15px; }
-            .action-group.bordered { border-left: none !important; border-top: 1px solid var(--border-color); padding-left: 0 !important; padding-top: 20px; }
-            .action-group > div { padding-right: 0 !important; }
-            .action-group select { width: 100% !important; margin-bottom: 10px; }
+            .action-group select { width: 100% !important; }
         }
     </style>
 </head>
