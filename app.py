@@ -815,6 +815,10 @@ def pegar_dados():
 
         df.columns = [c.capitalize() for c in df.columns]
 
+        # Save latest data as fallback for short periods (like 1d in ticker tape)
+        latest_price = df['Close'].iloc[-1]
+        latest_date = df.index[-1].strftime('%Y-%m-%d %H:%M')
+
         # Indicators
         ma_col = f'MA{ma_period}'
         df[ma_col] = df['Close'].rolling(window=ma_period).mean()
@@ -823,7 +827,7 @@ def pegar_dados():
         delta = df['Close'].diff()
         gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
         loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
-        rs = gain / loss
+        rs = gain / (loss + 1e-9)
         df['RSI'] = 100 - (100 / (1 + rs))
 
         # MACD
@@ -841,37 +845,42 @@ def pegar_dados():
         df['Slow_K'] = df['Fast_K'].rolling(window=3).mean()
         df['Slow_D'] = df['Slow_K'].rolling(window=3).mean()
 
-        # ATR (Average True Range)
-        # TR = Max(High - Low, |High - PrevClose|, |Low - PrevClose|)
-        # Since we downloaded auto_adjust=False, we use Close. But if split/div happened... yf.download usually handles.
-        # Let's use High/Low/Close directly.
+        # ATR
         prev_close = df['Close'].shift(1)
         tr1 = df['High'] - df['Low']
         tr2 = (df['High'] - prev_close).abs()
         tr3 = (df['Low'] - prev_close).abs()
-        
         df['TR'] = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
         df['ATR'] = df['TR'].rolling(window=14).mean()
 
-        df.dropna(inplace=True)
+        df_clean = df.dropna()
+        
+        if df_clean.empty:
+            return jsonify({
+                "symbol": ticker,
+                "datas": [latest_date],
+                "close": [float(latest_price)],
+                "preco_atual": f"{latest_price:.2f}",
+                "warning": "Indicadores indisponíveis para este período."
+            })
         
         return jsonify({
             "symbol": ticker,
-            "datas": df.index.strftime('%Y-%m-%d %H:%M').tolist(),
-            "open": df['Open'].tolist(),
-            "high": df['High'].tolist(),
-            "low": df['Low'].tolist(),
-            "close": df['Close'].tolist(),
-            "ma": df[ma_col].tolist(),
-            "rsi": df['RSI'].tolist(),
-            "macd": df['MACD_Line'].tolist(),
-            "signal": df['Signal_Line'].tolist(),
-            "macd_hist": df['MACD_Hist'].tolist(),
-            "stoch_k": df['Slow_K'].tolist(),
-            "stoch_d": df['Slow_D'].tolist(),
-            "atr": df['ATR'].tolist(),
-            "volume": df['Volume'].fillna(0).tolist(),
-            "preco_atual": f"{df['Close'].iloc[-1]:.2f}"
+            "datas": df_clean.index.strftime('%Y-%m-%d %H:%M').tolist(),
+            "open": df_clean['Open'].tolist(),
+            "high": df_clean['High'].tolist(),
+            "low": df_clean['Low'].tolist(),
+            "close": df_clean['Close'].tolist(),
+            "ma": df_clean[ma_col].tolist(),
+            "rsi": df_clean['RSI'].tolist(),
+            "macd": df_clean['MACD_Line'].tolist(),
+            "signal": df_clean['Signal_Line'].tolist(),
+            "macd_hist": df_clean['MACD_Hist'].tolist(),
+            "stoch_k": df_clean['Slow_K'].tolist(),
+            "stoch_d": df_clean['Slow_D'].tolist(),
+            "atr": df_clean['ATR'].tolist(),
+            "volume": df_clean['Volume'].fillna(0).tolist(),
+            "preco_atual": f"{latest_price:.2f}"
         })
 
     except Exception as e:
@@ -999,28 +1008,65 @@ def list_assets():
 
 
 @app.route('/api/portfolio/benchmark', methods=['POST'])
+@login_required
 def portfolio_benchmark():
     try:
         data = request.get_json()
         tickers = data.get('tickers', [])
-        weights = data.get('weights', [1.0/len(data.get('tickers'))]*len(data.get('tickers')))
+        weights = data.get('weights', [])
         bench = data.get('benchmark', '^BVSP')
         start = data.get('start_date')
         end = data.get('end_date')
 
-        all_sym = tickers + [bench]
-        df = yf.download(all_sym, start=start, end=end, progress=False)['Close']
-        
-        # Portfolio Curve
-        # This is a simplification vs backend3 but functionally sufficient for display
-        # assuming daily rebalance or simple index tracking
-        
-        port_returns = df[tickers].pct_change().fillna(0)
-        weighted_returns = (port_returns * weights).sum(axis=1)
-        port_cum = (1 + weighted_returns).cumprod() - 1
+        if not tickers:
+            return jsonify({"error": "No tickers provided"}), 400
 
-        bench_data = df[bench].pct_change().fillna(0)
-        bench_cum = (1 + bench_data).cumprod() - 1
+        if not weights or len(weights) != len(tickers):
+            weights = [1.0/len(tickers)] * len(tickers)
+            
+        # 1. Date Validation
+        now = datetime.now()
+        if end:
+            end_dt = datetime.strptime(end, '%Y-%m-%d')
+            if end_dt > now:
+                end = now.strftime('%Y-%m-%d')
+                logger.info(f"Capping end_date to {end}")
+
+        all_sym = tickers + [bench]
+        
+        # 2. Download and Handle Errors
+        df_all = yf.download(all_sym, start=start, end=end, progress=False, threads=True)
+        if df_all.empty:
+            return jsonify({"error": "No data found for the selected period or tickers."}), 404
+            
+        prices = df_all['Close']
+        
+        # Check if we have all tickers
+        missing = [t for t in all_sym if t not in prices.columns]
+        if missing:
+             # If bench is missing, we can't proceed. If some tickers are missing, we might alert.
+             # For now, if anything is missing, let's be strict or handle it.
+             if bench in missing:
+                  return jsonify({"error": f"Benchmark {bench} not found or unavailable."}), 404
+             # Filter out missing tickers
+             valid_tickers = [t for t in tickers if t in prices.columns]
+             if not valid_tickers:
+                 return jsonify({"error": "None of the selected assets returned data."}), 404
+             tickers = valid_tickers
+
+        # 3. Clean and Align Data
+        # We need daily returns for both portfolio and benchmark
+        df_returns = prices.pct_change().dropna()
+        
+        if len(df_returns) < 2:
+             return jsonify({"error": "Insufficient data points for comparison (minimum 2 days required)."}), 400
+
+        # Portfolio Curve
+        port_returns = (df_returns[tickers] * weights).sum(axis=1)
+        port_cum = (1 + port_returns).cumprod() - 1
+
+        bench_returns = df_returns[bench]
+        bench_cum = (1 + bench_returns).cumprod() - 1
 
         dates = port_cum.index.strftime('%Y-%m-%d').tolist()
 
@@ -1032,6 +1078,7 @@ def portfolio_benchmark():
         })
 
     except Exception as e:
+        logger.error(f"Error in benchmark: {e}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -1785,6 +1832,7 @@ def predict_price():
 
 
 @app.route('/api/portfolio/correlation', methods=['POST'])
+@login_required
 def portfolio_correlation():
     try:
         data = request.get_json()
@@ -1795,23 +1843,56 @@ def portfolio_correlation():
         if not tickers or len(tickers) < 2:
             return jsonify({"error": "Need at least 2 tickers"}), 400
             
+        # 1. Date Validation
+        now = datetime.now()
+        if end_date:
+            try:
+                end_dt = datetime.strptime(end_date, '%Y-%m-%d')
+                if end_dt > now:
+                    end_date = now.strftime('%Y-%m-%d')
+                    logger.info(f"Capping end_date to {end_date}")
+            except Exception as e:
+                logger.error(f"Date parse error: {e}")
+
         logger.info(f"Correlation Request: {tickers} from {start_date} to {end_date}")
         
-        # Download Data
-        prices = yf.download(tickers, start=start_date, end=end_date, progress=False, threads=True)['Close']
-        prices = prices.fillna(method='ffill').fillna(method='bfill')
+        # 2. Download and Handle Errors
+        df_all = yf.download(tickers, start=start_date, end=end_date, progress=False, threads=True)
+        if df_all.empty:
+            return jsonify({"error": "No data found for selected period."}), 404
+            
+        prices = df_all['Close']
         
-        # Calculate Correlation (Based on Price as requested)
-        corr_matrix = prices.corr()
+        # Check for missing tickers
+        valid_tickers = [t for t in tickers if t in prices.columns]
+        if len(valid_tickers) < 2:
+            missing = set(tickers) - set(valid_tickers)
+            return jsonify({"error": f"Insufficient valid assets (2 required). Missing: {', '.join(missing)}"}), 400
         
-        # Calculate Average Absolute Correlation (upper triangle)
+        # 3. Series Alignment and Log Returns
+        # Use only valid tickers and drop days where ANY ticker is missing (strict alignment)
+        prices = prices[valid_tickers].dropna()
+        
+        # Calculate Log Returns
+        log_returns = np.log(prices / prices.shift(1)).dropna()
+        
+        # 4. Amostragem Mínima (Trava de 5 dias)
+        sample_size = len(log_returns)
+        warning = None
+        if sample_size < 5:
+             warning = "Amostra insuficiente. O período selecionado resultou em menos de 5 dias úteis de dados alinhados. Os resultados podem não ser estatisticamente confiáveis."
+        
+        # Calculate Correlation on Log Returns
+        corr_matrix = log_returns.corr()
+        
+        # 5. Average Correlation Calculation (Excluding Diagonal)
+        # mask = np.triu(np.ones_like(corr_matrix, dtype=bool), k=1) already excludes diagonal
         mask = np.triu(np.ones_like(corr_matrix, dtype=bool), k=1)
-        # Using ABSOLUTE correlation as requested ("Média de Correlação Absoluta")
         avg_corr = np.abs(corr_matrix.where(mask).stack()).mean()
         
         if pd.isna(avg_corr): avg_corr = 0.0
         
-        # Determine Class and Text based on the screenshot provided
+        # Classification
         classification = ""
         meaning = ""
         
@@ -1833,7 +1914,9 @@ def portfolio_correlation():
         return jsonify({
             "correlation_matrix": corr_matrix.reset_index().to_dict(orient='records'),
             "avg_correlation": float(avg_corr),
-            "summary": summary
+            "summary": summary,
+            "sample_size": sample_size,
+            "warning": warning
         })
 
     except Exception as e:

@@ -329,6 +329,25 @@
             gap: 40px;
         }
 
+        /* --- Error Feedback --- */
+        #error-msg {
+            color: var(--danger-red);
+            margin-top: 15px;
+            display: none;
+            font-weight: 600;
+            padding: 12px;
+            border-radius: 8px;
+            background: rgba(211, 47, 47, 0.1);
+            border: 1px solid var(--danger-red);
+            animation: pulse-error 2s infinite;
+        }
+
+        @keyframes pulse-error {
+            0% { box-shadow: 0 0 0 0 rgba(211, 47, 47, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(211, 47, 47, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(211, 47, 47, 0); }
+        }
+
         /* Mobile Responsive */
 
         /* Consolidated Mobile Styles */
@@ -859,15 +878,23 @@
             for (const asset of selectedTickers) {
                 try {
                     const response = await fetch(`${API_BASE_URL}/api/dados?ticker=${asset.symbol}&period=1d`);
+                    const item = document.createElement('div');
+                    item.className = 'ticker-item';
+                    
                     if (response.ok) {
                         const data = await response.json();
-                        const item = document.createElement('div');
-                        item.className = 'ticker-item';
                         item.innerHTML = `${asset.symbol}: <span class="ticker-price">R$ ${data.preco_atual}</span>`;
-                        tickerContent.appendChild(item);
+                    } else {
+                        item.innerHTML = `${asset.symbol}: <span class="ticker-price" style="color: var(--danger-red)">Indisponível</span>`;
+                        console.warn(`Failed to fetch price for ${asset.symbol}`);
                     }
+                    tickerContent.appendChild(item);
                 } catch (e) {
                     console.error("Error fetching ticker price:", e);
+                    const item = document.createElement('div');
+                    item.className = 'ticker-item';
+                    item.innerHTML = `${asset.symbol}: <span class="ticker-price" style="color: var(--danger-red)">Erro Conexão</span>`;
+                    tickerContent.appendChild(item);
                 }
             }
             
@@ -992,10 +1019,22 @@
                     const data = await response.json();
                     if (!response.ok) throw new Error(data.error);
 
-                    document.getElementById('correlation-card').style.display = 'block';
+                    if (data.warning) {
+                        const warningDiv = document.createElement('div');
+                        warningDiv.id = 'warning-banner';
+                        warningDiv.style = 'background: rgba(255, 193, 7, 0.1); border-left: 4px solid #ffc107; padding: 15px; margin-bottom: 20px; border-radius: 4px; color: #ffc107; font-size: 13px;';
+                        warningDiv.innerText = data.warning;
+                        const card = document.getElementById('correlation-card');
+                        const existingWarning = document.getElementById('warning-banner');
+                        if (existingWarning) existingWarning.remove();
+                        card.insertBefore(warningDiv, card.firstChild);
+                    } else {
+                        const existingWarning = document.getElementById('warning-banner');
+                        if (existingWarning) existingWarning.remove();
+                    }
+
                     document.getElementById('correlation-card').style.display = 'block';
                     renderCorrelationText(data.avg_correlation);
-                    // document.getElementById('summary-text').innerText = data.summary; // Use local generation
                     document.getElementById('avg-corr-val').innerText = data.avg_correlation.toFixed(2);
                     lastAnalysisData = { ...lastAnalysisData, corr: data };
                 }
