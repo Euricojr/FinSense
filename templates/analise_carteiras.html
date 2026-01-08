@@ -381,6 +381,95 @@
             border-color: rgba(0, 212, 255, 0.4);
         }
 
+        /* --- Asset Cards Grid --- */
+        #asset-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding: 15px;
+            border: 1px solid rgba(0, 212, 255, 0.1);
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            min-height: 120px;
+            transition: all 0.3s ease;
+        }
+
+        .asset-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 10px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 140px;
+            position: relative;
+            animation: card-enter 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        @keyframes card-enter {
+            0% { opacity: 0; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        .asset-card:hover {
+            border-color: rgba(0, 212, 255, 0.4);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .asset-card .ticker {
+            font-weight: 800;
+            color: #00d4ff;
+            font-size: 14px;
+            letter-spacing: 0.5px;
+        }
+
+        .asset-card .weight-box {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .asset-card .weight-input {
+            width: 40px;
+            background: transparent;
+            border: none;
+            color: white;
+            font-weight: 700;
+            text-align: right;
+            outline: none;
+            padding: 0;
+            font-size: 12px;
+        }
+
+        .asset-card .btn-remove {
+            position: absolute;
+            top: 6px;
+            right: 8px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 18px;
+            cursor: pointer;
+            line-height: 1;
+            padding: 2px;
+            transition: all 0.2s ease;
+        }
+
+        .asset-card .btn-remove:hover {
+            color: #ff00ff;
+            text-shadow: 0 0 8px #ff00ff;
+            transform: scale(1.2);
+        }
+
         /* --- Ticker Tape --- */
         .ticker-container {
             width: 100%;
@@ -416,6 +505,25 @@
         @keyframes ticker {
             0% { transform: translate3d(0, 0, 0); }
             100% { transform: translate3d(-100%, 0, 0); }
+        }
+
+        .empty-state-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 20px;
+            color: var(--text-muted);
+            opacity: 0.7;
+        }
+
+        .empty-state-icon {
+            width: 48px;
+            height: 48px;
+            fill: var(--text-muted);
+            opacity: 0.3;
         }
 
         /* --- Refined Components --- */
@@ -593,13 +701,8 @@
                     </ul>
                 </div>
 
-                <div id="asset-list"
-                    style="border: 1px solid var(--border-color); border-radius: 6px; overflow: hidden; min-height: 100px; background: rgba(255,255,255,0.02);">
-                    <!-- Empty State -->
-                    <div id="empty-assets"
-                        style="padding: 20px; text-align: center; color: var(--text-muted); font-size: 13px;" data-i18n="no_assets">
-                        Nenhum ativo selecionado.
-                    </div>
+                <div id="asset-list">
+                    <!-- Empty State will be dynamically rendered -->
                 </div>
             </div>
 
@@ -911,55 +1014,40 @@
 
         function renderAssetList() {
             const container = document.getElementById('asset-list');
-            const emptyState = document.getElementById('empty-assets');
 
-            // Clear but keep empty state if needed
-            const currentRows = container.querySelectorAll('.asset-row');
-            currentRows.forEach(r => r.remove());
+            container.innerHTML = '';
 
             if (selectedTickers.length === 0) {
-                if (!document.getElementById('empty-assets')) {
-                    container.innerHTML = `<div id="empty-assets" style="padding: 20px; text-align: center; color: var(--text-muted); font-size: 13px;">Nenhum ativo selecionado.</div>`;
-                } else {
-                    emptyState.style.display = 'block';
-                }
+                container.innerHTML = `
+                    <div class="empty-state-container">
+                        <svg class="empty-state-icon" viewBox="0 0 24 24">
+                            <path d="M21 18c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2h1V2h2v2h8V2h2v2h1c1.1 0 2 .9 2 2v12zM5 8h14V6H5v2zm14 10V10H5v8h14zM7 12h5v2H7v-2z"/>
+                        </svg>
+                        <div style="font-size: 13px;">Aguardando seus ativos para iniciar a mágica...</div>
+                    </div>
+                `;
                 updateTickerTape();
                 return;
-            } else {
-                if (emptyState) emptyState.style.display = 'none';
             }
 
             selectedTickers.forEach(asset => {
-                const row = document.createElement('div');
-                row.className = 'asset-row';
+                const card = document.createElement('div');
+                card.className = 'asset-card';
 
-                row.innerHTML = `
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <span style="font-weight: 700; font-size: 14px; color: var(--text-main);">${asset.symbol}</span>
+                card.innerHTML = `
+                    <div class="ticker">${asset.symbol}</div>
+                    <div class="weight-box">
+                        <span>Peso:</span>
+                        <input type="number" class="weight-input" value="${asset.weight}" 
+                           onchange="updateWeight('${asset.symbol}', this.value)">
+                        <span>%</span>
                     </div>
-                    
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <div style="display: flex; align-items: center; gap: 6px; background: rgba(0,0,0,0.03); padding: 4px 8px; border-radius: 4px;">
-                            <span style="font-size: 11px; font-weight: 600; color: var(--text-muted);">PESO</span>
-                            <div style="display: flex; align-items: center;">
-                                <input type="number" value="${asset.weight}" onchange="updateWeight('${asset.symbol}', this.value)" 
-                                style="width: 35px; padding: 0; border: none; background: transparent; text-align: right; font-weight: 700; font-size: 13px; outline: none; height: auto;">
-                                <span style="font-size: 13px; font-weight: 700; color: var(--text-main); margin-left: 2px;">%</span>
-                            </div>
-                        </div>
-                        
-                        <button onclick="removeTag('${asset.symbol}')" style="background: none; border: none; color: var(--text-muted); font-size: 16px; cursor: pointer; padding: 5px; margin-left: 5px; transition: color 0.2s;">
-                            &times;
-                        </button>
-                    </div>
+                    <button class="btn-remove" onclick="removeTag('${asset.symbol}')" title="Remover">
+                        &times;
+                    </button>
                 `;
 
-                // Add hover effect for delete button
-                const btn = row.querySelector('button');
-                btn.onmouseover = () => btn.style.color = 'var(--danger-red)';
-                btn.onmouseout = () => btn.style.color = 'var(--text-muted)';
-
-                container.appendChild(row);
+                container.appendChild(card);
             });
             
             updateTickerTape();
