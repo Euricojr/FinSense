@@ -47,6 +47,10 @@ groq_client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 CACHE_HEATMAP = {}
 CACHE_DURATION = 60  # seconds
 
+# Cache for Market Ticker
+CACHE_TICKER = {}
+TICKER_CACHE_DURATION = 300 # 5 minutes
+
 ADVICE_CACHE = {}
 
 def clear_advice_cache(user_id):
@@ -886,6 +890,83 @@ def pegar_dados():
     except Exception as e:
         logger.error(f"Error in /api/dados: {e}")
         return jsonify({"erro": str(e)}), 500
+
+@app.route('/api/market-ticker')
+def market_ticker_data():
+    try:
+        now = time.time()
+        if 'data' in CACHE_TICKER and now - CACHE_TICKER['timestamp'] < TICKER_CACHE_DURATION:
+            return jsonify(CACHE_TICKER['data'])
+
+        # Expanded Lists
+        # 5 Indices
+        indices = ["^BVSP", "^IXIC", "^GSPC", "^DJI", "^FTSE"]
+        # 20 BR Stocks
+        br_stocks = [
+            "PETR4.SA", "VALE3.SA", "ITUB4.SA", "BBDC4.SA", "ABEV3.SA", 
+            "BBAS3.SA", "ITSA4.SA", "WEGE3.SA", "SANB11.SA", "MGLU3.SA",
+            "RENT3.SA", "SUZB3.SA", "GGBR4.SA", "JBSS3.SA", "EQTL3.SA",
+            "RADL3.SA", "VIVT3.SA", "LREN3.SA", "B3SA3.SA", "CIEL3.SA"
+        ]
+        # 20 US Stocks
+        us_stocks = [
+            "AAPL", "MSFT", "GOOGL", "AMZN", "NVDA", "TSLA", "META", "BRK-B", "UNH", "V",
+            "JNJ", "WMT", "JPM", "PG", "MA", "HD", "CVX", "LLY", "PFE", "ABBV"
+        ]
+        # 20 Crypto
+        cryptos = [
+            "BTC-USD", "ETH-USD", "SOL-USD", "BNB-USD", "XRP-USD", "ADA-USD", "DOGE-USD", "TRX-USD", "DOT-USD", "LINK-USD",
+            "MATIC-USD", "SHIB-USD", "LTC-USD", "DAI-USD", "BCH-USD", "UNI-USD", "AVAX-USD", "ATOM-USD", "XLM-USD", "ETC-USD"
+        ]
+        
+        majors = indices + br_stocks + us_stocks + cryptos
+        
+        # We download enough points for percentage change calculation
+        data = yf.download(majors, period="5d", progress=False, threads=True)
+        
+        if data.empty:
+            return jsonify([])
+
+        prices = data['Close']
+        result = []
+
+        for t in majors:
+            try:
+                if t not in prices.columns: continue
+                
+                series = prices[t].dropna()
+                if len(series) < 2: continue
+                
+                current = series.iloc[-1]
+                prev = series.iloc[-2]
+                change = ((current - prev) / prev) * 100
+                
+                # Detect region for currency
+                is_br = ".SA" in t or t == "^BVSP"
+                currency = "R$" if is_br else "$"
+                
+                # Human readable name
+                name = t.replace(".SA", "").replace("^", "")
+                if "-USD" in name: name = name.replace("-USD", "")
+                
+                result.append({
+                    "symbol": name,
+                    "price": f"{current:,.2f}" if current < 1000 else f"{current:,.0f}",
+                    "change": f"{change:+.2f}%",
+                    "positive": bool(change >= 0),
+                    "currency": currency
+                })
+            except Exception as e:
+                logger.error(f"Error processing ticker {t}: {e}")
+
+        CACHE_TICKER['data'] = result
+        CACHE_TICKER['timestamp'] = now
+        
+        return jsonify(result)
+
+    except Exception as e:
+        logger.error(f"Error in market-ticker: {e}")
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/api/heatmap')
 def heatmap_data():

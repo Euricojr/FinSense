@@ -373,8 +373,8 @@ nav a:hover {
   padding: 10px;
   gap: 10px;
   background-color: var(--bg-main);
-  height: calc(100vh - 50px);
-  /* Fill remaining height */
+  height: calc(100vh - 106px);
+  /* Header (50) + Ticker (36) + Ticker Margins (20) = 106px */
   width: 100%;
   max-width: 100%;
   /* Full width */
