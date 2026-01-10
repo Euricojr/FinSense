@@ -79,7 +79,13 @@ Módulo avançado para gestão de despesas pessoais.
 - **Dashboard de Despesas**: Acompanhe seus gastos por categoria e evolução mensal com gráficos dinâmicos.
 
 <p align="center">
-  <img src="static/assets/financas.png" alt="Gestão Financeira" width="95%" />
+  <img src="static/assets/financas_mentor.png" alt="Mentor FinSense" width="95%" style="margin-bottom: 15px;" />
+</p>
+<p align="center">
+  <img src="static/assets/financas_charts.png" alt="Gráficos Financeiros" width="95%" style="margin-bottom: 15px;" />
+</p>
+<p align="center">
+  <img src="static/assets/financas_entries.png" alt="Lançamentos e Saldo" width="95%" />
 </p>
 
 ### 5. Exportação de Relatórios (`PDF`) 🆕
@@ -120,10 +126,21 @@ Projeção estocástica de cenários futuros para sua carteira.
 
 ### 8. Otimização de Portfólio (`Otimização`) 🆕
 
-Ferramenta baseada na Teoria Moderna de Portfólio (Markowitz).
+Ferramenta baseada na Teoria Moderna de Portfólio (Markowitz) para encontrar a alocação ideal.
 
-- **Fronteira Eficiente**: Encontre a melhor relação risco x retorno.
-- **Pesos Ideais**: Sugestão de rebalanceamento para maximizar o Sharpe Ratio.
+- **Fronteira Eficiente**: Visualização clara da relação risco x retorno para milhares de combinações de ativos.
+- **Sharpe Ratio & Volatilidade**: Identificação automática da carteira de Sharpe Máximo e de Mínima Volatilidade.
+- **Sugestão de Rebalanceamento**: Pesos ideais calculados matematicamente para otimizar sua estratégia.
+
+<p align="center">
+  <img src="static/assets/otimizacao_setup.png" alt="Setup Otimização" width="95%" style="margin-bottom: 15px;" />
+</p>
+<p align="center">
+  <img src="static/assets/otimizacao_fronteira.png" alt="Fronteira Eficiente" width="95%" style="margin-bottom: 15px;" />
+</p>
+<p align="center">
+  <img src="static/assets/otimizacao_pesos.png" alt="Pesos Ideais" width="95%" />
+</p>
 
 ---
 
