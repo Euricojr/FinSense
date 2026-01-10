@@ -52,7 +52,7 @@ Visão geral do mercado financeiro em tempo real.
 Ferramenta para controle pessoal de investimentos.
 
 - **Registro**: Adicione suas compras de ativos com data e preço.
-- **Evolução Patrimonial**: Gráfico comparativo que mostra Valor Atual vs Total Investido vs Benchmark.
+- **Evolução Patrimonial**: Gráfico comparativo que mostra Valor Atual vs Total Investido vs Benchmark (IBOV, CDI, IPCA, etc.).
 - **Alocação**: Gráfico de pizza mostrando a divisão da carteira (Ações BR, EUA, Cripto).
 
 <p align="center">
@@ -71,15 +71,23 @@ Ferramenta avançada para entender a diversificação.
 
 ### 4. Controle Financeiro (`Finanças`) 🆕
 
-Módulo completo para gestão de despesas pessoais com auxílio de IA.
+Módulo avançado para gestão de despesas pessoais.
 
-- **Entrada Inteligente (IA)**: Adicione despesas usando linguagem natural (ex: "Gastei 50 reais no uber hoje").
-- **Dashboard de Despesas**: Acompanhe seus gastos por categoria e evolução mensal.
-- **Metas de Orçamento**: Defina e monitore limites de gastos.
+- **Entrada Inteligente (IA - Groq)**: Adicione despesas usando linguagem natural alimentada por LLama 3.1 (ex: "Gastei 50 reais no uber hoje").
+- **Mentor Estratégico**: IA que analisa seus gastos e fornece conselhos personalizados e acionáveis.
+- **Inteligência de Transição**: Sistema que carrega dados do mês anterior para manter o contexto financeiro e metas.
+- **Dashboard de Despesas**: Acompanhe seus gastos por categoria e evolução mensal com gráficos dinâmicos.
 
 <p align="center">
   <img src="static/assets/financas.png" alt="Gestão Financeira" width="95%" />
 </p>
+
+### 5. Exportação de Relatórios (`PDF`) 🆕
+
+Transforme seus dados em relatórios profissionais.
+
+- **PDF Inteligente**: Geração de relatórios com sumário executivo, insights do mentor e gráficos de performance.
+- **Preservação de Estilo**: O relatório mantém o visual dark/neon premium da plataforma.
 
 ### 5. Predição de Mercado (`Predição`) 🆕
 
@@ -110,7 +118,7 @@ Projeção estocástica de cenários futuros para sua carteira.
   <img src="static/assets/simulacao_chart.png" alt="Simulação Gráfico" width="95%" />
 </p>
 
-### 7. Otimização de Portfólio (`Otimização`) 🆕
+### 8. Otimização de Portfólio (`Otimização`) 🆕
 
 Ferramenta baseada na Teoria Moderna de Portfólio (Markowitz).
 
@@ -183,8 +191,9 @@ python app.py
 ### 🛠️ Tecnologias e Ferramentas
 
 - **Backend**: Python (Flask), YFinance, BCB.
-- **Data Science/AI**: Scikit-learn, Numpy, Pandas, Scipy.
-- **Frontend**: HTML5, CSS3, JavaScript (Plotly.js, Particles.js).
+- **AI / LLM**: Groq Cloud (LLama 3.1), Scikit-learn, Numpy, Pandas.
+- **Frontend**: HTML5, CSS3 (Modern/Responsive), JavaScript (Plotly.js, Particles.js).
+- **Exportação**: ReportLab / Html2Canvas para relatórios PDF.
 
 #### 🧩 Extensões Recomendadas (VS Code)
 
