@@ -804,79 +804,72 @@
         tendências futuras com base nos parâmetros selecionados.
       </p>
 
-      <!-- Educational Widget -->
-      <div class="edu-widget" id="predEduWidget" onclick="toggleEduWidget()">
-        <div class="edu-header">
-          <div class="edu-title">
-            <span data-i18n="edu_pred_title"
-              >Inteligência Algorítmica: Machine Learning</span
-            >
-          </div>
-          <div class="edu-toggle-icon">▼</div>
+
+      <!-- Educational Bento Component -->
+      <div class="bento-edu-container" id="predEduWidget">
+        <div class="bento-header" onclick="toggleEduWidget()">
+           <div class="header-title">
+             <span class="icon-chip">🧠</span>
+             <span data-i18n="edu_pred_title">Engenharia do Modelo Preditivo</span>
+           </div>
+           <div class="toggle-arrow">▼</div>
         </div>
-        <div class="edu-content" id="predEduContent">
-          <div class="edu-inner">
-            <div class="edu-topic">
-              <h4 data-i18n="edu_pred_engine_title">O Motor</h4>
-              <p data-i18n="edu_pred_engine_desc">
-                Usamos uma "Floresta Aleatória" de 100 árvores de decisão que
-                votam entre si para reduzir erros e evitar overfitting.
-              </p>
+        <div class="bento-content" id="predEduContent">
+            <div class="bento-grid-inner">
+                <!-- Card 1: Algo -->
+                <div class="bento-mini-card">
+                    <div class="mini-icon">⚙️</div>
+                    <div class="mini-content">
+                        <h5 data-i18n="edu_pred_engine_title">O Algoritmo</h5>
+                        <p data-i18n="edu_pred_engine_desc">O Random Forest combina os resultados de 100 árvores de decisão para minimizar a variância e evitar o overfitting (superajuste).</p>
+                    </div>
+                </div>
+                <!-- Card 2: Features -->
+                <div class="bento-mini-card">
+                    <div class="mini-icon">🧪</div>
+                    <div class="mini-content">
+                        <h5 data-i18n="edu_pred_features_title">Feature Engineering</h5>
+                        <p data-i18n="edu_pred_features_desc">O regressor processa vetores de Tendência (MM), Momentum (RSI) e Volatilidade Histórica para identificar padrões não-lineares.</p>
+                    </div>
+                </div>
+                <!-- Card 3: Supervised -->
+                <div class="bento-mini-card">
+                    <div class="mini-icon">🏋️</div>
+                    <div class="mini-content">
+                        <h5 data-i18n="edu_pred_train_title">Aprendizado Supervisionado</h5>
+                        <p data-i18n="edu_pred_train_desc">Utilizamos dados históricos rotulados para treino e validamos a generalização em um conjunto de teste (Backtesting) via R² Score.</p>
+                    </div>
+                </div>
+                <!-- Card 4: Recursive -->
+                <div class="bento-mini-card">
+                    <div class="mini-icon">❄️</div>
+                    <div class="mini-content">
+                        <h5 data-i18n="edu_pred_snowball_title">Recursividade Univariada</h5>
+                        <p data-i18n="edu_pred_snowball_desc">A projeção de múltiplos passos é gerada retroalimentando as previsões de curto prazo como inputs para os dias subsequentes.</p>
+                    </div>
+                </div>
+                <!-- Card 5: Uncertainty -->
+                <div class="bento-mini-card full-width">
+                     <div class="mini-icon">🎯</div>
+                     <div class="mini-content">
+                        <h5 data-i18n="edu_pred_funnel_title">Intervalo de Confiança</h5>
+                        <p data-i18n="edu_pred_funnel_desc">A área sombreada representa a incerteza estatística (95%), calculada a partir da distribuição dos resíduos (erros) do modelo.</p>
+                     </div>
+                </div>
             </div>
-            <div class="edu-topic">
-              <h4 data-i18n="edu_pred_features_title">Os Ingredientes</h4>
-              <p data-i18n="edu_pred_features_desc">
-                A IA analisa Tendência (Médias Móveis), Força (RSI),
-                Volatilidade e Retornos Passados.
-              </p>
-            </div>
-            <div class="edu-topic">
-              <h4 data-i18n="edu_pred_train_title">O Treinamento</h4>
-              <p data-i18n="edu_pred_train_desc">
-                O sistema estuda 2 anos de dados e se avalia em um teste de 20%
-                antes de mostrar a precisão.
-              </p>
-            </div>
-            <div class="edu-topic">
-              <h4 data-i18n="edu_pred_snowball_title">O Efeito Neve</h4>
-              <p data-i18n="edu_pred_snowball_desc">
-                Para prever 7 dias, a IA prevê o amanhã e usa essa previsão para
-                prever o dia seguinte recursivamente.
-              </p>
-            </div>
-            <div class="edu-topic" style="grid-column: 1 / -1">
-              <h4 data-i18n="edu_pred_funnel_title">O Funil</h4>
-              <p data-i18n="edu_pred_funnel_desc">
-                A faixa azul é a incerteza (95%). Quanto mais longe o dia, maior
-                o funil.
-              </p>
-            </div>
-          </div>
         </div>
       </div>
 
-      <div class="control-panel">
+      <!-- Control Panel (Glass) -->
+      <div class="control-panel-glass">
         <div class="input-group" style="flex: 2">
-          <label
-            data-i18n="pred_assets_label"
-            style="
-              text-transform: uppercase;
-              font-size: 12px;
-              color: var(--text-muted);
-              font-weight: 600;
-            "
-            >Ativos (Tags)</label
-          >
-          <div
-            class="tags-input-container"
-            onclick="document.getElementById('tickerInput').focus()"
-          >
+          <label style="color: var(--pred-cyan); font-weight: 700; letter-spacing: 1px;" data-i18n="pred_assets_label">ATIVOS</label>
+          <div class="tags-input-container" onclick="document.getElementById('tickerInput').focus()">
             <div id="tickerTags"></div>
             <input
               type="text"
               id="tickerInput"
-              placeholder="Ex: BTC-USD, PETR4.SA (Enter)"
-              data-i18n="pred_placeholder"
+              placeholder="BTC-USD, PETR4.SA"
               autocomplete="off"
             />
           </div>
@@ -884,45 +877,17 @@
         </div>
 
         <div class="input-group">
-          <label
-            data-i18n="pred_train_label"
-            style="
-              text-transform: uppercase;
-              font-size: 12px;
-              color: var(--text-muted);
-              font-weight: 600;
-            "
-            >Treino (Anos)</label
-          >
-          <select
-            id="trainPeriod"
-            style="
-              padding: 12px;
-              border-radius: 6px;
-              border: 1px solid var(--border-color);
-              background: var(--bg-main);
-              color: var(--text-main);
-            "
-          >
-            <option value="2">
-              2 <span data-i18n="pred_year_suffix">Anos</span>
-            </option>
-            <option value="3">
-              3 <span data-i18n="pred_year_suffix">Anos</span>
-            </option>
-            <option value="4">
-              4 <span data-i18n="pred_year_suffix">Anos</span>
-            </option>
-            <option value="5">
-              5 <span data-i18n="pred_year_suffix">Anos</span>
-            </option>
+          <label style="color: var(--pred-cyan); font-weight: 700; letter-spacing: 1px;" data-i18n="pred_train_label">TREINO</label>
+          <select id="trainPeriod">
+            <option value="2">2 Anos</option>
+            <option value="3">3 Anos</option>
+            <option value="4">4 Anos</option>
+            <option value="5">5 Anos</option>
           </select>
         </div>
 
         <div class="input-group">
-          <label data-i18n="pred_horizon_label"
-            >Horizonte: <span id="horizonValue">7</span> Dias</label
-          >
+          <label style="color: var(--pred-cyan); font-weight: 700; letter-spacing: 1px;" data-i18n="pred_horizon_label">HORIZONTE: <span id="horizonValue" style="color: white;">7</span> Dias</label>
           <input
             type="range"
             id="forecastHorizon"
@@ -933,58 +898,292 @@
           />
         </div>
 
-        <button
-          class="btn-predict"
-          onclick="runPrediction()"
-          data-i18n="pred_btn_analyze"
-        >
-          Gerar Análise
+        <button class="btn-predict-neon" onclick="runPrediction()">
+          <span data-i18n="pred_btn_analyze">GERAR ANÁLISE</span>
         </button>
       </div>
 
       <div class="result-tabs" id="resultTabs"></div>
 
-      <div class="insights-container">
+      <!-- Metrics (Bento Row) -->
+      <div class="metrics-bento-row">
         <!-- Tendência -->
-        <div class="insight-card">
-          <div class="insight-content">
-            <h4 data-i18n="pred_trend">Tendência (7 Dias)</h4>
-            <div class="value" id="val-trend">---</div>
+        <div class="metric-bento-card">
+          <div class="metric-icon">📈</div>
+          <div class="metric-content">
+             <h4 data-i18n="pred_trend">TENDÊNCIA</h4>
+             <div class="value-glow" id="val-trend">---</div>
           </div>
         </div>
         <!-- Score -->
-        <div class="insight-card">
-          <div class="insight-content">
-            <h4 data-i18n="pred_accuracy">Precisão do Modelo</h4>
-            <div class="value" id="val-score">---</div>
+        <div class="metric-bento-card">
+          <div class="metric-icon">🛡️</div>
+          <div class="metric-content">
+             <h4 data-i18n="pred_accuracy">PRECISÃO</h4>
+             <div class="value-glow neon-blue" id="val-score" style="color: var(--pred-cyan); text-shadow: 0 0 10px var(--pred-cyan);">---</div>
           </div>
         </div>
         <!-- Volatilidade -->
-        <div class="insight-card">
-          <div class="insight-content">
-            <h4 data-i18n="pred_volatility">Volatilidade Recente</h4>
-            <div class="value" id="val-vol">---</div>
+        <div class="metric-bento-card">
+          <div class="metric-icon">⚡</div>
+          <div class="metric-content">
+             <h4 data-i18n="pred_volatility">VOLATILIDADE</h4>
+             <div class="value-glow" id="val-vol">---</div>
           </div>
         </div>
       </div>
 
-      <div class="chart-container">
+      <!-- Chart (Glass Container) -->
+      <div class="chart-glass-container">
+        <div class="chart-header-clean">
+            <h3>Previsão: <span id="chartTickerTitle" style="color: var(--pred-cyan);">---</span></h3>
+        </div>
         <div class="loading-overlay" id="loader">
           <div class="spinner"></div>
-          <div>Treinando Modelo & Projetando...</div>
+          <div>Processando Dados...</div>
         </div>
         <div id="chartDiv" style="width: 100%; height: 100%"></div>
       </div>
 
-      <div style="margin-top: 20px; font-size: 12px; color: var(--text-muted)">
+      <div style="margin-top: 20px; font-size: 12px; color: var(--text-muted); opacity: 0.7;">
         <div data-i18n="pred_footer_1">
-          * O modelo utiliza Random Forest Regressor treinado com indicadores
-          técnicos (SMA, RSI, Volatilidade).
-        </div>
-        <div data-i18n="pred_footer_2">
-          * A área sombreada representa o intervalo de incerteza (95%).
+          * O modelo utiliza Random Forest Regressor treinado com indicadores técnicos (SMA, RSI, Volatilidade).
         </div>
       </div>
+    </div>
+
+    <!-- Page Specific Styles -->
+    <style>
+        :root {
+            --pred-bg-dark: #0a192f;
+            --pred-card-bg: rgba(16, 24, 41, 0.6); /* Glass */
+            --pred-border: rgba(0, 212, 255, 0.2);
+            --pred-cyan: #00d4ff;
+            --pred-cyan-glow: rgba(0, 212, 255, 0.4);
+            --glass-blur: blur(12px);
+        }
+
+        /* Bento Educational Widget */
+        .bento-edu-container {
+            background: var(--pred-card-bg);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--pred-border);
+            border-radius: 20px;
+            overflow: hidden;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .bento-header {
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            background: linear-gradient(90deg, rgba(0, 212, 255, 0.05), transparent);
+            border-bottom: 1px solid transparent;
+        }
+        .bento-edu-container.expanded .bento-header {
+            border-bottom: 1px solid var(--pred-border);
+        }
+        
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: var(--pred-cyan);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .toggle-arrow {
+            color: var(--pred-cyan);
+            transition: transform 0.3s;
+        }
+        .bento-edu-container.expanded .toggle-arrow {
+            transform: rotate(180deg);
+        }
+
+        .bento-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out;
+        }
+        
+        .bento-grid-inner {
+            padding: 25px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .bento-mini-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(0, 212, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        .bento-mini-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--pred-cyan);
+        }
+        .bento-mini-card.full-width {
+            grid-column: 1 / -1;
+            flex-direction: row;
+            align-items: center;
+        }
+        
+        .mini-icon {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        .bento-mini-card.full-width .mini-icon { margin-bottom: 0; margin-right: 15px; }
+        
+        .bento-mini-card h5 {
+            color: white;
+            font-size: 14px;
+            margin: 0;
+            font-weight: 600;
+        }
+        .bento-mini-card p {
+            color: #94a3b8;
+            font-size: 12px;
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        /* Control Panel Glass */
+        .control-panel-glass {
+            background: var(--pred-card-bg);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--pred-border);
+            border-radius: 20px;
+            padding: 30px;
+            display: flex;
+            align-items: flex-end;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.05);
+        }
+        
+        button.btn-predict-neon {
+            background: linear-gradient(135deg, #00d4ff 0%, #007bff 100%);
+            border: none;
+            color: white;
+            padding: 0 30px;
+            height: 50px;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            flex: 1;
+            min-width: 150px;
+            transition: all 0.2s;
+        }
+        button.btn-predict-neon:hover {
+            box-shadow: 0 0 25px rgba(0, 212, 255, 0.5);
+            transform: scale(1.02);
+        }
+
+        /* Metrics Bento Row */
+        .metrics-bento-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .metric-bento-card {
+            background: var(--pred-card-bg);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--pred-border);
+            border-radius: 16px;
+            padding: 25px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        /* Glow Effect on Hover */
+        .metric-bento-card:hover {
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.15);
+            border-color: var(--pred-cyan);
+        }
+        
+        .metric-icon {
+            font-size: 32px;
+            background: rgba(0, 212, 255, 0.1);
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+        }
+        
+        .metric-content h4 {
+            color: #94a3b8;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 5px;
+        }
+        .value-glow {
+            font-size: 28px;
+            font-weight: 700;
+            color: white;
+        }
+
+        /* Chart Glass Container */
+        .chart-glass-container {
+            background: var(--pred-card-bg);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--pred-border);
+            border-radius: 20px;
+            padding: 25px;
+            height: 550px;
+            position: relative;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+        
+        .chart-header-clean {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            z-index: 10;
+            pointer-events: none;
+        }
+        .chart-header-clean h3 {
+            font-size: 18px;
+            font-weight: 400;
+            color: #cbd5e1;
+            margin: 0;
+        }
+
+        @media (max-width: 768px) {
+            .metrics-bento-row, .control-panel-glass {
+                grid-template-columns: 1fr;
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .bento-mini-card.full-width { flex-direction: column; text-align: left; align-items: flex-start; }
+            .bento-mini-card.full-width .mini-icon { margin-bottom: 10px; }
+        }
+    </style>
+
     </div>
 
     <script>
@@ -1255,8 +1454,9 @@
         renderChart(data);
       }
 
+
       function renderChart(data) {
-        // ... (Same Chart Logic as before) ...
+        // ...
         const isDark =
           document.documentElement.getAttribute("data-theme") === "dark";
         const colorText = isDark ? "#e6f1ff" : "#1a1a1a";
@@ -1264,26 +1464,21 @@
         const lang = window.currentLang || "pt";
         const t = translations[lang]; // Shortcut
 
-        // 1. History (Solid)
+        // Update Chart Title HTML
+        const titleEl = document.getElementById("chartTickerTitle");
+        if(titleEl) titleEl.innerText = data.ticker;
+
+        // 1. History (Solid Blue)
         const traceHistory = {
           x: data.dates_history,
           y: data.prices_history,
           type: "scatter",
           mode: "lines",
           name: t.pred_chart_history,
-          line: { color: "#007bff", width: 2 },
+          line: { color: "#3b82f6", width: 2.5 },
         };
 
-        // 2. Prediction (Dashed Neon)
-        const connectX = [
-          data.dates_history[data.dates_history.length - 1],
-          data.dates_future[0],
-        ];
-        const connectY = [
-          data.prices_history[data.prices_history.length - 1],
-          data.prices_predicted[0],
-        ];
-
+        // 2. Prediction Region
         const fullPredX = [
           data.dates_history[data.dates_history.length - 1],
           ...data.dates_future,
@@ -1293,7 +1488,7 @@
           ...data.prices_predicted,
         ];
 
-        // 3. Upper/Lower Bounds
+        // 3. Upper/Lower Bounds (Cyan Tint)
         const lastPrice = data.prices_history[data.prices_history.length - 1];
         const upperY = [lastPrice, ...data.upper_bound];
         const lowerY = [lastPrice, ...data.lower_bound];
@@ -1312,7 +1507,7 @@
           y: upperY,
           fill: "tonexty",
           fillcolor: isDark
-            ? "rgba(51, 153, 255, 0.1)"
+            ? "rgba(0, 212, 255, 0.15)"
             : "rgba(0, 123, 255, 0.2)",
           mode: "lines",
           line: { width: 0 },
@@ -1320,6 +1515,7 @@
           hoverinfo: "skip",
         };
 
+        // Prediction Line (Cyan Neon Dot)
         const tracePred = {
           x: fullPredX,
           y: fullPredY,
@@ -1327,14 +1523,14 @@
           mode: "lines+markers",
           name: t.pred_chart_pred,
           line: {
-            color: isDark ? "#3399ff" : "#007bff",
+            color: "#00d4ff", /* Cyan */
             width: 3,
             dash: "dot",
           },
-          marker: { size: 6 },
+          marker: { size: 6, color: "#00d4ff", symbol: "circle-open-dot" },
         };
 
-        // Neon Glow Effect (Duplicate Trace)
+        // Neon Glow Effect (Duplicate Trace for Bloom)
         const traceGlow = {
           x: fullPredX,
           y: fullPredY,
@@ -1343,18 +1539,14 @@
           showlegend: false,
           hoverinfo: "skip",
           line: {
-            color: isDark
-              ? "rgba(51, 153, 255, 0.3)"
-              : "rgba(0, 123, 255, 0.4)",
-            width: 15,
+            color: "rgba(0, 212, 255, 0.4)",
+            width: 12,
           },
         };
 
         const layout = {
-          title: {
-            text: `${t.pred_chart_title}: ${data.ticker}`,
-            font: { color: colorText, size: 18 },
-          },
+          // Remove built-in title to use the HTML one
+          title: false,
           paper_bgcolor: "transparent",
           plot_bgcolor: "transparent",
           xaxis: {
@@ -1368,8 +1560,15 @@
             title: t.pred_chart_yaxis,
           },
           showlegend: true,
-          legend: { font: { color: colorText }, orientation: "h", y: -0.2 },
-          margin: { t: 40, r: 20, l: 40, b: 40 },
+          legend: { 
+              font: { color: colorText }, 
+              orientation: "h", 
+              y: 1.05, 
+              x: 0, 
+              xanchor: 'left',
+              bgcolor: 'rgba(0,0,0,0)'
+          },
+          margin: { t: 20, r: 20, l: 40, b: 40 },
         };
 
         const config = { responsive: true, displayModeBar: false };
