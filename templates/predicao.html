@@ -809,7 +809,6 @@
       <div class="bento-edu-container" id="predEduWidget">
         <div class="bento-header" onclick="toggleEduWidget()">
            <div class="header-title">
-             <span class="icon-chip">🧠</span>
              <span data-i18n="edu_pred_title">Engenharia do Modelo Preditivo</span>
            </div>
            <div class="toggle-arrow">▼</div>
@@ -818,7 +817,6 @@
             <div class="bento-grid-inner">
                 <!-- Card 1: Algo -->
                 <div class="bento-mini-card">
-                    <div class="mini-icon">⚙️</div>
                     <div class="mini-content">
                         <h5 data-i18n="edu_pred_engine_title">O Algoritmo</h5>
                         <p data-i18n="edu_pred_engine_desc">O Random Forest combina os resultados de 100 árvores de decisão para minimizar a variância e evitar o overfitting (superajuste).</p>
@@ -826,7 +824,6 @@
                 </div>
                 <!-- Card 2: Features -->
                 <div class="bento-mini-card">
-                    <div class="mini-icon">🧪</div>
                     <div class="mini-content">
                         <h5 data-i18n="edu_pred_features_title">Feature Engineering</h5>
                         <p data-i18n="edu_pred_features_desc">O regressor processa vetores de Tendência (MM), Momentum (RSI) e Volatilidade Histórica para identificar padrões não-lineares.</p>
@@ -834,7 +831,6 @@
                 </div>
                 <!-- Card 3: Supervised -->
                 <div class="bento-mini-card">
-                    <div class="mini-icon">🏋️</div>
                     <div class="mini-content">
                         <h5 data-i18n="edu_pred_train_title">Aprendizado Supervisionado</h5>
                         <p data-i18n="edu_pred_train_desc">Utilizamos dados históricos rotulados para treino e validamos a generalização em um conjunto de teste (Backtesting) via R² Score.</p>
@@ -842,7 +838,6 @@
                 </div>
                 <!-- Card 4: Recursive -->
                 <div class="bento-mini-card">
-                    <div class="mini-icon">❄️</div>
                     <div class="mini-content">
                         <h5 data-i18n="edu_pred_snowball_title">Recursividade Univariada</h5>
                         <p data-i18n="edu_pred_snowball_desc">A projeção de múltiplos passos é gerada retroalimentando as previsões de curto prazo como inputs para os dias subsequentes.</p>
@@ -850,7 +845,6 @@
                 </div>
                 <!-- Card 5: Uncertainty -->
                 <div class="bento-mini-card full-width">
-                     <div class="mini-icon">🎯</div>
                      <div class="mini-content">
                         <h5 data-i18n="edu_pred_funnel_title">Intervalo de Confiança</h5>
                         <p data-i18n="edu_pred_funnel_desc">A área sombreada representa a incerteza estatística (95%), calculada a partir da distribuição dos resíduos (erros) do modelo.</p>
@@ -909,7 +903,6 @@
       <div class="metrics-bento-row">
         <!-- Tendência -->
         <div class="metric-bento-card">
-          <div class="metric-icon">📈</div>
           <div class="metric-content">
              <h4 data-i18n="pred_trend">TENDÊNCIA</h4>
              <div class="value-glow" id="val-trend">---</div>
@@ -917,7 +910,6 @@
         </div>
         <!-- Score -->
         <div class="metric-bento-card">
-          <div class="metric-icon">🛡️</div>
           <div class="metric-content">
              <h4 data-i18n="pred_accuracy">PRECISÃO</h4>
              <div class="value-glow neon-blue" id="val-score" style="color: var(--pred-cyan); text-shadow: 0 0 10px var(--pred-cyan);">---</div>
@@ -925,7 +917,6 @@
         </div>
         <!-- Volatilidade -->
         <div class="metric-bento-card">
-          <div class="metric-icon">⚡</div>
           <div class="metric-content">
              <h4 data-i18n="pred_volatility">VOLATILIDADE</h4>
              <div class="value-glow" id="val-vol">---</div>
@@ -1015,8 +1006,21 @@
         .bento-grid-inner {
             padding: 25px;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            /* Explicit 4 columns for desktop to ensure top row fills perfectly */
+            grid-template-columns: repeat(4, 1fr);
             gap: 20px;
+        }
+
+        /* Responsive Breakpoints for Bento Grid */
+        @media (max-width: 1200px) {
+            .bento-grid-inner {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (max-width: 650px) {
+            .bento-grid-inner {
+                grid-template-columns: 1fr;
+            }
         }
         
         .bento-mini-card {
@@ -1040,10 +1044,8 @@
         }
         
         .mini-icon {
-            font-size: 24px;
-            margin-bottom: 5px;
+            display: none;
         }
-        .bento-mini-card.full-width .mini-icon { margin-bottom: 0; margin-right: 15px; }
         
         .bento-mini-card h5 {
             color: white;
@@ -1053,9 +1055,10 @@
         }
         .bento-mini-card p {
             color: #94a3b8;
-            font-size: 12px;
+            font-size: 13px; /* Slightly larger for readability */
             margin: 0;
-            line-height: 1.4;
+            line-height: 1.5;
+            text-align: justify; /* Justify text */
         }
 
         /* Control Panel Glass */
@@ -1125,14 +1128,7 @@
         }
         
         .metric-icon {
-            font-size: 32px;
-            background: rgba(0, 212, 255, 0.1);
-            width: 60px;
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 12px;
+            display: none;
         }
         
         .metric-content h4 {
