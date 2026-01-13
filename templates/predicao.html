@@ -1071,6 +1071,9 @@
             flex-wrap: wrap;
             margin-bottom: 30px;
             box-shadow: 0 4px 20px rgba(0, 212, 255, 0.05);
+            /* Fix Stacking Context for Dropdown */
+            position: relative;
+            z-index: 20;
         }
         
         button.btn-predict-neon {
@@ -1173,6 +1176,7 @@
             margin: 0;
         }
 
+
         @media (max-width: 768px) {
             .metrics-bento-row, .control-panel-glass {
                 grid-template-columns: 1fr;
@@ -1182,6 +1186,147 @@
             .bento-mini-card.full-width { flex-direction: column; text-align: left; align-items: flex-start; }
             .bento-mini-card.full-width .mini-icon { margin-bottom: 10px; }
         }
+
+        /* Upgrade Inputs: Select & Tags */
+        select#trainPeriod {
+             appearance: none;
+             background-color: rgba(255, 255, 255, 0.05); /* Glass tint */
+             background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2300d4ff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+             background-repeat: no-repeat;
+             background-position: right 15px center;
+             background-size: 16px;
+             border: 1px solid var(--pred-cyan);
+             color: white;
+             font-weight: 500;
+             padding: 0 45px 0 20px;
+             border-radius: 12px;
+             height: 50px;
+             cursor: pointer;
+             backdrop-filter: blur(10px);
+             transition: all 0.3s ease;
+             width: 100%;
+        }
+        select#trainPeriod:focus {
+             box-shadow: 0 0 15px var(--pred-cyan-glow);
+             outline: none;
+        }
+        /* Fix option color in dark mode */
+        select#trainPeriod option {
+            background-color: #0a192f;
+            color: white;
+        }
+
+        .tags-input-container {
+             background: rgba(255, 255, 255, 0.05);
+             backdrop-filter: blur(10px);
+             border: 1px solid rgba(148, 163, 184, 0.2);
+             border-radius: 12px;
+             padding: 5px 10px;
+             min-height: 50px;
+             display: flex;
+             align-items: center;
+             flex-wrap: wrap;
+             gap: 8px;
+             transition: all 0.3s;
+             cursor: text;
+        }
+        .tags-input-container:focus-within {
+             border-color: var(--pred-cyan);
+             box-shadow: 0 0 15px var(--pred-cyan-glow);
+        }
+
+        .tag {
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            color: var(--pred-cyan);
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: 500;
+        }
+        .tag span {
+            cursor: pointer;
+            font-size: 14px;
+            opacity: 0.7;
+        }
+        .tag span:hover { opacity: 1; }
+
+        #tickerInput {
+            background: transparent;
+            border: none;
+            color: white;
+            outline: none;
+            font-size: 14px;
+            flex: 1;
+            min-width: 120px;
+            padding: 5px 0;
+            font-weight: 500;
+        }
+
+
+      /* Improved Autocomplete Dropdown */
+      #suggestions {
+          position: absolute;
+          top: 100%;
+          left: 0;
+          width: 100%;
+          background: #0a192f; /* Solid Dark Background */
+          border: 1px solid var(--pred-cyan);
+          border-top: none;
+          max-height: 200px;
+          overflow-y: auto;
+          display: none; /* Hidden by default */
+          z-index: 1000;
+          border-bottom-left-radius: 12px;
+          border-bottom-right-radius: 12px;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+          margin-top: 5px; /* Slight gap */
+          padding: 5px 0;
+          animation: slideDown 0.2s ease-out;
+      }
+
+      /* Custom Scrollbar for Dropdown */
+      #suggestions::-webkit-scrollbar {
+          width: 6px;
+      }
+      #suggestions::-webkit-scrollbar-thumb {
+          background: rgba(0, 229, 255, 0.3);
+          border-radius: 3px;
+      }
+
+      #suggestions li {
+          padding: 12px 20px;
+          cursor: pointer;
+          color: #e2e8f0;
+          font-size: 14px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+          transition: background 0.2s;
+      }
+
+      #suggestions li:last-child {
+          border-bottom: none;
+      }
+
+      #suggestions li:hover {
+          background: rgba(0, 229, 255, 0.15); /* Cyan Hover */
+          color: white;
+      }
+
+      #suggestions li strong {
+          color: var(--pred-cyan);
+          font-weight: 700;
+      }
+
+      @keyframes slideDown {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
+      }
     </style>
 
     </div>
