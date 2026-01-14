@@ -25,7 +25,7 @@
             --neon-cyan: #00d4ff;
             --neon-cyan-glow: rgba(0, 212, 255, 0.3);
             --glass-bg: rgba(16, 24, 41, 0.8);
-            --glass-border: 1px solid var(--neon-cyan);
+            --glass-border: 1px solid rgba(0, 212, 255, 0.2); /* Matching Predicao subtle border */
             --glass-blur: blur(8px);
         }
 
@@ -197,14 +197,21 @@
         h1 { font-size: 28px; margin-bottom: 30px; font-weight: 700; }
 
         .control-panel {
-            background-color: var(--glass-bg); /* UPDATED: Glass Background */
-            border: var(--glass-border);       /* UPDATED: Neon Border */
-            box-shadow: 0 0 12px var(--neon-cyan-glow); /* UPDATED: Glow */
-            backdrop-filter: var(--glass-blur); /* UPDATED: Blur */
+            background-color: var(--glass-bg);
+            border: var(--glass-border);
+            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.05); /* Subtle shadow like Predicao */
+            backdrop-filter: var(--glass-blur);
             border-radius: 12px;
             padding: 24px;
             margin-bottom: 30px;
             display: grid;
+            transition: all 0.3s ease;
+        }
+        .control-panel:hover {
+            border-color: var(--neon-cyan); /* Brighter on hover */
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.15);
+        }
+        .control-panel {
             grid-template-columns: 1fr 1fr auto;
             gap: 30px;
             align-items: end;
@@ -221,13 +228,17 @@
         .input-group label { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
         
         input[type="text"] {
-            background: var(--glass-bg);      /* UPDATED */
-            border: var(--glass-border);      /* UPDATED */
-            color: white;                     /* UPDATED: Contrast */
+            background: var(--glass-bg);
+            border: var(--glass-border);
+            color: white;
             padding: 12px;
             border-radius: 6px;
             font-family: inherit;
-            box-shadow: 0 0 8px var(--neon-cyan-glow); /* UPDATED */
+            transition: all 0.2s;
+        }
+        input[type="text"]:focus {
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 8px var(--neon-cyan-glow);
         }
         
         /* Range Sliders */
@@ -311,14 +322,19 @@
 
         /* --- Chart --- */
         .chart-container {
-            background-color: var(--glass-bg); /* UPDATED */
-            border: var(--glass-border);       /* UPDATED */
+            background-color: var(--glass-bg);
+            border: var(--glass-border);
             border-radius: 12px;
             padding: 20px;
             height: 500px;
             position: relative;
-            box-shadow: 0 0 15px var(--neon-cyan-glow); /* UPDATED */
+            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.05); /* Subtle default */
             backdrop-filter: var(--glass-blur);
+            transition: all 0.3s ease;
+        }
+        .chart-container:hover {
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 15px var(--neon-cyan-glow);
         }
 
         .loading-overlay {
@@ -427,14 +443,14 @@
             flex-wrap: wrap; 
             align-items: center;
             gap: 6px;
-            background: var(--glass-bg); /* UPDATED */
-            border: var(--glass-border); /* UPDATED */
+            background: var(--glass-bg);
+            border: var(--glass-border);
             padding: 6px 10px; 
             border-radius: 8px;
             min-height: 48px;
             cursor: text;
             transition: border-color 0.2s, box-shadow 0.2s;
-            box-shadow: 0 0 8px var(--neon-cyan-glow);
+            /* Removed static glow */
         }
         .tags-input-container:focus-within {
             border-color: var(--accent-primary);
@@ -671,11 +687,11 @@
             .bento-grid-inner { grid-template-columns: 1fr; }
         }
 
-        /* --- Educational Bento Component (From Predicao.html) --- */
+        /* --- Educational Bento Component (Matched to Predicao.html) --- */
         .bento-edu-container {
-            background: var(--glass-bg);
-            backdrop-filter: var(--glass-blur);
-            border: 1px solid var(--glass-border);
+            background: rgba(16, 24, 41, 0.6); /* Match pred-card-bg */
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 212, 255, 0.2); /* Match pred-border */
             border-radius: 20px;
             overflow: hidden;
             margin-bottom: 30px;
@@ -693,7 +709,7 @@
             border-bottom: 1px solid transparent;
         }
         .bento-edu-container.expanded .bento-header {
-            border-bottom: 1px solid var(--glass-border);
+            border-bottom: 1px solid rgba(0, 212, 255, 0.2);
         }
         
         .header-title {
