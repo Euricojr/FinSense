@@ -261,6 +261,7 @@
         overflow: hidden;
         transition: max-height 0.5s ease-in-out;
       }
+      .bento-edu-container.expanded .bento-content { max-height: 500px; }
       .bento-grid-inner {
         padding: 25px;
         display: grid;
@@ -474,17 +475,12 @@
 
       /* --- Charts & Results --- */
       .charts-grid {
-        display: grid;
-        grid-template-columns: 2fr 1fr;
-        gap: 30px;
-        margin-bottom: 30px;
+        display: grid; grid-template-columns: 2fr 1fr;
+        gap: 30px; margin-bottom: 30px;
+        align-items: start;
       }
-      @media (max-width: 1024px) {
-        .charts-grid {
-          grid-template-columns: 1fr;
-        }
-      }
-
+      @media (max-width: 768px) { .charts-grid { grid-template-columns: 1fr; } }
+      
       .chart-glass-container {
         background: var(--opt-card-bg);
         backdrop-filter: var(--glass-blur);
