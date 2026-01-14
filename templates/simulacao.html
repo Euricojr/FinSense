@@ -53,6 +53,19 @@
             transition: background-color 0.3s, color 0.3s;
         }
 
+        /* Global Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            background: #0a192f;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--neon-cyan);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
         /* --- Global Bento-Glass Utilities --- */
         .glass-panel {
             background: var(--glass-bg);
@@ -349,20 +362,7 @@
             transform: translateY(-3px);
             box-shadow: 0 0 20px var(--neon-cyan-glow);
         }
-        .bento-card h4 {
-            color: white;
-            font-size: 16px;
-            margin-bottom: 10px;
-            border-bottom: 1px solid rgba(0, 212, 255, 0.3);
-            padding-bottom: 8px;
-            font-weight: 700;
-        }
-        .bento-card p {
-            font-size: 14px;
-            color: #d1d5db; /* Light gray text */
-            line-height: 1.6;
-            text-align: justify;
-        }
+        /* Bento Grid styles replaced by bento-edu-container above */
         /* Search Suggestions */
         .input-group { position: relative; } /* Ensure absolute positioning works relative to this */
         
@@ -382,6 +382,19 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             margin-top: 5px;
             backdrop-filter: blur(10px);
+        }
+
+        /* Scrollbar Customization */
+        #suggestions::-webkit-scrollbar {
+            width: 6px;
+            background: transparent; /* Remove white background */
+        }
+        #suggestions::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.1);
+        }
+        #suggestions::-webkit-scrollbar-thumb {
+            background: var(--neon-cyan);
+            border-radius: 3px;
         }
         
         #suggestions li {
@@ -650,6 +663,97 @@
             .metric-value { font-size: 20px; }
             table.sim-results th, table.sim-results td { padding: 8px 5px; font-size: 12px; white-space: nowrap; }
             .btn-sm-view { padding: 4px 6px; font-size: 11px; }
+            
+            /* Mobile Bento Fix */
+            .bento-grid-inner { grid-template-columns: 1fr; }
+        }
+
+        /* --- Educational Bento Component (From Predicao.html) --- */
+        .bento-edu-container {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            overflow: hidden;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .bento-header {
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            background: linear-gradient(90deg, rgba(0, 212, 255, 0.05), transparent);
+            border-bottom: 1px solid transparent;
+        }
+        .bento-edu-container.expanded .bento-header {
+            border-bottom: 1px solid var(--glass-border);
+        }
+        
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: var(--neon-cyan);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .toggle-arrow {
+            color: var(--neon-cyan);
+            transition: transform 0.3s;
+        }
+        .bento-edu-container.expanded .toggle-arrow {
+            transform: rotate(180deg);
+        }
+
+        .bento-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out;
+        }
+        
+        .bento-grid-inner {
+            padding: 25px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* 3 Columns for Sim cards */
+            gap: 20px;
+        }
+
+        .bento-mini-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(0, 212, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        .bento-mini-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--neon-cyan);
+        }
+        
+        .bento-mini-card h5 {
+            color: white;
+            font-size: 14px;
+            margin: 0;
+            font-weight: 600;
+        }
+        .bento-mini-card p {
+            color: #94a3b8;
+            font-size: 13px;
+            margin: 0;
+            line-height: 1.5;
+            text-align: justify;
+        }
+        @media (max-width: 900px) {
+            .bento-grid-inner { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -702,23 +806,40 @@
     <div class="container">
         <h1 data-i18n="sim_title">Simulação de Monte Carlo</h1>
 
-        <!-- Bento Cards Section (formerly Edu Widget) -->
-        <div class="bento-grid">
-            <div class="bento-card">
-                <h4><span data-i18n="edu_def_label">O que é</span></h4>
-                <p data-i18n="edu_def_text">Uma técnica matemática que usa amostragem aleatória massiva para prever a probabilidade de diferentes resultados quando há intervenção do acaso.</p>
+        <!-- Educational Bento Component (Collapsible) -->
+        <div class="bento-edu-container" id="monteCarloEdu">
+            <div class="bento-header" onclick="toggleEduWidget()">
+               <div class="header-title">
+                 <span data-i18n="edu_widget_title">Entenda a Simulação</span>
+               </div>
+               <div class="toggle-arrow">▼</div>
             </div>
-
-            <div class="bento-card">
-                <h4><span data-i18n="edu_how_label">Como funciona</span></h4>
-                <p data-i18n="edu_how_text">Em vez de prever apenas um futuro, o algoritmo gera milhares de "futuros possíveis" baseados na volatilidade histórica e tendências passadas do ativo.</p>
+            <div class="bento-content" id="eduContent">
+                <div class="bento-grid-inner">
+                    <!-- Card 1: Definition -->
+                    <div class="bento-mini-card">
+                        <div class="mini-content">
+                            <h5 data-i18n="edu_def_label">O que é</h5>
+                            <p data-i18n="edu_def_text">Uma técnica matemática que usa amostragem aleatória massiva para prever a probabilidade de diferentes resultados quando há intervenção do acaso.</p>
+                        </div>
+                    </div>
+                    <!-- Card 2: Mechanism -->
+                    <div class="bento-mini-card">
+                        <div class="mini-content">
+                            <h5 data-i18n="edu_how_label">Como funciona</h5>
+                            <p data-i18n="edu_how_text">Em vez de prever apenas um futuro, o algoritmo gera milhares de "futuros possíveis" baseados na volatilidade histórica e tendências passadas do ativo.</p>
+                        </div>
+                    </div>
+                    <!-- Card 3: Value -->
+                    <div class="bento-mini-card">
+                        <div class="mini-content">
+                            <h5 data-i18n="edu_value_label">Por que usar</h5>
+                            <p data-i18n="edu_value_text">Ajuda a "testar o futuro" e entender não apenas o retorno esperado, mas os riscos extremos (bons e ruins), permitindo decisões muito mais robustas que modelos estáticos.</p>
+                        </div>
+                    </div>
+                </div>
             </div>
-
-            <div class="bento-card">
-                <h4><span data-i18n="edu_value_label">Por que usar</span></h4>
-                <p data-i18n="edu_value_text">Ajuda a "testar o futuro" e entender não apenas o retorno esperado, mas os riscos extremos (bons e ruins), permitindo decisões muito mais robustas que modelos estáticos.</p>
-            </div>
-        </div>
+          </div>
 
         <div class="control-panel">
             <!-- Asset Selection -->
@@ -822,8 +943,19 @@
         }
         const API_BASE_URL = getBaseUrl();
 
-        // --- Educational Widget Logic Removed (Bento Cards are static) ---
-        // function toggleEduWidget() { ... }
+        // --- Educational Widget Logic ---
+        function toggleEduWidget() {
+            const widget = document.getElementById('monteCarloEdu');
+            const content = document.getElementById('eduContent');
+            
+            widget.classList.toggle('expanded');
+            
+            if (widget.classList.contains('expanded')) {
+                content.style.maxHeight = content.scrollHeight + "px";
+            } else {
+                content.style.maxHeight = null;
+            }
+        }
 
         // --- Header Functions ---
         function toggleMenu() {

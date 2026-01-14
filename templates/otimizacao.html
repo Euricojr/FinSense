@@ -54,6 +54,19 @@
         transition: background-color 0.3s, color 0.3s;
       }
 
+      /* Global Scrollbar */
+      ::-webkit-scrollbar {
+          width: 8px;
+          background: #0a192f;
+      }
+      ::-webkit-scrollbar-thumb {
+          background: #00d4ff; /* Neon Cyan */
+          border-radius: 4px;
+      }
+      ::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.02);
+      }
+
       /* --- Header --- */
       header {
         background-color: #0a192f;
@@ -443,6 +456,18 @@
         z-index: 1001;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
         margin-top: 5px;
+      }
+      /* Suggestions Scrollbar Override */
+      #suggestions::-webkit-scrollbar {
+          width: 6px;
+          background: transparent;
+      }
+      #suggestions::-webkit-scrollbar-track {
+          background: rgba(0,0,0,0.1);
+      }
+      #suggestions::-webkit-scrollbar-thumb {
+          background: #00d4ff;
+          border-radius: 3px;
       }
       #suggestions li {
         padding: 10px 15px;
