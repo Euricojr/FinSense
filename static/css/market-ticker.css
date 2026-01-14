@@ -24,7 +24,7 @@
 .ticker-scroll-wrapper {
     display: flex;
     align-items: center;
-    animation: ticker-scrolling 250s linear infinite; /* Slower (120s -> 180s) */
+    animation: ticker-scrolling 300s linear infinite; /* Slower (120s -> 180s) */
     padding-left: 100%;
 }
 
