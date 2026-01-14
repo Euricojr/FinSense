@@ -257,21 +257,24 @@
         .range-val { font-size: 14px; color: var(--neon-cyan); font-weight: 600; margin-top: 5px; text-shadow: 0 0 5px var(--neon-cyan-glow); }
 
         button.btn-sim {
-            background-color: var(--neon-cyan); /* UPDATED */
-            color: #0a192f;
+            background: linear-gradient(135deg, #00d4ff 0%, #007bff 100%);
             border: none;
-            padding: 12px 30px;
-            border-radius: 6px;
+            color: white;
+            padding: 0 30px;
+            height: 50px;
+            border-radius: 12px;
             font-weight: 700;
             cursor: pointer;
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            flex: 1; /* Make it stretch like in Prediction */
+            min-width: 150px;
             transition: all 0.2s;
-            height: 45px;
-            box-shadow: 0 0 15px var(--neon-cyan-glow); /* UPDATED */
         }
         button.btn-sim:hover { 
-            background-color: #33e4ff; 
-            transform: translateY(-2px); 
-            box-shadow: 0 0 25px var(--neon-cyan-glow);
+            box-shadow: 0 0 25px rgba(0, 212, 255, 0.5);
+            transform: scale(1.02);
         }
 
         /* --- Metrics Grid --- */
@@ -867,7 +870,7 @@
                 </div>
             </div>
 
-            <button class="btn-sim" onclick="runSimulation()" data-i18n="sim_exec" style="height: 50px;">Executar Simulação</button>
+            <button class="btn-sim" onclick="runSimulation()" data-i18n="sim_exec">Executar Simulação</button>
         </div>
 
         <!-- Results List -->
