@@ -807,7 +807,7 @@
               <span class="metric-label" data-i18n="opt_vol">Risco</span>
               <span class="metric-value" id="ms-vol">---</span>
             </div>
-            <div id="sharpePie" style="height: 150px; margin: 10px 0"></div>
+            <div id="sharpePie" style="height: 220px; margin: 10px 0"></div>
             <button
               class="apply-btn"
               onclick="applyWeights('max_sharpe')"
@@ -840,7 +840,7 @@
               <span class="metric-label" data-i18n="opt_vol">Risco</span>
               <span class="metric-value" id="mv-vol">---</span>
             </div>
-            <div id="volPie" style="height: 150px; margin: 10px 0"></div>
+            <div id="volPie" style="height: 220px; margin: 10px 0"></div>
             <button
               class="apply-btn"
               onclick="applyWeights('min_volatility')"
@@ -1115,11 +1115,19 @@
           },
         ];
 
-        const layout = {
-          paper_bgcolor: "rgba(0,0,0,0)",
-          showlegend: false,
-          margin: { t: 0, b: 0, l: 0, r: 0 },
-        };
+         const layout = {
+            paper_bgcolor: "rgba(0,0,0,0)",
+            showlegend: true,
+            legend: {
+                orientation: "h",
+                y: -0.1,
+                x: 0.5,
+                xanchor: "center",
+                font: { color: "#e6f1ff", size: 10 },
+                bgcolor: 'rgba(0,0,0,0)'
+            },
+            margin: { t: 10, b: 20, l: 0, r: 0 }
+         };
         Plotly.newPlot(id, data, layout, {
           responsive: true,
           displayModeBar: false,
