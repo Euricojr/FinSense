@@ -5,12 +5,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FinSense - Minha Carteira</title>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
     <script src="/static/js/translations.js"></script>
     <style>
         * {
             box-sizing: border-box;
+            font-family: 'Manrope', sans-serif;
         }
 
         :root {
@@ -140,6 +141,17 @@
         }
 
         /* --- Forms & Inputs --- */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
         input, select, .form-control {
             background-color: rgba(10, 25, 47, 0.6) !important;
             color: var(--text-main) !important;
@@ -178,7 +190,7 @@
         
         .ticker-badge { color: var(--neon-cyan); font-weight: 700; letter-spacing: 0.5px; }
         .text-right { text-align: right; }
-        .val-col { text-align: right; font-family: 'JetBrains Mono', monospace; }
+        .val-col { text-align: right; }
 
         .delete-btn { background: none; border: none; color: var(--danger-red); cursor: pointer; font-size: 16px; opacity: 0.7; }
         .delete-btn:hover { opacity: 1; transform: scale(1.1); }
