@@ -5,6 +5,7 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 import yfinance as yf
 from scipy.optimize import minimize
+from scipy.interpolate import griddata
 import pandas as pd
 import numpy as np
 import time
@@ -2227,6 +2228,33 @@ def optimize_portfolio():
             "volatility": port_vol.tolist(),
             "sharpe": port_sharpe.tolist()
         }
+
+        # 5. Generate 3D Surface Data (Interpolation)
+        # We need a grid for Plotly Surface
+        # Create a grid of Volatility (X) and Returns (Y)
+        grid_x, grid_y = np.mgrid[
+            min(port_vol):max(port_vol):100j,
+            min(port_ret):max(port_ret):100j
+        ]
+        
+        # Interpolate Sharpe (Z) onto this grid
+        # We use linear interpolation to avoid artifacts, fill_value for outside hull
+        grid_z = griddata(
+            (port_vol, port_ret), 
+            port_sharpe, 
+            (grid_x, grid_y), 
+            method='linear',
+            fill_value=np.nan # Let Plotly handle gaps or we fill them
+        )
+        
+        # Replace NaNs with min sharpe for a "floor" effect or just 0, OR leave NaN for transparency
+        # Leaving NaN often works best in Plotly to show gaps
+        
+        surface_data = {
+            "x": grid_x.tolist(),
+            "y": grid_y.tolist(),
+            "z": grid_z.tolist()
+        }
         
         return jsonify({
             "max_sharpe": {
@@ -2241,7 +2269,8 @@ def optimize_portfolio():
                 "volatility": float(vol_min),
                 "sharpe": float(sharpe_min)
             },
-            "cloud": cloud_data
+            "cloud": cloud_data,
+            "surface": surface_data
         })
         
     except Exception as e:
