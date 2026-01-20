@@ -2250,10 +2250,16 @@ def optimize_portfolio():
         # Replace NaNs with min sharpe for a "floor" effect or just 0, OR leave NaN for transparency
         # Leaving NaN often works best in Plotly to show gaps
         
+        # Sanitize grid_z for JSON (NaN -> None) - browsers cannot parse JSON "NaN"
+        clean_z = []
+        for row in grid_z.tolist():
+             clean_row = [None if np.isnan(val) else val for val in row]
+             clean_z.append(clean_row)
+
         surface_data = {
             "x": grid_x.tolist(),
             "y": grid_y.tolist(),
-            "z": grid_z.tolist()
+            "z": clean_z
         }
         
         return jsonify({

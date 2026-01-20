@@ -1018,63 +1018,56 @@
       function renderCharts(data) {
         // Render Efficient Frontier (3D Surface)
         
-        // 1. Surface Plane
-        const surfaceTrace = {
-          type: 'surface',
-          x: data.surface.x,
-          y: data.surface.y,
-          z: data.surface.z,
-          colorscale: [
-            [0, 'rgb(16, 24, 50)'],    // Deep Dark Blue
-            [0.3, 'rgb(0, 80, 150)'],  // Mid Blue
-            [0.6, 'rgb(0, 212, 255)'], // Neon Cyan
-            [1, 'rgb(220, 250, 255)']  // White/Cyan Highlight
-          ],
-          lighting: {
-            roughness: 0.1,
-            specular: 0.5,
-            ambient: 0.8
+        // Render Efficient Frontier (2D Scatter)
+        
+        // 1. Random Portfolios Cloud
+        const cloudTrace = {
+          x: data.cloud.volatility,
+          y: data.cloud.returns,
+          mode: 'markers',
+          type: 'scatter',
+          marker: {
+            color: data.cloud.sharpe,
+            colorscale: 'Bluered', // or 'Viridis', 'Plasma' - keeping it vibrant
+            colorbar: {
+              title: 'Sharpe',
+              thickness: 15,
+              x: 1.02,
+              tickfont: { color: '#e6f1ff' }
+            },
+            size: 6,
+            opacity: 0.6
           },
-          opacity: 0.9,
-          colorbar: {
-             title: 'Sharpe',
-             thickness: 10,
-             len: 0.6,
-             x: 1.02,
-             tickfont: { color: '#e6f1ff' }
-          },
-          hoverinfo: 'x+y+z',
-          hovertemplate: 'Vol: %{x:.1%}<br>Ret: %{y:.1%}<br>Sharpe: %{z:.2f}<extra></extra>'
+          text: data.cloud.sharpe.map(s => `Sharpe: ${s.toFixed(2)}`),
+          hovertemplate: 'Vol: %{x:.1%}<br>Ret: %{y:.1%}<br>%{text}<extra></extra>'
         };
 
-        // 2. Max Sharpe Marker (3D Scatter)
+        // 2. Max Sharpe Marker
         const msTrace = {
-           type: 'scatter3d',
-           mode: 'markers',
            x: [data.max_sharpe.volatility],
            y: [data.max_sharpe.return],
-           z: [data.max_sharpe.sharpe],
+           mode: 'markers',
+           type: 'scatter',
            marker: {
-               size: 8,
+               size: 14,
                color: '#FFD700', // Gold
-               symbol: 'diamond',
+               symbol: 'star',
                line: { color: 'white', width: 2 }
            },
            name: 'Max Sharpe',
            hovertemplate: 'Max Sharpe<br>Vol: %{x:.1%}<br>Ret: %{y:.1%}<br>Sharpe: %{z:.2f}<extra></extra>'
         };
 
-        // 3. Min Vol Marker (3D Scatter)
+        // 3. Min Vol Marker
         const mvTrace = {
-           type: 'scatter3d',
-           mode: 'markers',
            x: [data.min_volatility.volatility],
            y: [data.min_volatility.return],
-           z: [data.min_volatility.sharpe],
+           mode: 'markers',
+           type: 'scatter',
            marker: {
-               size: 8,
+               size: 14,
                color: '#00d4ff', // Cyan
-               symbol: 'circle',
+               symbol: 'diamond',
                line: { color: 'white', width: 2 }
            },
            name: 'Min Vol',
@@ -1085,37 +1078,20 @@
           paper_bgcolor: "rgba(0,0,0,0)",
           plot_bgcolor: "rgba(0,0,0,0)",
           font: { color: "#e6f1ff", family: "Manrope" },
-          scene: {
-              xaxis: { 
-                  title: 'Risco (Vol)', 
-                  gridcolor: '#00d4ff', 
-                  zerolinecolor: '#00d4ff',
-                  showbackground: false,
-                  tickfont: { color: '#00d4ff' },
-                  titlefont: { color: '#00d4ff' }
-              },
-              yaxis: { 
-                  title: 'Retorno', 
-                  gridcolor: '#00d4ff', 
-                  zerolinecolor: '#00d4ff', 
-                  showbackground: false,
-                  tickfont: { color: '#00d4ff' },
-                  titlefont: { color: '#00d4ff' }
-              },
-              zaxis: { 
-                  title: 'Sharpe', 
-                  gridcolor: '#00d4ff', 
-                  zerolinecolor: '#00d4ff', 
-                  showbackground: false,
-                  tickfont: { color: '#00d4ff' },
-                  titlefont: { color: '#00d4ff' }
-              },
-              camera: {
-                  eye: { x: 1.5, y: 1.5, z: 0.5 }
-              },
-              aspectratio: { x: 1, y: 1, z: 0.6 }
+          xaxis: { 
+              title: 'Risco (Volatilidade)', 
+              gridcolor: 'rgba(255,255,255,0.1)', 
+              zerolinecolor: 'rgba(255,255,255,0.1)',
+              tickformat: '.0%'
           },
-          margin: { t: 0, l: 0, r: 0, b: 0 },
+          yaxis: { 
+              title: 'Retorno Esperado', 
+              gridcolor: 'rgba(255,255,255,0.1)', 
+              zerolinecolor: 'rgba(255,255,255,0.1)',
+              tickformat: '.0%'
+          },
+          hovermode: 'closest',
+          margin: { t: 30, l: 60, r: 20, b: 50 },
           showlegend: true,
           legend: { 
               x: 0, 
@@ -1126,7 +1102,7 @@
           }
         };
 
-        Plotly.newPlot("efChart", [surfaceTrace, msTrace, mvTrace], layoutEF, {
+        Plotly.newPlot("efChart", [cloudTrace, msTrace, mvTrace], layoutEF, {
           responsive: true,
           displayModeBar: true,
           displaylogo: false
