@@ -12,9 +12,14 @@ import time
 import os
 import logging
 from bcb import sgs
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import r2_score
+try:
+    from sklearn.ensemble import RandomForestRegressor
+    from sklearn.model_selection import train_test_split
+    from sklearn.metrics import r2_score
+    HAS_SKLEARN = True
+except ImportError as e:
+    HAS_SKLEARN = False
+    print(f"WARNING: ML features disabled: scikit-learn DLL blocked by security policy: {e}")
 from groq import Groq
 import json
 from datetime import datetime
@@ -42,7 +47,12 @@ login_manager.init_app(app)
 login_manager.login_view = 'login' 
 
 # GROQ Client
-groq_client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+groq_api_key = os.environ.get("GROQ_API_KEY")
+if groq_api_key:
+    groq_client = Groq(api_key=groq_api_key)
+else:
+    groq_client = None
+    print("WARNING: GROQ_API_KEY not set. Natural language financial advisor features will be disabled.")
 
 # Cache for Heatmap
 CACHE_HEATMAP = {}
@@ -188,6 +198,9 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(150), unique=True, nullable=False)
     password_hash = db.Column(db.String(150), nullable=False)
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
@@ -200,8 +213,10 @@ class Transaction(db.Model):
     ticker = db.Column(db.String(20), nullable=False)
     date = db.Column(db.String(10), nullable=False) # YYYY-MM-DD
     qty = db.Column(db.Float, nullable=False)
-    qty = db.Column(db.Float, nullable=False)
     price = db.Column(db.Float, nullable=False)
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
 class Expense(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -209,10 +224,11 @@ class Expense(db.Model):
     description = db.Column(db.String(200), nullable=False)
     amount = db.Column(db.Float, nullable=False)
     date = db.Column(db.String(10), nullable=False) # YYYY-MM-DD
-    amount = db.Column(db.Float, nullable=False)
-    date = db.Column(db.String(10), nullable=False) # YYYY-MM-DD
     category = db.Column(db.String(50), nullable=False)
     payment_method = db.Column(db.String(50), default='Outros')
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
 class Income(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -221,6 +237,9 @@ class Income(db.Model):
     amount = db.Column(db.Float, nullable=False)
     date = db.Column(db.String(10), nullable=False)
     category = db.Column(db.String(50), nullable=False)
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -1600,6 +1619,8 @@ def calculate_technical_features(df):
 @app.route('/api/predict', methods=['POST'])
 @login_required
 def predict_price():
+    if not HAS_SKLEARN:
+        return jsonify({"error": "Módulo de predição de IA desativado. O sistema de controle de aplicativos do Windows bloqueou as DLLs do scikit-learn no ambiente virtual."}), 500
     try:
         data = request.get_json()
         
@@ -1763,153 +1784,6 @@ def predict_price():
         logger.error(f"Prediction error: {e}")
         return jsonify({"error": str(e)}), 500
     
-    # To calculate "Benchmark Equivalent Portfolio":
-    # Identify each cashflow. Buy 'InvestedAmount' worth of Benchmark at that day's price.
-    # Track "Qty of Benchmark held".
-    
-    bench_qty_held = pd.Series(0.0, index=all_days)
-    
-    if benchmark_ticker in market_data.columns:
-        bench_prices = market_data[benchmark_ticker]
-        
-        for _, tx in df_tx.iterrows():
-            mask = all_days >= tx['date']
-            
-
-            # Price of benchmark at transaction date
-            # Find closest date if exact match missing
-            try:
-                # get price at tx date or nearest before
-
-
-                idx = market_data.index.get_indexer([tx['date']], method='pad')[0]
-                if idx == -1: idx = 0 # fallback
-                price_at_buy = bench_prices.iloc[idx]
-                
-                investment = tx['qty'] * tx['price']
-                bench_units_bought = investment / price_at_buy
-                
-                # Add this qty to all subsequent days
-                bench_qty_held.loc[mask] += bench_units_bought
-            except:
-                pass # skip if date issues
-        
-        # Now Calculate Value of Bench Portfolio
-        bench_series = bench_qty_held * bench_prices
-        
-    elif is_cdi:
-        try:
-            # Fetch Real CDI Data using python-bcb
-            # Code 12 = Taxa de juros - CDI (% a.d.)
-            start_str = start_date.strftime('%Y-%m-%d')
-            cdi_daily = sgs.get({'CDI': 12}, start=start_str)
-            
-            # The API returns % (e.g., 0.05). We need factor (1 + 0.05/100)
-            cdi_daily['factor'] = 1 + (cdi_daily['CDI'] / 100)
-            
-            # Reindex to all_days (business days + weekends from yfinance range)
-            # Fill missing with factor 1.0 (no growth on weekends)
-            cdi_aligned = cdi_daily['factor'].reindex(all_days, fill_value=1.0)
-            
-            # Calculate cumulative product
-            cdi_accum = cdi_aligned.cumprod()
-            
-            # Now we have an index (e.g. 1.0, 1.0004...). 
-            # We use this "price" to buy units.
-            
-            bench_qty_held = pd.Series(0.0, index=all_days)
-            
-            for _, tx in df_tx.iterrows():
-                mask = all_days >= tx['date']
-                try:
-                    # get index val at tx date
-                    idx = all_days.get_indexer([tx['date']], method='pad')[0]
-                    if idx == -1: idx = 0
-                    index_val_at_buy = cdi_accum.iloc[idx]
-                    
-                    if index_val_at_buy == 0: index_val_at_buy = 1.0
-                    
-                    investment = tx['qty'] * tx['price']
-                    units_bought = investment / index_val_at_buy
-                    
-                    bench_qty_held.loc[mask] += units_bought
-                except:
-                    pass
-            
-            bench_series = bench_qty_held * cdi_accum
-            
-        except Exception as e:
-            logger.error(f"Error fetching CDI from BCB: {e}")
-            # Fallback to zeros or flat line
-            bench_series = pd.Series(0.0, index=all_days)
-    
-    # 5. Format for JSON
-    
-    result = {
-        "dates": all_days.strftime('%Y-%m-%d').tolist(),
-        "portfolio": portfolio_series.fillna(0).tolist(),
-        "invested": invested_series.fillna(0).tolist(),
-        "benchmark": bench_series.fillna(0).tolist(),
-        "benchmark_symbol": benchmark_ticker
-    }
-    
-    return jsonify(result)
-    
-    for i in range(len(stats_df)):
-        if i < first_idx: 
-            prev_total = stats_df['end_value'].iloc[i]
-            continue
-            
-        today_total = stats_df['end_value'].iloc[i]
-        today_flow = stats_df['flow'].iloc[i]
-        
-        if prev_total > 0:
-            # Adjust today's total by removing the cash that entered today
-            adjusted_today = today_total - today_flow
-            daily_ret = (adjusted_today / prev_total) - 1
-        else:
-            daily_ret = 0.0
-            
-        current_quota = current_quota * (1 + daily_ret)
-        quota.iloc[i] = current_quota
-        prev_total = today_total
-
-    # 3. Benchmark Normalization (to % starting at 0)
-    bench_series = pd.Series(0.0, index=all_days)
-    
-    if is_cdi:
-        try:
-             start_str = start_date.strftime('%Y-%m-%d')
-             cdi_daily = sgs.get({'CDI': 12}, start=start_str)
-             if cdi_daily is not None:
-                 cdi_daily['factor'] = 1 + (cdi_daily['CDI'] / 100)
-                 cdi_aligned = cdi_daily['factor'].reindex(all_days, fill_value=1.0)
-                 # Cumulative Product
-                 bench_cum = cdi_aligned.cumprod()
-                 # Normalize to start at 100
-                 bench_series = (bench_cum / bench_cum.iloc[0]) * 100
-        except: pass
-    elif benchmark_ticker in market_data.columns:
-        b_prices = market_data[benchmark_ticker]
-        valid_start = b_prices.first_valid_index()
-        if valid_start:
-             base_price = b_prices.loc[valid_start]
-             bench_series = (b_prices / base_price) * 100
-        else:
-             bench_series = b_prices # Fallback
-
-    # Shift to Percentage Change (0 basis) for Chart
-    # i.e., 100 -> 0%, 110 -> 10%
-    quota_final = quota - 100
-    bench_final = bench_series - 100
-    
-    return jsonify({
-        "dates": all_days.strftime('%Y-%m-%d').tolist(),
-        "portfolio": quota_final.fillna(0).tolist(),
-        "invested": [], # No longer plotted
-        "benchmark": bench_final.fillna(0).tolist(),
-        "benchmark_symbol": benchmark_ticker
-    })
 
 
 

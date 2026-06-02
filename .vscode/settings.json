@@ -1,0 +1,15 @@
+{
+  "python.analysis.exclude": [
+    "**/node_modules",
+    "**/__pycache__",
+    ".venv",
+    "legacy_code"
+  ],
+  "python.analysis.ignore": [
+    "**/node_modules",
+    "**/__pycache__",
+    ".venv",
+    "legacy_code"
+  ],
+  "python.analysis.typeCheckingMode": "off"
+}
